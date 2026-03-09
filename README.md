@@ -1,40 +1,97 @@
 # my-skills
 
-Personal Claude Code skills repository. Integrate into any project via git submodule.
+Personal Claude Code skills repository. A complete requirement-driven development workflow — from requirement analysis to final delivery.
 
-## Usage
+[中文版](./README_CN.md)
+
+## Installation
+
+Add this repository as a git submodule to your project's `.claude/skills` directory:
 
 ```bash
 git submodule add git@github.com:GOODDAYDAY/my-skills.git .claude/skills
 ```
 
+To clone a project that already includes this submodule:
+
+```bash
+git clone --recurse-submodules <your-project-repo>
+```
+
+To update the skills to the latest version:
+
+```bash
+git submodule update --remote .claude/skills
+```
+
+## How It Works
+
+Once installed, all skills are auto-discovered by Claude Code as slash commands.
+
+The core workflow is `/req`, which orchestrates a full development cycle in 6 stages:
+
+```
+/req "feature description"
+  │
+  ├─ Stage 1: Requirement Analysis ──→ requirement.md + diagrams
+  │    ↓ (user approval required)
+  ├─ Stage 2: Technical Design ──────→ technical.md + diagrams
+  │    ↓ (user approval required)
+  ├─ Stage 3: Coding ────────────────→ source code + scripts/*.bat
+  │    ↓
+  ├─ Stage 4: Requirement Review ────→ compliance check report
+  │    ↓
+  ├─ Stage 5: Verification ─────────→ build / run / test
+  │    ↓
+  └─ Stage 6: Archive ──────────────→ mark as completed
+```
+
+Each stage waits for user confirmation before proceeding. You can also run any stage independently.
+
 ## Skills
 
-| 命令 | 说明 |
+| Command | Description |
 |:---|:---|
-| `/req [需求简述]` | 总编排入口，引导走完需求开发全流程 |
-| `/req-1-analyze [需求简述]` | 需求分析，扩展为完整需求文档 |
-| `/req-2-tech [REQ-xxx]` | 技术文档编写 |
-| `/req-3-code [REQ-xxx]` | 编码开发（自动加载语言规范） |
-| `/req-4-review [REQ-xxx]` | 需求对比审查 |
-| `/req-5-verify [REQ-xxx]` | 编译/运行/测试校验 |
-| `/req-6-done [REQ-xxx]` | 归档，标记为已完成 |
-| `/create-skill [name]` | 创建新 skill 的标准指南 |
+| `/req [description]` | Full workflow orchestrator — guides through all 6 stages |
+| `/req-1-analyze [description]` | Requirement analysis — expand brief input into detailed requirement doc |
+| `/req-2-tech [REQ-xxx]` | Technical design — architecture, modules, API, diagrams |
+| `/req-3-code [REQ-xxx]` | Coding — develop with language-specific conventions |
+| `/req-4-review [REQ-xxx]` | Requirement review — compare implementation against requirements |
+| `/req-5-verify [REQ-xxx]` | Verification — build, run, and test (including Playwright e2e for web) |
+| `/req-6-done [REQ-xxx]` | Archive — mark requirement as completed |
+| `/create-skill [name]` | Guide for creating new skills |
 
-## Structure
+## Document Structure
+
+All requirement documents are managed under `requirements/` in your project root:
+
+```
+requirements/
+├── index.md                        # Requirement index & status tracking
+├── REQ-001-user-login/
+│   ├── requirement.md              # Requirement document
+│   ├── technical.md                # Technical design document
+│   ├── *.puml / *.svg              # PlantUML diagrams
+│   └── ...
+└── REQ-002-data-export/
+    └── ...
+```
+
+## Repository Structure
 
 ```
 my-skills/
-├── _shared/plantuml.md           # PlantUML 共享规范
+├── _shared/plantuml.md              # Shared PlantUML conventions
 ├── create-skill/SKILL.md
-├── req/SKILL.md                  # 总编排
-├── req-1-analyze/SKILL.md        # 需求分析
-├── req-2-tech/SKILL.md           # 技术文档
-├── req-3-code/                   # 编码开发
+├── req/SKILL.md                     # Workflow orchestrator
+├── req-1-analyze/SKILL.md           # Requirement analysis
+├── req-2-tech/SKILL.md              # Technical design
+├── req-3-code/                      # Coding
 │   ├── SKILL.md
-│   ├── python.md
-│   └── java.md
-├── req-4-review/SKILL.md         # 需求对比
-├── req-5-verify/SKILL.md         # 校验测试
-└── req-6-done/SKILL.md           # 归档完成
+│   ├── python.md                    # Python conventions
+│   └── java.md                      # Java conventions
+├── req-4-review/SKILL.md            # Requirement review
+├── req-5-verify/SKILL.md            # Verification & testing
+└── req-6-done/SKILL.md              # Archive
 ```
+
