@@ -1,117 +1,124 @@
 ---
 name: req-2-tech
-description: 技术文档编写：基于需求文档设计技术方案
+description: Technical design — create technical specification based on finalized requirements
 argument-hint: "[REQ-xxx]"
 ---
 
-你负责技术文档编写阶段。基于已定稿的需求文档，编写技术设计方案。
+You are responsible for the technical design stage. Write a technical specification based on the finalized requirement document.
 
-## 前置条件
+## Prerequisites
 
-- `$ARGUMENTS` 传入 REQ 编号（如 REQ-001）
-- 对应的 `requirements/REQ-xxx-*/requirement.md` 必须存在且状态为"需求已定稿"
-- 如果不满足，提示用户先完成需求分析阶段
+- `$ARGUMENTS` provides a REQ number (e.g., REQ-001)
+- The corresponding `requirements/REQ-xxx-*/requirement.md` must exist with status `Requirement Finalized`
+- If not met, prompt the user to complete the requirement analysis stage first
 
-## 流程
+## Breakpoint Recovery
 
-### 第一步：阅读需求文档
+Read `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` for recovery specifications.
 
-读取对应的 `requirement.md`，理解所有功能点和验收标准。
+If `technical.md` already exists with status `Technical Design` (not finalized):
+- Read existing content and show it to the user
+- Ask whether to continue refining or start over
 
-### 第二步：编写技术方案
+## Flow
 
-在同目录下创建 `technical.md`，格式如下：
+### Step 1: Read Requirement Document
+
+Read the corresponding `requirement.md`. Understand all features and acceptance criteria.
+
+### Step 2: Write Technical Specification
+
+Create `technical.md` in the same directory with the following format:
 
 ```markdown
-# REQ-xxx 技术设计
+# REQ-xxx Technical Design
 
-> 状态：技术设计中
-> 需求文档：requirement.md
-> 创建时间：<当前日期>
-> 最后更新：<当前日期>
+> Status: Technical Design
+> Requirement: requirement.md
+> Created: <date>
+> Updated: <date>
 
-## 1. 技术选型
+## 1. Technology Stack
 
-| 模块 | 技术 | 理由 |
+| Module | Technology | Rationale |
 |:---|:---|:---|
 
-## 2. 设计原则
+## 2. Design Principles
 
-- 高内聚低耦合：模块职责单一，模块间通过清晰接口通信
-- 复用优先：提取公共逻辑为独立模块，避免重复代码
-- 可测试性：关键逻辑可独立测试
+- High cohesion, low coupling: single responsibility per module, communicate via clear interfaces
+- Reuse first: extract shared logic into independent modules, avoid duplication
+- Testability: key logic must be independently testable
 
-## 3. 整体架构
+## 3. Architecture Overview
 
-（配架构图）
+(attach architecture diagram)
 
-注意：源码不允许直接放在项目根目录的 src/ 下，必须按模块划分子层，如：
-- `backend/` — 后端服务
-- `frontend/` — 前端应用
-- `app/` — 移动端/桌面端
-- `shared/` — 公共模块（供多模块复用）
+Note: source code must NOT be placed directly under project root `src/`. Must be organized in sub-layers:
+- `backend/` — backend services
+- `frontend/` — frontend application
+- `app/` — mobile/desktop
+- `shared/` — shared modules (for cross-module reuse)
 
-## 4. 模块设计
+## 4. Module Design
 
-### 4.1 <模块1>
-- 职责：
-- 对外接口：
-- 内部结构：
-- 复用说明：哪些组件/逻辑可被其他模块复用
+### 4.1 <Module 1>
+- Responsibility:
+- Public interface:
+- Internal structure:
+- Reuse notes: which components/logic can be reused by other modules
 
-### 4.2 <模块2>
+### 4.2 <Module 2>
 ...
 
-## 5. 数据模型
+## 5. Data Model
 
-（如涉及数据库，配 ER 图或类图）
+(attach ER diagram or class diagram if applicable)
 
-## 6. 接口设计
+## 6. API Design
 
-（如有 API，列出接口清单）
+(list API endpoints if applicable)
 
-## 7. 关键流程
+## 7. Key Flows
 
-（配时序图）
+(attach sequence diagrams)
 
-## 8. 公共模块与复用策略
+## 8. Shared Modules & Reuse Strategy
 
-明确列出哪些组件/工具/逻辑是公共的，如何被各模块引用。
+Explicitly list which components/utilities/logic are shared, and how they are referenced by each module.
 
-## 9. 风险与注意事项
+## 9. Risks & Notes
 
-## 10. 变更记录
+## 10. Change Log
 
-| 版本 | 日期 | 变更内容 | 变更原因 |
-|:---|:---|:---|:---|
-| v1 | <日期> | 初始版本 | |
+| Version | Date | Changes | Affected Scope | Reason |
+|:---|:---|:---|:---|:---|
+| v1 | <date> | Initial version | ALL | - |
 ```
 
-### 第三步：生成配图
+**Note: Section titles and structural fields must be in English. Descriptive content may use Chinese.**
 
-读取 `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` 获取 PlantUML 规范。
+Change log format and rules: see `${CLAUDE_SKILL_DIR}/../_shared/changelog.md`. The `Affected Scope` column must be filled accurately (e.g., Module 4.1, API 6.2).
 
-根据技术方案需要，生成以下配图（至少包含 1-2 张）：
+### Step 3: Generate Diagrams
 
-- **架构图**（组件图）：`tech-架构图.puml`
-- **时序图**：`tech-时序图.puml`（关键流程）
-- **类图**：`tech-类图.puml`（数据模型/核心类）
-- **ER 图**：`tech-ER图.puml`（如涉及数据库）
+Read `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` for the complete PlantUML specification (env detection, syntax, SVG conversion). Follow the process strictly.
 
-画图后**必须执行转换和校验**：
-- 运行 `plantuml -tsvg <file>.puml`
-- 验证 SVG 生成成功且无语法错误
-- 如果失败，修复语法后重试，直到成功
+Generate the following diagrams as needed (at least 1-2):
 
-### 第四步：用户审核
+- **Architecture diagram** (component): `tech-architecture.puml`
+- **Sequence diagram**: `tech-sequence.puml` (key flows)
+- **Class diagram**: `tech-class.puml` (data model / core classes)
+- **ER diagram**: `tech-er.puml` (if database is involved)
 
-输出技术方案摘要，**等待用户确认**：
-- 重点展示技术选型、架构设计和模块复用策略
-- 用户可能要求调整
-- 循环直到用户确认通过
+### Step 4: User Review
 
-### 第五步：定稿
+Present the technical specification summary and **wait for user confirmation**:
+- Focus on technology stack, architecture design, and module reuse strategy
+- User may request adjustments
+- Loop until user approves
 
-用户确认后：
-1. 更新 `technical.md` 状态为"技术已定稿"
-2. 更新 `requirements/index.md` 中状态为"技术已定稿"
+### Step 5: Finalize
+
+After user approval:
+1. Update `technical.md` status to `Technical Finalized`
+2. Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Technical Finalized`

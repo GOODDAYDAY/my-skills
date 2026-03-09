@@ -1,56 +1,66 @@
 ---
 name: req-5-verify
-description: 校验测试：编译检查、运行检查、自动化测试
+description: Verification — build check, runtime check, and automated testing
 argument-hint: "[REQ-xxx]"
 ---
 
-你负责校验测试阶段。确保代码能编译、能运行、能通过测试。
+You are responsible for the verification stage. Ensure the code builds, runs, and passes tests.
 
-## 前置条件
+## Prerequisites
 
-- `$ARGUMENTS` 传入 REQ 编号
-- 代码开发已完成
+- `$ARGUMENTS` provides a REQ number
+- Coding must be completed
 
-## 流程
+## Breakpoint Recovery
 
-### 第一步：识别项目类型
+Read `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` for recovery specifications.
 
-读取 `requirements/REQ-xxx-*/technical.md`，确定技术栈和构建方式。
+If a previous verification was interrupted:
+1. Check if scripts already exist under `scripts/`
+2. Check if test files already exist
+3. If they exist, run existing scripts to see which pass/fail
+4. Only fix failing items, do not regenerate passing ones
 
-### 第二步：编译检查
+## Flow
 
-根据技术栈执行编译：
+### Step 1: Identify Project Type
 
-| 技术栈 | 命令 |
+Read `requirements/REQ-xxx-*/technical.md` to determine the technology stack and build method.
+
+### Step 2: Build Check
+
+Execute build based on technology stack:
+
+| Technology | Command |
 |:---|:---|
-| Python | `python -m py_compile <files>` 或 `mypy <package>` |
+| Python | `python -m py_compile <files>` or `mypy <package>` |
 | Java (Maven) | `mvn compile` |
 | Java (Gradle) | `gradle build` |
 | TypeScript | `tsc --noEmit` |
 | Go | `go build ./...` |
 
-编译必须通过，如有错误则修复后重试。
+Build must pass. If errors occur, fix and retry.
 
-### 第三步：运行检查
+### Step 3: Runtime Check
 
-尝试运行项目的入口程序，确保能正常启动：
-- 如果是 CLI 工具，执行 `--help` 或简单命令
-- 如果是 Web 服务，启动后检查健康检查端点
-- 如果是库，尝试 import/加载
+Attempt to run the project's entry point to ensure it starts correctly:
+- CLI tool: execute `--help` or a simple command
+- Web service: start and check health endpoint
+- Library: attempt import/load
 
-### 第四步：自动化测试
+### Step 4: Automated Testing
 
-1. 检查是否已有测试文件
-2. 如果没有，**根据需求文档的验收标准生成测试用例**
-3. **Web 项目特殊要求**：使用 Python + Playwright 进行端到端测试
-   - 测试脚本放在 `tests/e2e/` 目录下
-   - 根据需求文档的功能点和验收标准设计测试流程
-   - 不仅测试 UI 交互（点击、输入、页面跳转）
-   - 还要测试数据流转（提交数据后验证数据库/API 返回是否正确）
-   - 测试文件命名：`test_e2e_<功能模块>.py`
-4. 单元测试/集成测试：
+1. Check if test files already exist
+2. If not, **generate test cases based on the requirement document's acceptance criteria**
+3. **Web project special requirement**: use Python + Playwright for end-to-end testing
+   - Place test scripts in `tests/e2e/`
+   - Design test flows based on requirement features and acceptance criteria
+   - Test not only UI interactions (click, input, navigation)
+   - Also test data flow (submit data, verify database/API response is correct)
+   - Test file naming: `test_e2e_<feature>.py`
+4. Unit/integration tests:
 
-| 技术栈 | 命令 |
+| Technology | Command |
 |:---|:---|
 | Python | `pytest tests/ -v` |
 | Java (Maven) | `mvn test` |
@@ -58,36 +68,39 @@ argument-hint: "[REQ-xxx]"
 | TypeScript | `npm test` |
 | Go | `go test ./...` |
 
-5. 所有测试必须通过
+5. All tests must pass
 
-### 第五步：生成/更新自动化脚本
+### Step 5: Generate/Update Automation Scripts
 
-将所有校验命令生成为 `scripts/` 目录下的 `.bat` 文件：
+Read `${CLAUDE_SKILL_DIR}/../_shared/scripts.md` for script specifications.
 
-- `scripts/build.bat` — 编译构建
-- `scripts/test.bat` — 运行所有测试（单元 + 集成）
-- `scripts/test-e2e.bat` — 运行端到端测试（Web 项目）
-- `scripts/run.bat` — 启动运行
+Generate verification scripts in `scripts/` (.bat + .sh), strictly following the shared script specifications.
 
-如果脚本已存在，检查是否需要更新。每个脚本要包含注释说明用途。
+At minimum:
+- `scripts/build.bat` + `scripts/build.sh` — build/compile
+- `scripts/test.bat` + `scripts/test.sh` — run all tests (unit + integration)
+- `scripts/test-e2e.bat` + `scripts/test-e2e.sh` — run e2e tests (web projects)
+- `scripts/run.bat` + `scripts/run.sh` — start/run
 
-### 第六步：输出报告
+If scripts already exist, check if they need updating.
+
+### Step 6: Output Report
 
 ```markdown
-## 校验报告
+## Verification Report
 
-- 编译检查：通过/失败
-- 运行检查：通过/失败
-- 单元/集成测试：X/Y 通过
-- 端到端测试：X/Y 通过（Web 项目）
+- Build check: PASS / FAIL
+- Runtime check: PASS / FAIL
+- Unit/Integration tests: X/Y passed
+- E2E tests: X/Y passed (web projects)
 
-### 自动化脚本
-- scripts/build.bat ✓
-- scripts/test.bat ✓
-- scripts/run.bat ✓
+### Automation Scripts
+- scripts/build.bat + build.sh ✓
+- scripts/test.bat + test.sh ✓
+- scripts/run.bat + run.sh ✓
 
-### 问题清单（如有）
+### Issues (if any)
 1. ...
 ```
 
-全部通过后，告知用户可以进入归档阶段。
+When all checks pass, inform user they can proceed to the archive stage.

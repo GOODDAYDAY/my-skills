@@ -1,43 +1,83 @@
 ---
 name: req-6-done
-description: 归档完成：更新文档状态，标记需求为已完成
+description: Archive — final consistency check, update document status, mark requirement as completed
 argument-hint: "[REQ-xxx]"
 ---
 
-你负责归档阶段。将需求标记为已完成。
+You are responsible for the archive stage. Run the final consistency check, then mark the requirement as completed.
 
-## 前置条件
+## Prerequisites
 
-- `$ARGUMENTS` 传入 REQ 编号
-- 校验测试阶段已通过
+- `$ARGUMENTS` provides a REQ number
+- Verification stage must have passed
 
-## 流程
+## Flow
 
-### 第一步：更新需求文档状态
+### Step 1: Final Consistency Check
 
-修改 `requirements/REQ-xxx-*/requirement.md`：
-- 将状态改为"已完成"
-- 更新"最后更新"日期
-
-### 第二步：更新技术文档状态
-
-修改 `requirements/REQ-xxx-*/technical.md`：
-- 将状态改为"已完成"
-- 更新"最后更新"日期
-
-### 第三步：更新索引
-
-修改 `requirements/index.md`：
-- 将该需求的状态改为"已完成"
-- 更新时间
-
-### 第四步：输出总结
+Before archiving, execute the following checklist. **All items must pass.**
 
 ```markdown
-## REQ-xxx <名称> 已完成
+## Final Consistency Checklist
 
-- 需求文档：已归档
-- 技术文档：已归档
-- 代码：已实现并通过校验
-- 完成时间：<日期>
+### Documents
+- [ ] requirement.md exists and status is finalized
+- [ ] technical.md exists and status is finalized
+- [ ] All .puml files have corresponding .svg files
+- [ ] All .svg files are valid (size > 0, no Syntax Error)
+
+### Code
+- [ ] Source code exists for all modules defined in technical.md
+- [ ] Code builds successfully (run scripts/build.bat or build.sh)
+- [ ] All tests pass (run scripts/test.bat or test.sh)
+
+### Scripts
+- [ ] scripts/build.bat + build.sh exist and are executable
+- [ ] scripts/run.bat + run.sh exist and are executable
+- [ ] scripts/test.bat + test.sh exist and are executable
+
+### Git
+- [ ] All changes are committed (no uncommitted modifications)
+```
+
+If any check fails:
+1. List all failed items
+2. For auto-fixable issues (missing SVG, missing scripts), fix them directly
+3. For issues requiring human intervention (uncommitted code, test failures), prompt the user
+4. **All items must pass before proceeding to archive**
+
+### Step 2: Update Requirement Document Status
+
+Modify `requirements/REQ-xxx-*/requirement.md`:
+- Set Status to `Completed`
+- Update the Updated date
+
+### Step 3: Update Technical Document Status
+
+Modify `requirements/REQ-xxx-*/technical.md`:
+- Set Status to `Completed`
+- Update the Updated date
+
+### Step 4: Update Index
+
+Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Modify `requirements/index.md`:
+- Set the requirement's status to `Completed`
+- Update the date
+
+### Step 5: Output Summary
+
+```markdown
+## REQ-xxx <Name> — Completed
+
+### Consistency Check
+- Documents: ALL PASS
+- Code: ALL PASS
+- Scripts: ALL PASS
+- Git: ALL PASS
+
+### Summary
+- Requirement document: archived
+- Technical design: archived
+- Code: implemented and verified
+- Completed: <date>
 ```
