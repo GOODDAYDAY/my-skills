@@ -1,120 +1,108 @@
 ---
 name: req-1-analyze
-description: 需求分析：将用户的简单描述扩展为完整需求文档
-argument-hint: "[需求简述]"
+description: Requirement analysis — expand brief user input into a complete requirement document
+argument-hint: "[brief description]"
 ---
 
-你负责需求分析阶段。根据用户的简单描述，扩展为完整的需求文档。
+You are responsible for the requirement analysis stage. Expand the user's brief description into a complete requirement document.
 
-## 流程
+## Flow
 
-### 第一步：理解需求
+### Step 1: Understand the Requirement
 
-如果 `$ARGUMENTS` 为空或不明确，**主动引导用户输入**：
-- "你想做什么功能？"
-- "解决什么问题？"
-- "目标用户是谁？"
-- "有没有参考的产品或界面？"
+If `$ARGUMENTS` is empty or unclear, **proactively guide the user**:
+- "What feature do you want to build?"
+- "What problem does it solve?"
+- "Who are the target users?"
+- "Any reference products or interfaces?"
 
-循环提问直到获得足够信息开始分析。
+Keep asking until you have enough information to begin analysis.
 
-如果 `$ARGUMENTS` 已提供需求描述，直接进入扩展分析。
+If `$ARGUMENTS` already provides a description, proceed directly to expansion.
 
-### 第二步：扩展分析
+### Step 2: Expand Analysis
 
-对需求进行**尽可能全面和详细**的扩展，输出以下内容供用户审核：
+Expand the requirement **as comprehensively and in as much detail as possible**, and present the following for user review:
 
-1. **需求背景**：为什么要做这个，解决什么痛点
-2. **目标用户**：谁会用，使用场景是什么
-3. **功能清单**：分条列出所有功能点，每个功能点要细化到具体行为
-   - 主流程是什么
-   - 异常流程怎么处理
-   - 边界情况有哪些
-4. **非功能需求**：性能、安全、兼容性等要求
-5. **边界说明**：明确不做什么
-6. **验收标准**：每个功能点对应的验收条件，要具体可验证
+1. **Background** — Why build this, what pain point does it solve
+2. **Target Users** — Who will use it, usage scenarios
+3. **Functional Requirements** — List all features with numbered IDs, each detailed to specific behavior
+   - Main flow
+   - Error handling
+   - Edge cases
+4. **Non-functional Requirements** — Performance, security, compatibility, etc.
+5. **Out of Scope** — What is explicitly excluded
+6. **Acceptance Criteria** — Specific, verifiable conditions for each feature
 
-格式要求：用简洁的列表形式呈现，功能点要编号（如 F-01、F-02），便于后续追踪。
+Format: Use concise lists. Number features as F-01, F-02, etc. for traceability.
 
-### 第三步：用户审核
+### Step 3: User Review
 
-输出扩展结果后，**必须等待用户反馈**：
-- 用户可能修改、补充、删减
-- 根据用户意见调整，再次提交审核
-- 循环直到用户明确表示"没问题"或"通过"
+After presenting the expansion, **wait for user feedback**:
+- User may modify, add, or remove items
+- Adjust based on feedback and resubmit for review
+- Loop until user explicitly says "looks good" or "approved"
 
-### 第四步：生成需求文档
+### Step 4: Generate Requirement Document
 
-用户确认后：
+After user approval:
 
-1. 确定需求编号：读取 `requirements/index.md`，取下一个编号
-2. 创建目录：`requirements/REQ-xxx-<简称>/`
-3. 编写 `requirement.md`，格式如下：
+1. Determine REQ number: read `requirements/index.md`, take the next number
+2. Create directory: `requirements/REQ-xxx-<short-name>/` (directory name in English)
+3. Write `requirement.md` in the following format:
 
 ```markdown
-# REQ-xxx <需求名称>
+# REQ-xxx <Requirement Name>
 
-> 状态：需求已定稿
-> 创建时间：<当前日期>
-> 最后更新：<当前日期>
+> Status: Requirement Finalized
+> Created: <date>
+> Updated: <date>
 
-## 1. 背景
+## 1. Background
 
-## 2. 目标用户与使用场景
+## 2. Target Users & Scenarios
 
-## 3. 功能需求
+## 3. Functional Requirements
 
-### F-01 <功能点1>
-- 主流程：
-- 异常处理：
-- 边界情况：
+### F-01 <Feature Name>
+- Main flow:
+- Error handling:
+- Edge cases:
 
-### F-02 <功能点2>
+### F-02 <Feature Name>
 ...
 
-## 4. 非功能需求
+## 4. Non-functional Requirements
 
-## 5. 边界说明
+## 5. Out of Scope
 
-## 6. 验收标准
+## 6. Acceptance Criteria
 
-| 编号 | 功能点 | 验收条件 | 预期结果 |
+| ID | Feature | Condition | Expected Result |
 |:---|:---|:---|:---|
 
-## 7. 变更记录
+## 7. Change Log
 
-| 版本 | 日期 | 变更内容 | 变更原因 |
-|:---|:---|:---|:---|
-| v1 | <日期> | 初始版本 | |
+| Version | Date | Changes | Affected Scope | Reason |
+|:---|:---|:---|:---|:---|
+| v1 | <date> | Initial version | ALL | - |
 ```
 
-4. 生成配图（参考 PlantUML 规范）：
-   - 至少包含一张用例图
-   - 复杂流程需要流程图
-   - 涉及多角色交互时需要时序图
+**Note: Section titles and structural fields must be in English. Descriptive content may use Chinese.**
 
-### PlantUML 画图
+Change log format and rules: see `${CLAUDE_SKILL_DIR}/../_shared/changelog.md`. The `Affected Scope` column must be filled accurately.
 
-读取 `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` 获取 PlantUML 规范。
+4. Generate diagrams (per PlantUML conventions):
+   - At least one use case diagram
+   - Flowchart for complex processes
+   - Sequence diagram for multi-role interactions
 
-画图后**必须执行转换和校验**：
-- 运行 `plantuml -tsvg <file>.puml`
-- 验证 SVG 生成成功且无语法错误
-- 如果失败，修复 `.puml` 语法后重试，直到成功
+### PlantUML Diagrams
 
-### 第五步：更新索引
+Read `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` for the complete PlantUML specification (env detection, syntax, SVG conversion). Follow the process strictly.
 
-在 `requirements/index.md` 中添加该需求记录：
+### Step 5: Update Index
 
-```markdown
-| REQ-xxx | <需求名称> | 需求已定稿 | <日期> |
-```
+Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for index.md format and status enum.
 
-如果 `index.md` 不存在，创建它：
-
-```markdown
-# 需求总览
-
-| 编号 | 名称 | 状态 | 更新时间 |
-|:---|:---|:---|:---|
-```
+Add the requirement record to `requirements/index.md` with status `Requirement Finalized`. If `index.md` does not exist, create it per the shared specification.

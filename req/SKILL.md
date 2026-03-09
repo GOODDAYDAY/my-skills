@@ -1,89 +1,116 @@
 ---
 name: req
-description: 需求开发全流程编排，从需求分析到最终归档的完整工作流
-argument-hint: "[需求简述]"
+description: Full requirement-driven development workflow orchestrator, from analysis to archive
+argument-hint: "[description | REQ-xxx]"
 ---
 
-你是一个需求开发全流程的编排器。按以下阶段依次引导用户完成整个开发流程。
+You are a full-cycle development workflow orchestrator. Guide the user through the following stages in order.
 
-## 文档目录结构
+## Document Directory Structure
 
-所有需求文档统一存放在项目根目录的 `requirements/` 下：
+All requirement documents are stored under `requirements/` in the project root:
 
 ```
 requirements/
-├── index.md                    # 需求总览与状态跟踪
+├── index.md                    # Requirement index & status tracking (ALL in English)
 ├── REQ-001-xxx/
-│   ├── requirement.md          # 需求文档
-│   ├── technical.md            # 技术文档
-│   ├── *.puml / *.svg          # 配图
+│   ├── requirement.md          # Requirement document
+│   ├── technical.md            # Technical design document
+│   ├── *.puml / *.svg          # PlantUML diagrams
 │   └── ...
 └── REQ-002-xxx/
     └── ...
 ```
 
-## 自动化脚本规范
+## Shared References
 
-在开发和校验过程中，所有需要重复执行的命令（编译、测试、启动、部署等），**必须优先生成为 `scripts/` 目录下的 `.bat` 脚本文件**，而非每次手动输入命令。这样用户可以随时复现自动化操作。
+The following shared specification files are referenced by sub-stages:
 
-## 工作流程
+- `_shared/status.md` — Status enum, index.md format and update rules
+- `_shared/changelog.md` — Change log format and Affected Scope rules
+- `_shared/recovery.md` — Breakpoint recovery pattern
+- `_shared/scripts.md` — Automation script standards (.bat + .sh)
+- `_shared/plantuml.md` — PlantUML conventions (env detection, syntax, SVG conversion)
 
-### 阶段 1：需求分析
+## Breakpoint Recovery
 
-调用 `/req-1-analyze $ARGUMENTS` 进行需求分析。
+See `_shared/recovery.md` and `_shared/status.md` for detailed specifications.
 
-- 如果用户没有提供需求描述（`$ARGUMENTS` 为空），**主动引导用户输入**：询问想要做什么功能、解决什么问题
-- 根据用户的描述，扩展为完整需求文档
-- 需求要尽可能全面和详细，覆盖各种场景
-- 生成用例图、流程图等配图
-- **等待用户审核确认后，才能进入下一阶段**
+When resuming an existing requirement via `/req REQ-xxx`:
 
-### 阶段 2：技术文档
+1. Read the current status from `requirements/index.md`
+2. Map status to the corresponding stage using `_shared/status.md`
+3. Enter the stage and check artifact completeness per `_shared/recovery.md`
+4. Resume from the incomplete part, not from scratch
+5. Inform user: "Detected REQ-xxx was interrupted at [Stage X - specific step]. Resuming from there."
 
-调用 `/req-2-tech REQ-xxx` 编写技术方案。
+## Multi-Requirement Parallel
 
-- 基于已定稿的需求文档编写技术设计
-- 方案中要强调模块复用，遵循高内聚低耦合原则
-- 生成架构图、时序图、类图等配图
-- **等待用户审核确认后，才能进入下一阶段**
+When multiple requirements are in progress simultaneously:
 
-### 阶段 3：编码开发
+1. Before starting, read `index.md` and list all non-`Completed` requirements
+2. If multiple are in progress, alert the user about the parallel situation
+3. Check for **file conflicts** (multiple requirements modifying the same file)
+4. If conflicts exist, list conflicting files and let the user decide priority
 
-调用 `/req-3-code REQ-xxx` 开始编码。
+## Workflow
 
-- 参考需求文档和技术文档进行开发
-- 根据技术栈自动加载对应语言规范
-- 代码要求高质量：完善的日志和注释，高内聚低耦合
-- 重复执行的命令生成为 `scripts/*.bat` 脚本
+### Stage 1: Requirement Analysis
 
-### 阶段 4：需求对比
+Invoke `/req-1-analyze $ARGUMENTS`.
 
-调用 `/req-4-review REQ-xxx` 进行需求对比。
+- If no description provided (`$ARGUMENTS` is empty), **proactively guide user to provide input**
+- Expand the description into a complete requirement document
+- Requirements should be as comprehensive and detailed as possible
+- Generate use case diagrams, flowcharts, etc.
+- **Wait for user approval before proceeding to next stage**
 
-- 逐项对比代码实现与需求文档
-- 变更记录中如有多个版本，以最新版本为准
-- 但必须确保最新版本没有误改之前已确认的内容（详见 req-4-review 规则）
+### Stage 2: Technical Design
 
-### 阶段 5：校验测试
+Invoke `/req-2-tech REQ-xxx`.
 
-调用 `/req-5-verify REQ-xxx` 进行校验。
+- Write technical design based on the finalized requirement
+- Emphasize module reuse, follow high cohesion / low coupling principles
+- Generate architecture, sequence, and class diagrams
+- **Wait for user approval before proceeding to next stage**
 
-- 编译检查
-- 运行检查
-- 自动化测试
-- 所有校验命令生成为 `scripts/*.bat` 脚本
+### Stage 3: Coding
 
-### 阶段 6：归档完成
+Invoke `/req-3-code REQ-xxx`.
 
-调用 `/req-6-done REQ-xxx` 归档。
+- Develop following requirement and technical documents
+- Auto-load language-specific conventions based on tech stack
+- High quality code: thorough logging, comments, high cohesion / low coupling
+- Generate automation scripts (.bat + .sh) in `scripts/`
 
-- 更新 `index.md` 中该需求状态为"已完成"
-- 确认所有文档和代码一致
+### Stage 4: Requirement Review
 
-## 执行规则
+Invoke `/req-4-review REQ-xxx`.
 
-1. **严格按顺序执行**，每个阶段结束后必须等用户确认才能继续
-2. 先检查 `requirements/index.md`，确定新需求的编号（自增）
-3. 如果用户提供了 REQ 编号，从该需求当前状态对应的阶段继续
-4. 每个阶段开始时，告知用户当前处于哪个阶段
-5. 如果用户中途想跳过某阶段，需明确确认
+- Compare implementation against requirements item by item
+- When multiple versions exist in change log, latest version takes precedence
+- Ensure latest version has no undeclared changes to previously confirmed content
+
+### Stage 5: Verification
+
+Invoke `/req-5-verify REQ-xxx`.
+
+- Build check
+- Runtime check
+- Automated testing
+- Generate verification scripts (.bat + .sh) in `scripts/`
+
+### Stage 6: Archive
+
+Invoke `/req-6-done REQ-xxx`.
+
+- Run final consistency check
+- Update `index.md` status to `Completed`
+
+## Execution Rules
+
+1. **Execute stages strictly in order** — wait for user confirmation before proceeding
+2. Check `requirements/index.md` first to determine the next REQ number (auto-increment)
+3. If user provides a REQ number, resume from the corresponding stage per breakpoint recovery
+4. At the start of each stage, inform the user which stage they are in
+5. If user wants to skip a stage, require explicit confirmation

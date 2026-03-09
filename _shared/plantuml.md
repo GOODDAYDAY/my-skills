@@ -1,75 +1,107 @@
-# PlantUML 画图规范
+# PlantUML Diagram Conventions
 
-## 使用流程
+## Language Requirement
 
-1. 在需求/技术文档同目录下创建 `.puml` 文件
-2. 使用标准 PlantUML 语法编写
-3. 执行转换命令生成 SVG
-4. **必须验证转换成功**，失败则修复语法后重试
+**All text content in diagrams must be in English**, including actor names, participant names, class names, method names, labels, and notes. Chinese is prohibited in `.puml` files.
 
-## 转换与校验
+## Environment Detection
+
+**PlantUML environment must be checked before generating any diagrams.** Try in order:
 
 ```bash
-# 转换单个文件
+# Method 1: direct command
+plantuml -version 2>/dev/null
+
+# Method 2: via Java
+java -jar plantuml.jar -version 2>/dev/null
+
+# Method 3: Windows
+where plantuml 2>nul || java -jar plantuml.jar -version 2>nul
+```
+
+If all fail, **stop the diagram workflow** and provide installation instructions:
+
+```
+PlantUML not installed. Please install first:
+
+1. Install Java (JDK 8+): https://adoptium.net/
+2. Install PlantUML:
+   - Windows: choco install plantuml
+   - macOS:   brew install plantuml
+   - Linux:   apt install plantuml
+3. Verify: plantuml -version
+```
+
+## Workflow
+
+1. Create `.puml` files in the same directory as the requirement/technical document
+2. Write using standard PlantUML syntax (all English)
+3. Convert to SVG
+4. **Must verify conversion succeeded** — fix syntax and retry on failure
+
+## Conversion & Validation
+
+```bash
+# Convert single file
 plantuml -tsvg <file>.puml
 
-# 转换目录下所有 puml 文件
+# Convert all puml files in directory
 plantuml -tsvg *.puml
 ```
 
-校验规则：
-- 转换命令退出码必须为 0
-- 必须生成对应的 `.svg` 文件
-- SVG 文件大小必须 > 0
-- SVG 内容中不能包含 `Syntax Error`（PlantUML 语法错误时会生成带错误信息的图片）
+Validation rules:
+- Exit code must be 0
+- Corresponding `.svg` file must be generated
+- SVG file size must be > 0
+- SVG content must not contain `Syntax Error` (PlantUML generates an error image on syntax errors)
 
-校验脚本：
+Validation script:
 
 ```bash
-# 校验单个文件
 plantuml -tsvg "$FILE" 2>&1
 EXIT_CODE=$?
 SVG_FILE="${FILE%.puml}.svg"
 if [ $EXIT_CODE -ne 0 ] || [ ! -s "$SVG_FILE" ] || grep -q "Syntax Error" "$SVG_FILE"; then
   echo "FAILED: $FILE"
-  # 需要修复语法后重试
+  # Fix syntax and retry
 else
   echo "OK: $SVG_FILE"
 fi
 ```
 
-## 语法要点
+## Syntax Guidelines
 
-### 通用规则
-- 文件必须以 `@startuml` 开头，`@enduml` 结尾
-- 使用 UTF-8 编码，中文直接写即可
-- 避免使用非标准扩展语法
+### General Rules
+- Files must start with `@startuml` and end with `@enduml`
+- Use UTF-8 encoding
+- **All text content in English**
+- Avoid non-standard extension syntax
 
-### 常用图类型
+### Common Diagram Types
 
-**用例图：**
+**Use Case Diagram:**
 ```plantuml
 @startuml
-actor 用户
-用户 --> (登录)
-用户 --> (查看数据)
+actor User
+User --> (Login)
+User --> (View Data)
 @enduml
 ```
 
-**时序图：**
+**Sequence Diagram:**
 ```plantuml
 @startuml
-participant 客户端
-participant 服务端
-participant 数据库
-客户端 -> 服务端: 请求数据
-服务端 -> 数据库: 查询
-数据库 --> 服务端: 返回结果
-服务端 --> 客户端: 响应
+participant Client
+participant Server
+participant Database
+Client -> Server: Request data
+Server -> Database: Query
+Database --> Server: Return result
+Server --> Client: Response
 @enduml
 ```
 
-**类图：**
+**Class Diagram:**
 ```plantuml
 @startuml
 class User {
@@ -85,32 +117,32 @@ User "1" -- "*" Order
 @enduml
 ```
 
-**流程图（Activity）：**
+**Activity Diagram (Flowchart):**
 ```plantuml
 @startuml
 start
-:接收请求;
-if (参数合法?) then (是)
-  :处理业务逻辑;
-  :返回成功;
-else (否)
-  :返回错误;
+:Receive request;
+if (Valid parameters?) then (yes)
+  :Process business logic;
+  :Return success;
+else (no)
+  :Return error;
 endif
 stop
 @enduml
 ```
 
-**组件图：**
+**Component Diagram:**
 ```plantuml
 @startuml
-package "前端" {
+package "Frontend" {
   [Web App]
 }
-package "后端" {
+package "Backend" {
   [API Server]
   [Worker]
 }
-database "数据库" {
+database "Database" {
   [MySQL]
 }
 [Web App] --> [API Server]
@@ -119,7 +151,7 @@ database "数据库" {
 @enduml
 ```
 
-## 文件命名
+## File Naming
 
-- 需求文档配图：`req-用例图.puml`、`req-流程图.puml`
-- 技术文档配图：`tech-架构图.puml`、`tech-时序图.puml`、`tech-类图.puml`
+- Requirement diagrams: `req-usecase.puml`, `req-flow.puml`
+- Technical diagrams: `tech-architecture.puml`, `tech-sequence.puml`, `tech-class.puml`

@@ -1,62 +1,76 @@
 ---
 name: req-3-code
-description: 编码开发：参考需求和技术文档进行编码
+description: Coding — develop following requirement and technical documents
 argument-hint: "[REQ-xxx]"
 ---
 
-你负责编码开发阶段。严格参考需求文档和技术文档进行开发。
+You are responsible for the coding stage. Develop strictly following the requirement and technical documents.
 
-## 前置条件
+## Prerequisites
 
-- `$ARGUMENTS` 传入 REQ 编号
-- 对应的 `requirement.md` 和 `technical.md` 必须存在且已定稿
-- 如果不满足，提示用户先完成前置阶段
+- `$ARGUMENTS` provides a REQ number
+- The corresponding `requirement.md` and `technical.md` must exist and be finalized
+- If not met, prompt the user to complete prerequisite stages first
 
-## 流程
+## Breakpoint Recovery
 
-### 第一步：阅读文档
+Read `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` for recovery specifications.
 
-1. 读取 `requirements/REQ-xxx-*/requirement.md` — 明确做什么
-2. 读取 `requirements/REQ-xxx-*/technical.md` — 明确怎么做
+When entering the coding stage, check current code status:
 
-### 第二步：加载语言规范
+1. Read the module list from `technical.md`
+2. Check whether code files exist for each module
+3. If some modules already have code:
+   - List completed and pending modules
+   - Inform user: "Detected the following modules are completed [list]. Resuming from [Module X]."
+   - Continue from pending modules, do not rewrite existing code
 
-根据 `technical.md` 中的技术选型，检查 `${CLAUDE_SKILL_DIR}/` 下是否有对应的语言规范文件：
+## Flow
 
-- Python → 读取 `${CLAUDE_SKILL_DIR}/python.md`
-- Java → 读取 `${CLAUDE_SKILL_DIR}/java.md`
-- 其他 → 如果存在同名 `.md` 则加载，否则使用通用最佳实践
+### Step 1: Read Documents
 
-### 第三步：编码
+1. Read `requirements/REQ-xxx-*/requirement.md` — understand what to build
+2. Read `requirements/REQ-xxx-*/technical.md` — understand how to build it
 
-按照技术文档的模块划分，逐模块开发：
+### Step 2: Load Language Conventions
 
-1. 先搭建项目结构（如果是新项目）
-2. **项目结构规则**：源码不允许直接放在项目根目录的 `src/` 下，必须按模块划分子层目录，如 `backend/`、`frontend/`、`app/`、`shared/` 等，`src/` 只能出现在子层内部
-3. 按模块顺序实现功能
-4. 每完成一个模块，简要告知用户进度
-5. 代码中关键逻辑需要与需求/技术文档对应
+Based on the technology stack in `technical.md`, check `${CLAUDE_SKILL_DIR}/` for the corresponding language convention file:
 
-### 代码质量要求
+- Python → read `${CLAUDE_SKILL_DIR}/python.md`
+- Java → read `${CLAUDE_SKILL_DIR}/java.md`
+- Others → load matching `.md` if exists, otherwise use general best practices
 
-- **高内聚低耦合**：模块职责单一，模块间通过清晰接口通信，避免紧耦合
-- **复用**：公共逻辑提取为独立模块，避免重复代码
-- **日志**：关键操作、异常分支、外部调用必须有日志输出，日志内容用英文
-- **注释**：复杂逻辑、业务规则、非直觉代码必须有注释说明意图
-- **代码语言**：变量名、函数名、注释、日志信息、commit message 均使用英文
-- **中文仅用于**：用户可见的 UI 文案（如需要）
+### Step 3: Code
 
-### 第四步：生成自动化脚本
+Develop module by module following the technical document's module breakdown:
 
-将开发过程中需要重复执行的命令生成为 `scripts/` 目录下的 `.bat` 文件：
+1. Set up project structure first (if new project)
+2. **Project structure rule**: source code must NOT be placed directly under project root `src/`. Must be organized in sub-layer directories like `backend/`, `frontend/`, `app/`, `shared/`, etc. `src/` may only appear inside sub-layers
+3. Implement features in module order
+4. Briefly inform user of progress after completing each module
+5. Key logic in code must correspond to requirement/technical documents
 
-- `scripts/build.bat` — 编译/构建
-- `scripts/run.bat` — 启动运行
-- `scripts/test.bat` — 运行测试
-- 其他按需生成
+### Code Quality Requirements
 
-脚本内容要包含必要的注释，说明用途和前置条件。
+- **High cohesion, low coupling**: single responsibility per module, communicate via clear interfaces, avoid tight coupling
+- **Reuse**: extract shared logic into independent modules, avoid code duplication
+- **Logging**: key operations, exception branches, external calls must have log output; log messages in English
+- **Comments**: complex logic, business rules, non-obvious code must have comments explaining intent
+- **Code language**: variable names, function names, comments, log messages, commit messages must all be in English
+- **Chinese only for**: user-facing UI text (if needed)
 
-### 第五步：更新状态
+### Step 4: Generate Automation Scripts
 
-编码完成后，更新 `requirements/index.md` 中状态为"开发完成"。
+Read `${CLAUDE_SKILL_DIR}/../_shared/scripts.md` for script specifications.
+
+Generate automation scripts in `scripts/` (.bat + .sh), strictly following the shared script specifications.
+
+At minimum:
+- `scripts/build.bat` + `scripts/build.sh` — build/compile
+- `scripts/run.bat` + `scripts/run.sh` — start/run
+- `scripts/test.bat` + `scripts/test.sh` — run tests
+- Additional as needed
+
+### Step 5: Update Status
+
+Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Development Done`.
