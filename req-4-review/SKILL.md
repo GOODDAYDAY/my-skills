@@ -1,85 +1,92 @@
 ---
 name: req-4-review
-description: 需求对比：逐项检查代码实现是否满足需求文档
+description: Requirement review — compare implementation against requirement document item by item
 argument-hint: "[REQ-xxx]"
 ---
 
-你负责需求对比审查阶段。逐项检查代码实现是否满足需求文档。
+You are responsible for the requirement review stage. Check whether the code implementation satisfies the requirement document item by item.
 
-## 前置条件
+## Prerequisites
 
-- `$ARGUMENTS` 传入 REQ 编号
-- 对应的需求文档、技术文档和代码都已就绪
+- `$ARGUMENTS` provides a REQ number
+- The corresponding requirement document, technical document, and code must all be ready
 
-## 流程
+## Flow
 
-### 第一步：加载文档
+### Step 1: Load Documents
 
-1. 读取 `requirements/REQ-xxx-*/requirement.md`
-2. 读取 `requirements/REQ-xxx-*/technical.md`
-3. 特别关注变更记录，理解每个版本的变更内容
+1. Read `requirements/REQ-xxx-*/requirement.md`
+2. Read `requirements/REQ-xxx-*/technical.md`
+3. Read `${CLAUDE_SKILL_DIR}/../_shared/changelog.md` for change log specifications
+4. Pay special attention to the Change Log — understand each version's changes and **Affected Scope**
 
-### 第二步：逐项对比
+### Step 2: Item-by-Item Comparison
 
-针对需求文档中的**每一条功能需求**和**每一条验收标准**：
+For **every functional requirement** and **every acceptance criterion** in the requirement document:
 
-1. 找到对应的代码实现
-2. 判断是否满足
-3. 输出对比结果表格：
+1. Find the corresponding code implementation
+2. Determine whether it is satisfied
+3. Output comparison result table:
 
 ```markdown
-| 需求项 | 状态 | 对应代码 | 备注 |
+| Requirement | Status | Code Location | Notes |
 |:---|:---|:---|:---|
-| F-01 功能点1 | 已实现 | src/xxx.py:L20 | |
-| F-02 功能点2 | 部分实现 | src/yyy.py:L45 | 缺少边界处理 |
-| F-03 功能点3 | 未实现 | - | 需要补充 |
+| F-01 Feature 1 | Implemented | src/xxx.py:L20 | |
+| F-02 Feature 2 | Partial | src/yyy.py:L45 | Missing edge case handling |
+| F-03 Feature 3 | Not implemented | - | Needs development |
 ```
 
-### 第三步：变更记录合规性检查
+### Step 3: Change Log Compliance Check
 
-这是本阶段的**核心规则**，必须严格执行：
+This is the **core rule** of this stage and must be strictly enforced.
 
-#### 版本生效原则
+#### Version Precedence Principle
 
-需求文档的变更记录中有多个版本时，**以最新版本（最大序号）为准**。例如：
-- v1 定义了功能 A
-- v2 新增了功能 B
-- v3 修改了功能 A 的行为
+When multiple versions exist in the change log, **the latest version (highest number) takes precedence**. For example:
+- v1 defined feature A
+- v2 added feature B
+- v3 modified feature A's behavior
 
-则代码应按 v3 的功能 A 描述 + v2 的功能 B 来实现。
+Code should implement v3's feature A description + v2's feature B.
 
-#### 误改检测规则
+#### Structured Mismod Detection
 
-**每个版本的变更只能影响其声明变更的内容，不能影响未声明变更的内容。**
+Use the **`Affected Scope`** column in the change log for precise detection:
 
-检查方法：
-1. 逐版本读取变更记录，明确每个版本**声明变更了什么**
-2. 对比相邻版本的完整文档内容
-3. 如果某个版本的文档中，**未在变更记录中声明的内容发生了变化**，则判定为**误改**
+1. Read change log version by version
+2. Check the `Affected Scope` column for each version's declared scope (e.g., F-01, F-03)
+3. Compare full document content between adjacent versions
+4. **If a feature changed but is NOT in that version's `Affected Scope`, classify it as a mismod (undeclared change)**
 
-示例：
-- v1：功能 A = 行为X，功能 B = 行为Y
-- v2 变更记录写"新增功能 C"，但实际文档中功能 B 从行为Y变成了行为Z
-- **这是误改**：v2 声明只新增了 C，但实际偷改了 B
-
-发现误改时：
-1. 明确标出误改的内容
-2. **以误改前的版本为准**（即功能 B 仍然是行为Y）
-3. 报告给用户，建议修正需求文档的变更记录
-
-#### 输出变更合规报告
+Example:
 
 ```markdown
-## 变更合规检查
-
-| 版本 | 声明变更 | 实际变更 | 是否合规 | 备注 |
+| Version | Date | Changes | Affected Scope | Reason |
 |:---|:---|:---|:---|:---|
-| v1 | 初始版本 | - | 合规 | |
-| v2 | 新增功能C | 新增功能C + 修改功能B | 不合规 | 功能B被误改 |
+| v1 | 2024-01-01 | Initial version | ALL | - |
+| v2 | 2024-01-15 | Add feature C | F-03 | New requirement |
 ```
 
-### 第四步：输出结论
+If F-02's content in v2 differs from v1, but `Affected Scope` only declares F-03 → **mismod detected**.
 
-- 如果全部满足且无误改 → 告知用户可以进入校验阶段
-- 如果有未实现/部分实现 → 列出需要补充的内容，等待用户决定
-- 如果发现误改 → 必须先解决误改问题，用户确认后再继续
+When a mismod is found:
+1. Clearly identify the mismod content and affected features
+2. **Use the pre-mismod version as authoritative** (i.e., F-02 follows v1's description)
+3. Report to user, suggest using `/req-amend` for a formal change process
+
+#### Output Compliance Report
+
+```markdown
+## Change Log Compliance Report
+
+| Version | Declared Scope | Actual Changes | Compliant | Notes |
+|:---|:---|:---|:---|:---|
+| v1 | ALL | - | Yes | |
+| v2 | F-03 | F-02 modified, F-03 added | No | F-02 undeclared change |
+```
+
+### Step 4: Output Conclusion
+
+- If all satisfied and no mismods → inform user they can proceed to verification stage
+- If items are not implemented / partially implemented → list what needs to be done, wait for user decision
+- If mismods found → must resolve mismod issues first, proceed only after user confirmation
