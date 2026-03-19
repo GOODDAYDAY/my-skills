@@ -91,18 +91,28 @@ Invoke `/req-4-review REQ-xxx`.
 - When multiple versions exist in change log, latest version takes precedence
 - Ensure latest version has no undeclared changes to previously confirmed content
 
-### Stage 5: Verification
+### Stage 5: Code Cleanup
 
-Invoke `/req-5-verify REQ-xxx`.
+Invoke `/req-5-cleanup REQ-xxx`.
+
+- Detect unused code, dead code, redundant logic
+- Merge duplicate code into shared utilities
+- Optimize cohesion and coupling
+- **Never alter business logic** — purely structural optimization
+- Present findings to user for approval before applying changes
+
+### Stage 6: Verification
+
+Invoke `/req-6-verify REQ-xxx`.
 
 - Build check
 - Runtime check
 - Automated testing
 - Generate verification scripts (.bat + .sh) in `scripts/`
 
-### Stage 6: Archive
+### Stage 7: Archive
 
-Invoke `/req-6-done REQ-xxx`.
+Invoke `/req-7-done REQ-xxx`.
 
 - Run final consistency check
 - Update `index.md` status to `Completed`

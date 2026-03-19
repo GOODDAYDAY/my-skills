@@ -87,6 +87,6 @@ When a mismod is found:
 
 ### Step 4: Output Conclusion
 
-- If all satisfied and no mismods → inform user they can proceed to verification stage
+- If all satisfied and no mismods → update `requirements/index.md` status to `Reviewed` (see `${CLAUDE_SKILL_DIR}/../_shared/status.md`), inform user they can proceed to code cleanup stage
 - If items are not implemented / partially implemented → list what needs to be done, wait for user decision
 - If mismods found → must resolve mismod issues first, proceed only after user confirmation
