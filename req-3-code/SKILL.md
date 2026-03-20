@@ -53,7 +53,13 @@ Develop module by module following the technical document's module breakdown:
 ### Code Quality Requirements
 
 - **High cohesion, low coupling**: single responsibility per module, communicate via clear interfaces, avoid tight coupling
-- **Reuse**: extract shared logic into independent modules, avoid code duplication
+- **Proactive common code extraction (mandatory)**: during coding, you must actively identify and extract shared logic — do NOT wait for the cleanup stage. Rules:
+  - **2-occurrence rule**: if the same logic appears (or is about to appear) in 2+ places, immediately extract it into a shared utility
+  - **Where to place**: `utils/`, `common/`, `shared/`, or the language-idiomatic equivalent (Java: `{domain}-common` module; Python: `utils/` or `common/` package)
+  - **What qualifies**: data format conversion, validation patterns, string/date manipulation, logging helpers, retry/backoff wrappers, config parsing, common business calculations
+  - **Naming**: utility functions/classes must have clear, descriptive names — `DateRangeValidator`, `format_currency()`, not `Helper1` or `do_stuff()`
+  - **Interface over implementation**: shared code should expose a clean function/method signature; callers should not need to know internal details
+  - **Do NOT over-abstract**: only extract when there is actual duplication or near-certain reuse. One-time logic stays inline
 - **Logging**: key operations, exception branches, external calls must have log output; log messages in English
 - **Comments**: complex logic, business rules, non-obvious code must have comments explaining intent
 - **Code language**: variable names, function names, comments, log messages, commit messages must all be in English
@@ -70,9 +76,11 @@ A public method should read like a business flowchart. Its body contains only a 
 #### Rules
 
 1. **Public methods only orchestrate** — the body is a sequence of private/helper method calls and simple variable passing. No procedural logic (conditionals, loops, try-catch, long expressions) in the public method body
-2. **Private methods are atomic steps** — each does one thing; the method name is the documentation
-3. **Recursive layering** — this pattern applies at every level: service calls service, each one's public method is a "table of contents", private methods are "chapters". Drill down layer by layer, each level is self-explanatory
-4. **When in doubt, extract** — if a block of code needs a comment to explain what it does, extract it into a private method whose name replaces the comment
+2. **Numbered step comments in public methods** — every line in the public method body must have a numbered comment (`// 1. ...`, `// 2. ...`) describing the business step. The public method is a numbered flowchart, not just code
+3. **Private methods are atomic steps** — each does one thing; the method name is the documentation
+4. **Sufficient logging in private methods** — every private method must log at entry or key outcome. Use `info` for key milestones, `debug` for intermediate values. The goal: by reading logs alone, you can reconstruct the full business flow without looking at code
+5. **Recursive layering** — this pattern applies at every level: service calls service, each one's public method is a "table of contents", private methods are "chapters". Drill down layer by layer, each level is self-explanatory
+6. **When in doubt, extract** — if a block of code needs a comment to explain what it does, extract it into a private method whose name replaces the comment
 
 #### Naming Convention for Private Methods
 
@@ -101,13 +109,19 @@ def do_action(self, data):
     self.event_bus.publish("created", record_id)
     return {"id": record_id, "email": data.email}
 
-# ✓ Correct: public method reads like a business flow
+# ✓ Correct: public method is a numbered flowchart
 def do_action(self, data):
+    # 1. Validate email format and presence
     self._validate_email(data.email)
+    # 2. Check for duplicate records
     self._ensure_no_duplicate(data.email)
+    # 3. Fill in default values and derived fields
     enriched = self._enrich_with_defaults(data)
+    # 4. Persist to database
     record_id = self._persist_to_database(enriched)
+    # 5. Publish creation event to downstream
     self._notify_created(record_id)
+    # 6. Build and return result
     return self._build_result(record_id, enriched)
 ```
 
