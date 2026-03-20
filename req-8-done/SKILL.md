@@ -1,5 +1,5 @@
 ---
-name: req-7-done
+name: req-8-done
 description: Archive — final consistency check, update document status, mark requirement as completed
 argument-hint: "[REQ-xxx]"
 ---

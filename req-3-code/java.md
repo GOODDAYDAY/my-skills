@@ -4,7 +4,6 @@
 
 ### 1.1 Three POM Roles
 
-| Role | packaging | Purpose | Example |
 |------|-----------|---------|---------|
 | **Root POM (Global Manager)** | `pom` | Unified versioning, dependency management, global plugins | `parent/pom.xml` |
 | **Aggregator POM (Domain Entry)** | `pom` | Groups all sub-modules of a business domain | `{domain}/pom.xml` |

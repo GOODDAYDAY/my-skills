@@ -9,10 +9,11 @@ All statuses used in `requirements/index.md`, `requirement.md`, and `technical.m
 | `Technical Design` | Technical design in progress | → req-2-tech |
 | `Technical Finalized` | Technical design approved | → req-3-code |
 | `In Development` | Coding in progress | → req-3-code |
-| `Development Done` | Coding completed | → req-4-review |
-| `Reviewed` | Requirement review passed | → req-5-cleanup |
-| `Code Cleaned` | Code cleanup completed | → req-6-verify |
-| `In Verification` | Verification in progress | → req-6-verify |
+| `Development Done` | Coding completed | → req-4-security |
+| `Security Reviewed` | Security review passed | → req-5-cleanup |
+| `Code Cleaned` | Code cleanup completed | → req-6-review |
+| `Reviewed` | Requirement review passed | → req-7-verify |
+| `In Verification` | Verification in progress | → req-7-verify |
 | `Completed` | All done | - |
 
 ## index.md Format

@@ -1,5 +1,5 @@
 ---
-name: req-6-verify
+name: req-7-verify
 description: Verification — build check, runtime check, and automated testing
 argument-hint: "[REQ-xxx]"
 ---

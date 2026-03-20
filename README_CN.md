@@ -28,7 +28,7 @@ git submodule update --remote .claude/skills
 
 安装后，所有 skill 会被 Claude Code 自动发现为斜杠命令。
 
-核心工作流是 `/req`，编排完整的开发周期，共 7 个阶段：
+核心工作流是 `/req`，编排完整的开发周期，共 8 个阶段：
 
 ```
 /req "功能描述"
@@ -39,13 +39,15 @@ git submodule update --remote .claude/skills
   │    ↓（需要用户确认）
   ├─ 阶段 3：编码开发 ──────→ 源代码 + scripts/
   │    ↓
-  ├─ 阶段 4：需求对比 ──────→ 合规检查报告
+  ├─ 阶段 4：安全审查 ──────→ 漏洞扫描 + 修复
   │    ↓
   ├─ 阶段 5：代码精简 ──────→ 结构优化（不改业务逻辑）
   │    ↓
-  ├─ 阶段 6：校验测试 ──────→ 编译 / 运行 / 测试
+  ├─ 阶段 6：需求对比 ──────→ 合规检查报告
   │    ↓
-  └─ 阶段 7：归档完成 ──────→ 一致性检查 + 标记完成
+  ├─ 阶段 7：校验测试 ──────→ 编译 / 运行 / 测试
+  │    ↓
+  └─ 阶段 8：归档完成 ──────→ 一致性检查 + 标记完成
 ```
 
 每个阶段等待用户确认后才进入下一阶段。也可以单独运行任意阶段。
@@ -56,14 +58,15 @@ git submodule update --remote .claude/skills
 
 | 命令 | 说明 |
 |:---|:---|
-| `/req [描述]` | 全流程编排入口，引导走完 7 个阶段 |
+| `/req [描述]` | 全流程编排入口，引导走完 8 个阶段 |
 | `/req-1-analyze [描述]` | 需求分析——将简单描述扩展为完整需求文档 |
 | `/req-2-tech [REQ-xxx]` | 技术设计——架构、模块、接口、配图 |
 | `/req-3-code [REQ-xxx]` | 编码开发——自动加载对应语言规范 |
-| `/req-4-review [REQ-xxx]` | 需求对比——逐项检查实现是否满足需求 |
+| `/req-4-security [REQ-xxx]` | 安全审查——漏洞扫描，严重/高风险直接修复 |
 | `/req-5-cleanup [REQ-xxx]` | 代码精简——删除无用代码、合并重复逻辑（不改业务逻辑） |
-| `/req-6-verify [REQ-xxx]` | 校验测试——编译、运行、测试（Web 项目含 Playwright 端到端测试） |
-| `/req-7-done [REQ-xxx]` | 归档——一致性检查 + 标记为已完成 |
+| `/req-6-review [REQ-xxx]` | 需求对比——逐项检查实现是否满足需求 |
+| `/req-7-verify [REQ-xxx]` | 校验测试——编译、运行、测试（Web 项目含 Playwright 端到端测试） |
+| `/req-8-done [REQ-xxx]` | 归档——一致性检查 + 标记为已完成 |
 | `/req-status [REQ-xxx\|all]` | 状态查询——快速查看单个或全部需求状态 |
 | `/req-amend [REQ-xxx]` | 需求变更——正式变更流程，避免误改 |
 | `/create-skill [name]` | 创建新 skill 的标准指南 |
@@ -97,10 +100,11 @@ my-skills/
 │   ├── SKILL.md
 │   ├── python.md                    # Python 开发规范
 │   └── java.md                      # Java 开发规范
-├── req-4-review/SKILL.md            # 需求对比
+├── req-4-security/SKILL.md           # 安全审查
 ├── req-5-cleanup/SKILL.md           # 代码精简（不改业务逻辑）
-├── req-6-verify/SKILL.md            # 校验测试
-├── req-7-done/SKILL.md              # 归档 + 一致性检查
+├── req-6-review/SKILL.md            # 需求对比
+├── req-7-verify/SKILL.md            # 校验测试
+├── req-8-done/SKILL.md              # 归档 + 一致性检查
 ├── req-status/SKILL.md              # 状态查询
 └── req-amend/SKILL.md               # 需求变更流程
 ```
