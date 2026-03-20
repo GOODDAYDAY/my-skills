@@ -16,7 +16,7 @@ All `requirement.md` and `technical.md` files must include a Change Log section 
 
 ### Affected Scope Column
 
-**This column is mandatory and must be filled accurately.** It is the basis for automated mismod detection in the review stage (`req-4-review`).
+**This column is mandatory and must be filled accurately.** It is the basis for automated mismod detection in the review stage (`req-6-review`).
 
 - For `requirement.md`: fill in affected feature IDs, e.g. `F-01, F-03`
 - For `technical.md`: fill in affected section/module IDs, e.g. `Module 4.1, API 6.2`

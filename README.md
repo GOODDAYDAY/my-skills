@@ -28,7 +28,7 @@ git submodule update --remote .claude/skills
 
 Once installed, all skills are auto-discovered by Claude Code as slash commands.
 
-The core workflow is `/req`, which orchestrates a full development cycle in 7 stages:
+The core workflow is `/req`, which orchestrates a full development cycle in 8 stages:
 
 ```
 /req "feature description"
@@ -39,13 +39,15 @@ The core workflow is `/req`, which orchestrates a full development cycle in 7 st
   │    ↓ (user approval required)
   ├─ Stage 3: Coding ────────────────→ source code + scripts/
   │    ↓
-  ├─ Stage 4: Requirement Review ────→ compliance check report
+  ├─ Stage 4: Security Review ──────→ vulnerability scan + fix
   │    ↓
   ├─ Stage 5: Code Cleanup ─────────→ structural optimization (no behavior changes)
   │    ↓
-  ├─ Stage 6: Verification ─────────→ build / run / test
+  ├─ Stage 6: Requirement Review ────→ compliance check report
   │    ↓
-  └─ Stage 7: Archive ──────────────→ consistency check + mark completed
+  ├─ Stage 7: Verification ─────────→ build / run / test
+  │    ↓
+  └─ Stage 8: Archive ──────────────→ consistency check + mark completed
 ```
 
 Each stage waits for user confirmation before proceeding. You can also run any stage independently.
@@ -56,14 +58,15 @@ Supports **checkpoint recovery** — if interrupted mid-stage, `/req REQ-xxx` de
 
 | Command | Description |
 |:---|:---|
-| `/req [description]` | Full workflow orchestrator — guides through all 7 stages |
+| `/req [description]` | Full workflow orchestrator — guides through all 8 stages |
 | `/req-1-analyze [description]` | Requirement analysis — expand brief input into detailed requirement doc |
 | `/req-2-tech [REQ-xxx]` | Technical design — architecture, modules, API, diagrams |
 | `/req-3-code [REQ-xxx]` | Coding — develop with language-specific conventions |
-| `/req-4-review [REQ-xxx]` | Requirement review — compare implementation against requirements |
+| `/req-4-security [REQ-xxx]` | Security review — vulnerability scan, fix critical/high issues |
 | `/req-5-cleanup [REQ-xxx]` | Code cleanup — remove unused code, merge duplicates (no behavior changes) |
-| `/req-6-verify [REQ-xxx]` | Verification — build, run, and test (including Playwright e2e for web) |
-| `/req-7-done [REQ-xxx]` | Archive — consistency check + mark as completed |
+| `/req-6-review [REQ-xxx]` | Requirement review — compare implementation against requirements |
+| `/req-7-verify [REQ-xxx]` | Verification — build, run, and test (including Playwright e2e for web) |
+| `/req-8-done [REQ-xxx]` | Archive — consistency check + mark as completed |
 | `/req-status [REQ-xxx\|all]` | Quick status check — view one or all requirements |
 | `/req-amend [REQ-xxx]` | Formal change process — safely amend finalized documents |
 | `/create-skill [name]` | Guide for creating new skills |
@@ -97,10 +100,11 @@ my-skills/
 │   ├── SKILL.md
 │   ├── python.md                    # Python conventions
 │   └── java.md                      # Java conventions
-├── req-4-review/SKILL.md            # Requirement review
+├── req-4-security/SKILL.md           # Security review
 ├── req-5-cleanup/SKILL.md           # Code cleanup (no behavior changes)
-├── req-6-verify/SKILL.md            # Verification & testing
-├── req-7-done/SKILL.md              # Archive + consistency check
+├── req-6-review/SKILL.md            # Requirement review
+├── req-7-verify/SKILL.md            # Verification & testing
+├── req-8-done/SKILL.md              # Archive + consistency check
 ├── req-status/SKILL.md              # Status query
 └── req-amend/SKILL.md               # Formal change process
 ```

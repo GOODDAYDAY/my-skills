@@ -22,7 +22,7 @@ When resuming a previously interrupted requirement, follow this pattern to avoid
 - List completed vs pending modules
 - Resume from the first pending module
 
-### req-6-verify (Verification)
+### req-7-verify (Verification)
 - Check if `scripts/` directory and scripts exist
 - Check if test files exist
 - If scripts exist: run them to see current pass/fail status
