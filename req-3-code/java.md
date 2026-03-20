@@ -339,17 +339,30 @@ public class ApiResult<T> implements Serializable {
 ### 4.1 Controller Template
 
 ```java
+/**
+ * Xxx controller.
+ *
+ * @author NoteFlow
+ * @version 1.0, 2026/3/20
+ * @since 1.0.0
+ */
 @RestController
 @RequestMapping("/api/{domain}")
-@RequiredArgsConstructor          // ← Constructor injection via final fields
+@RequiredArgsConstructor
 public class XxxController {
 
-    private final IXxxBizService xxxBizService;  // ← Only inject Biz layer interfaces
+    private final IXxxBizService xxxBizService;
 
     @Autowired
     @Lazy
-    private Executor bizThreadPool;              // ← Business thread pool
+    private Executor bizThreadPool;
 
+    /**
+     * Execute the action.
+     *
+     * @param request action request containing field1 and field2
+     * @return action response with saved ID
+     */
     @PostMapping("/action")
     public CompletionStage<ApiResult<XxxResponse>> action(
             @Valid @RequestBody XxxRequest request) {
@@ -381,20 +394,44 @@ public class XxxController {
 4. **Delegate validation to the framework** — `@Valid` + Jakarta Validation annotations on Request DTOs
 5. **Never handle exceptions** — Exceptions are caught globally by `@RestControllerAdvice`
 6. **Own the Request ↔ DTO ↔ Response conversion** — Controller is the translation layer between api and biz; Request/Response never penetrate into the Biz layer
+7. **Comment conventions**:
+    - **Class JavaDoc**: brief description of the Controller's responsibility. Must include `@author`, `@version` (format `X.Y, YYYY/M/D`), `@since`
+    - **Method JavaDoc**: every endpoint must have JavaDoc explaining the API's purpose, `@param` for each parameter, `@return` for the return value
+    - **No `@throws` needed**: exceptions are handled by the global exception handler, not by the Controller
 
 ---
 
 ## 5. Biz Layer Coding Standard
 
-### 5.1 Core Philosophy: Methods as Documentation
+### 5.1 Core Philosophy: Method Names + Comments + Logging — Trinity
 
-The essence of the Biz layer is **orchestration** — a public method calls a sequence of steps, where each step is a semantically clear private method. **Reading the public method should feel like reading a business flowchart — no comments needed to understand what the business is doing.**
+The essence of the Biz layer is **orchestration** — a public method calls a sequence of steps, where each step is a semantically clear private method. Method names are the best form of self-documentation, but **self-documenting names ≠ no comments, no logs**. All three serve different audiences and are equally mandatory:
 
-This principle applies recursively downward from the Biz layer: Biz calls Biz, Biz calls Service, Service internals — every layer should decompose complex logic into a set of clearly-named private methods. The end result: **anyone opening any method sees a sequence of method calls, not a block of procedural code. Want details? Click into a method. Don't care? Skip it. Drill down layer by layer, each level is crystal clear.**
+1. **Method names (for developers reading code structure)** — describe the business step "what", e.g. `findActiveUserByEmail`, `verifyCodeHashOrFail`
+2. **Comments (for developers reading business context)** — explain "why" and business rules, with numbered steps in public methods to form a readable flow checklist
+   - Public methods: numbered step comments (`// 1.`, `// 2.`) forming a business flowchart
+   - Private methods: explain non-obvious business rules, edge cases, design decisions
+   - No noise comments: `// find user` next to `findUser()` is noise; `// find active users (excluding DELETED/DISABLED status)` adds value
+3. **Logging (for ops/debugging at runtime)** — record runtime data and execution path
+   - Public method entry: `log.info` with key input parameters
+   - Public method exit: `log.info` with result summary
+   - Expected failures: `log.warn` (wrong password, validation failure, expired code)
+   - Unexpected exceptions: `log.error` with stack trace
+   - Debug details: `log.debug` for intermediate variables
+
+This principle applies recursively downward from the Biz layer: Biz calls Biz, Biz calls Service, Service internals — every layer should decompose complex logic into clearly-named private methods. The end result: **anyone opening any method sees a sequence of method calls + numbered comments, like reading a business flow checklist. Want details? Click in. Don't care? Skip it. Drill down layer by layer, each level is clear. And when production breaks, the log trail can reconstruct exactly what happened at every step.**
 
 ### 5.2 Biz Service Template
 
 ```java
+/**
+ * Xxx business service implementation.
+ *
+ * <p>Handles the complete Xxx workflow: decrypt → enrich → persist → notify.
+ *
+ * @author NoteFlow
+ * @since 1.0.0
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -405,41 +442,63 @@ public class XxxBizServiceImpl implements IXxxBizService {
     private final IExternalService externalService;
 
     /**
-     * Public method: a numbered flowchart of the business process.
+     * Execute the business action.
+     *
+     * <p>Flow: decrypt sensitive field → enrich with defaults → persist → notify downstream.
+     *
+     * @param dto input data containing encrypted field
+     * @return result DTO with saved ID populated
+     * @throws BizException DECRYPT_FAILED if decryption fails
+     * @throws BizException SAVE_FAILED if persistence fails
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public XxxDTO doAction(XxxDTO dto) {
-        // 1. Decrypt sensitive field from request
+        log.info("doAction started, field1={}", dto.getField1());
+        // 1. Decrypt the RSA-encrypted sensitive field from client
         String decryptedValue = decryptSensitiveField(dto.getEncryptedField());
         // 2. Fill in default values and derived fields
         XxxDTO enrichedDto = enrichWithDefaults(dto, decryptedValue);
         // 3. Persist to database
         Long savedId = persistToDatabase(enrichedDto);
-        // 4. Notify downstream systems
+        // 4. Notify downstream systems (async, does not affect main flow)
         notifyDownstream(savedId);
+        log.info("doAction completed, savedId={}", savedId);
         // 5. Build and return result
         return buildResult(savedId, enrichedDto);
     }
 
     // ══════════════════════════════════════════════
     //  Each private method corresponds to one step
-    //  in the business flow. The method name IS the
-    //  documentation. Click in to see implementation.
+    //  in the business flow.
     // ══════════════════════════════════════════════
 
+    /**
+     * Decrypt the RSA-encrypted sensitive field.
+     *
+     * @param encrypted Base64-encoded RSA ciphertext
+     * @return plaintext value
+     * @throws BizException DECRYPT_FAILED if decryption fails
+     */
     private String decryptSensitiveField(String encrypted) {
-        log.debug("Decrypting sensitive field");
         try {
             String decrypted = securityService.decrypt(encrypted);
             log.info("Sensitive field decrypted successfully");
             return decrypted;
         } catch (Exception e) {
-            log.warn("Sensitive field decryption failed: {}", e.getMessage());
+            log.error("Failed to decrypt sensitive field", e);
             throw new BizException(ErrorCodeEnum.DECRYPT_FAILED);
         }
     }
 
+    /**
+     * Enrich DTO with default values.
+     * field2 defaults to "default" because downstream system requires it non-null.
+     *
+     * @param dto            original input DTO
+     * @param decryptedValue decrypted value for field1
+     * @return enriched DTO
+     */
     private XxxDTO enrichWithDefaults(XxxDTO dto, String decryptedValue) {
         String field2 = dto.getField2() != null ? dto.getField2() : "default";
         log.debug("Enriching defaults, field2={}", field2);
@@ -449,24 +508,41 @@ public class XxxBizServiceImpl implements IXxxBizService {
                 .build();
     }
 
+    /**
+     * Persist the DTO to database.
+     *
+     * @param dto data to persist
+     * @return generated primary key ID
+     * @throws BizException SAVE_FAILED if save returns null
+     */
     private Long persistToDatabase(XxxDTO dto) {
         Long id = dataService.save(dto);
         if (id == null) {
-            log.warn("Database save returned null id");
+            log.warn("Failed to persist data");
             throw new BizException(ErrorCodeEnum.SAVE_FAILED);
         }
         log.info("Record persisted, id={}", id);
         return id;
     }
 
+    /**
+     * Notify downstream system after successful persistence.
+     *
+     * @param id saved record ID
+     */
     private void notifyDownstream(Long id) {
-        log.info("Sending downstream event, id={}", id);
+        log.debug("Notifying downstream for id={}", id);
         externalService.sendEvent(id);
-        log.info("Downstream event sent successfully, id={}", id);
     }
 
+    /**
+     * Build the return DTO from saved data.
+     *
+     * @param id  saved record ID
+     * @param dto enriched input DTO
+     * @return result DTO
+     */
     private XxxDTO buildResult(Long id, XxxDTO dto) {
-        log.debug("Building result, id={}", id);
         return XxxDTO.builder()
                 .id(id)
                 .field1(dto.getField1())
@@ -540,18 +616,24 @@ BizServiceA.doAction()                    ← Public method, reads like a busine
 
 1. **Business orchestration center** — Composes calls to dao, security, middleware, and other Services
 2. **Public methods only orchestrate** — Public method bodies should contain only private method calls and simple variable passing; no if/try/for procedural logic
-3. **Numbered step comments in public methods** — every line in the public method body must have a numbered comment (`// 1. ...`, `// 2. ...`) describing the business step. The public method is a numbered flowchart
-4. **Private methods are atomic business units** — Each private method does exactly one thing; the method name describes that thing
+3. **Private methods are atomic business units** — Each private method does exactly one thing; the method name describes that thing
 4. **Transaction boundary at Biz layer** — `@Transactional` is only annotated on Biz public methods
 5. **Use AOP for pre-validation** — Use `@ValueCheckers` or `@BasicCheck` for parameter/business validation; validation logic is extracted into a dedicated ValidationBizService
 6. **Only throw BizException** — `throw new BizException(ErrorCodeEnum.XXX)`; never throw raw exceptions
-7. **Sufficient logging in private methods** — every private method must log at entry or key outcome:
-    - `log.info` — Key flow milestones (start, completion, data persisted, event sent)
-    - `log.warn` — Expected failures (wrong password, validation failures)
-    - `log.error` — Unexpected failures (database errors, service unavailability)
-    - `log.debug` — Debug information (intermediate variables, detailed steps)
-    - Goal: by reading logs alone, you can reconstruct the full business flow without looking at code
-8. **Proactive common code extraction** — if the same logic appears in 2+ Biz services, immediately extract it:
+7. **Comment conventions** (three layers, each serving a different purpose):
+    - **Class JavaDoc**: describe the class responsibility and core flow overview. Must include `@author` and `@since`
+    - **Public method JavaDoc**: business flow overview (`<p>Flow:` tag), `@param` for each parameter, `@return`, `@throws` for possible exceptions
+    - **Private method JavaDoc**: explain business intent, params, return value, exceptions. Focus on information the method name cannot convey (e.g., why BCrypt instead of SHA, why this default value)
+    - **Inline numbered comments**: public method body uses `// 1.` `// 2.` to label each step with a brief business description, forming a readable flow checklist
+    - **No noise comments**: `// find user` next to `findUser()` is noise; `// find active users (excluding DELETED/DISABLED status)` adds value
+8. **Logging conventions**:
+    - `log.info` — public method entry (key input params) and exit (result summary); key milestones in private methods (data persisted, event sent)
+    - `log.warn` — expected failures (wrong password, validation failure, expired code)
+    - `log.error` — unexpected failures (database error, service unavailable) with stack trace
+    - `log.debug` — intermediate variables, detailed steps
+    - **Never log sensitive data**: no passwords, full tokens, verification codes in plaintext. OK to log email, userId, status
+    - **Goal**: by reading logs alone, you can reconstruct the full business flow without looking at code
+9. **Proactive common code extraction** — if the same logic appears in 2+ Biz services, immediately extract it:
     - **Where**: `{domain}-common` module for domain-internal shared logic; root `common` module for cross-domain utilities
     - **What qualifies**: data format conversion, validation patterns, string/date manipulation, common business calculations, retry wrappers
     - **How**: extract as static utility methods or shared Service interfaces; callers depend on the interface, not the implementation

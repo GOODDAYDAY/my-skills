@@ -60,10 +60,91 @@ Develop module by module following the technical document's module breakdown:
   - **Naming**: utility functions/classes must have clear, descriptive names — `DateRangeValidator`, `format_currency()`, not `Helper1` or `do_stuff()`
   - **Interface over implementation**: shared code should expose a clean function/method signature; callers should not need to know internal details
   - **Do NOT over-abstract**: only extract when there is actual duplication or near-certain reuse. One-time logic stays inline
-- **Logging**: key operations, exception branches, external calls must have log output; log messages in English
-- **Comments**: complex logic, business rules, non-obvious code must have comments explaining intent
 - **Code language**: variable names, function names, comments, log messages, commit messages must all be in English
 - **Chinese only for**: user-facing UI text (if needed)
+
+### Logging Requirements
+
+Every piece of code must have sufficient logging. The goal: **by reading logs alone, you can reconstruct the full business flow without looking at code.**
+
+#### Log Level Standards
+
+| Level | When to Use | Example |
+|:---|:---|:---|
+| `info` | Key business milestones: flow start/end, data persisted, event sent, external call completed | `"Order created, id=123"` |
+| `debug` | Intermediate values, inputs received, defaults applied, branch decisions | `"Enriching defaults, currency=USD"` |
+| `warn` | Expected failures: validation failed, duplicate detected, retry triggered, degraded mode | `"Duplicate order detected, key=abc"` |
+| `error` | Unexpected failures: database error, service unavailable, unhandled exception | `"Failed to connect to payment service"` |
+
+#### Where to Log (Mandatory)
+
+1. **Every private method** — log at entry or at key outcome (see Methods as Documentation below)
+2. **External calls** — log before and after every call to external services, databases, message queues
+3. **Exception branches** — every catch block must log what happened and why
+4. **Business decisions** — when code takes a branch based on data (if/else, switch), log which branch was taken and why
+5. **Data transformations** — log input/output summaries when converting between formats
+
+#### Log Content Rules
+
+- **Always include identifiers**: user ID, order ID, request ID — enough to trace a single request
+- **Never log secrets**: passwords, tokens, API keys, full credit card numbers
+- **Use lazy formatting**: `log("msg %s", var)` not `log(f"msg {var}")` (language-dependent)
+- **Truncate large values**: don't dump entire objects/arrays into logs
+- **English only** for log messages
+
+### Comment & Documentation Requirements
+
+#### File/Module Comment (Mandatory)
+
+Every source file must have a top-level comment explaining:
+- **What** this file/module is for — one sentence
+- **Why** it exists — if the purpose is not obvious from the file name
+
+```
+# Python
+"""Order validation utilities — shared validators for order-related services."""
+
+// Java
+/**
+ * Order validation utilities — shared validators for order-related services.
+ */
+```
+
+#### Class Comment (Mandatory)
+
+Every class must have a comment explaining:
+- **What** this class does — one sentence describing its responsibility
+- **Key collaborators** — what it depends on or interacts with (if not obvious)
+
+```
+# Python
+class OrderService:
+    """Orchestrates order creation workflow.
+
+    Coordinates between OrderRepository, PaymentGateway, and Notifier.
+    """
+
+// Java
+/**
+ * Orchestrates order creation workflow.
+ * Coordinates between IOrderService, IPaymentService, and INotifier.
+ */
+```
+
+#### Method Comment Rules
+
+| Method Type | Comment Required? | What to Document |
+|:---|:---|:---|
+| Public methods | **Yes, always** | What it does, params, return value, exceptions thrown |
+| Private methods | **Only if non-obvious** | Skip if the method name is self-explanatory (see Methods as Documentation) |
+| Interface/abstract methods | **Yes, always** | Contract: what implementors must guarantee |
+
+#### Inline Comment Rules
+
+- **Do NOT comment obvious code** — `i += 1  // increment i` is noise
+- **DO comment business rules** — `// Discount only applies to orders above $100 per policy XYZ`
+- **DO comment non-obvious decisions** — `// Using insertion sort here because n < 10 in all cases`
+- **DO comment workarounds** — `// Workaround for upstream bug #1234, remove after v2.1`
 
 ### Methods as Documentation (Mandatory)
 
@@ -78,7 +159,7 @@ A public method should read like a business flowchart. Its body contains only a 
 1. **Public methods only orchestrate** — the body is a sequence of private/helper method calls and simple variable passing. No procedural logic (conditionals, loops, try-catch, long expressions) in the public method body
 2. **Numbered step comments in public methods** — every line in the public method body must have a numbered comment (`// 1. ...`, `// 2. ...`) describing the business step. The public method is a numbered flowchart, not just code
 3. **Private methods are atomic steps** — each does one thing; the method name is the documentation
-4. **Sufficient logging in private methods** — every private method must log at entry or key outcome. Use `info` for key milestones, `debug` for intermediate values. The goal: by reading logs alone, you can reconstruct the full business flow without looking at code
+4. **Sufficient logging in private methods** — every private method must log at entry or key outcome (see Logging Requirements above for level standards)
 5. **Recursive layering** — this pattern applies at every level: service calls service, each one's public method is a "table of contents", private methods are "chapters". Drill down layer by layer, each level is self-explanatory
 6. **When in doubt, extract** — if a block of code needs a comment to explain what it does, extract it into a private method whose name replaces the comment
 
