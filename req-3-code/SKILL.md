@@ -59,6 +59,58 @@ Develop module by module following the technical document's module breakdown:
 - **Code language**: variable names, function names, comments, log messages, commit messages must all be in English
 - **Chinese only for**: user-facing UI text (if needed)
 
+### Methods as Documentation (Mandatory)
+
+This is the **core coding philosophy** — it applies to every language, every layer, every module.
+
+#### Principle
+
+A public method should read like a business flowchart. Its body contains only a sequence of clearly-named private method calls — no inline procedural logic (no if/try/for blocks in the public method body). Each private method does exactly one thing, and its name describes that thing. **Reading the public method tells you *what* happens; clicking into a private method tells you *how*.**
+
+#### Rules
+
+1. **Public methods only orchestrate** — the body is a sequence of private/helper method calls and simple variable passing. No procedural logic (conditionals, loops, try-catch, long expressions) in the public method body
+2. **Private methods are atomic steps** — each does one thing; the method name is the documentation
+3. **Recursive layering** — this pattern applies at every level: service calls service, each one's public method is a "table of contents", private methods are "chapters". Drill down layer by layer, each level is self-explanatory
+4. **When in doubt, extract** — if a block of code needs a comment to explain what it does, extract it into a private method whose name replaces the comment
+
+#### Naming Convention for Private Methods
+
+| Verb Prefix | Semantics | Example |
+|:---|:---|:---|
+| `validate` / `check` | Validate; raise/throw on failure | `validate_email_uniqueness(email)` |
+| `enrich` / `fill` | Populate defaults or derived fields | `enrich_with_defaults(data)` |
+| `persist` / `save` | Write to storage | `persist_to_database(data)` |
+| `notify` / `send` | Send notification or event | `notify_downstream(record_id)` |
+| `build` / `assemble` | Construct return object | `build_result(record_id, data)` |
+| `query` / `find` / `fetch` | Retrieve data | `find_existing_user(email)` |
+| `transform` / `convert` | Convert data format | `transform_to_internal_format(raw)` |
+
+#### Anti-Pattern
+
+```
+# ✗ Wrong: all logic flattened in the public method
+def do_action(self, data):
+    if not data.email:
+        raise ValueError("missing email")
+    existing = self.repo.find_by_email(data.email)
+    if existing:
+        raise ValueError("duplicate")
+    data.created_at = datetime.now()
+    record_id = self.repo.save(data)
+    self.event_bus.publish("created", record_id)
+    return {"id": record_id, "email": data.email}
+
+# ✓ Correct: public method reads like a business flow
+def do_action(self, data):
+    self._validate_email(data.email)
+    self._ensure_no_duplicate(data.email)
+    enriched = self._enrich_with_defaults(data)
+    record_id = self._persist_to_database(enriched)
+    self._notify_created(record_id)
+    return self._build_result(record_id, enriched)
+```
+
 ### Step 4: Generate Automation Scripts
 
 Read `${CLAUDE_SKILL_DIR}/../_shared/scripts.md` for script specifications.
