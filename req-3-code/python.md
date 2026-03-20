@@ -44,6 +44,136 @@ main → core → all other layers (via callback injection)
 - Config class only loads and displays values — it never knows which fields belong to which implementation
 - Fail fast: validate at startup, not at first use
 
+## Methods as Documentation
+
+### Core Philosophy
+
+The essence of a service/orchestration class is **orchestration** — a public method calls a sequence of steps, where each step is a semantically clear private method. **Reading the public method should feel like reading a business flowchart — no comments needed to understand what the business is doing.**
+
+This principle applies recursively: service calls service, handler calls handler — every layer should decompose complex logic into clearly-named private methods. The end result: **anyone opening any method sees a sequence of method calls, not a block of procedural code. Want details? Click into a method. Don't care? Skip it. Drill down layer by layer, each level is crystal clear.**
+
+### Template
+
+```python
+class OrderService:
+    """Orchestrates order creation workflow."""
+
+    def __init__(self, repo: OrderRepository, payment: PaymentGateway, notifier: Notifier):
+        self._repo = repo
+        self._payment = payment
+        self._notifier = notifier
+
+    def create_order(self, data: OrderData) -> OrderResult:
+        """Public method: reads like the business flow itself.
+        Each line is a 'what', not a 'how'.
+        """
+        self._validate_order_data(data)
+        self._ensure_no_duplicate(data.idempotency_key)
+        enriched = self._enrich_with_defaults(data)
+        order_id = self._persist_to_database(enriched)
+        self._charge_payment(order_id, enriched.amount)
+        self._notify_order_created(order_id)
+        return self._build_result(order_id, enriched)
+
+    # ══════════════════════════════════════════════
+    #  Each private method corresponds to one step
+    #  in the business flow. The method name IS the
+    #  documentation. Click in to see details.
+    # ══════════════════════════════════════════════
+
+    def _validate_order_data(self, data: OrderData) -> None:
+        missing = []
+        if not data.customer_id:
+            missing.append("customer_id")
+        if not data.items:
+            missing.append("items")
+        if missing:
+            raise ValueError(f"Missing required fields: {', '.join(missing)}")
+
+    def _ensure_no_duplicate(self, idempotency_key: str) -> None:
+        if self._repo.find_by_key(idempotency_key):
+            raise ValueError(f"Duplicate order: {idempotency_key}")
+
+    def _enrich_with_defaults(self, data: OrderData) -> OrderData:
+        return OrderData(
+            customer_id=data.customer_id,
+            items=data.items,
+            currency=data.currency or "USD",
+            created_at=datetime.now(),
+        )
+
+    def _persist_to_database(self, data: OrderData) -> int:
+        order_id = self._repo.save(data)
+        logger.info("Order persisted, id=%d", order_id)
+        return order_id
+
+    def _charge_payment(self, order_id: int, amount: Decimal) -> None:
+        self._payment.charge(order_id, amount)
+
+    def _notify_order_created(self, order_id: int) -> None:
+        self._notifier.send("order_created", {"order_id": order_id})
+
+    def _build_result(self, order_id: int, data: OrderData) -> OrderResult:
+        return OrderResult(id=order_id, status="created", currency=data.currency)
+```
+
+**Anti-pattern (do NOT write like this):**
+
+```python
+# ✗ Wrong: all logic flattened in the public method — reader must parse every line
+def create_order(self, data: OrderData) -> OrderResult:
+    if not data.customer_id or not data.items:
+        raise ValueError("Missing required fields")
+    existing = self._repo.find_by_key(data.idempotency_key)
+    if existing:
+        raise ValueError("Duplicate order")
+    data.currency = data.currency or "USD"
+    data.created_at = datetime.now()
+    order_id = self._repo.save(data)
+    self._payment.charge(order_id, data.amount)
+    self._notifier.send("order_created", {"order_id": order_id})
+    return OrderResult(id=order_id, status="created", currency=data.currency)
+# Same logic, but the reader must read every line to understand the business flow
+```
+
+### Recursive Application
+
+```
+OrderService.create_order()                  ← Public method, reads like a business flow
+  ├── _validate_order_data(data)             ← Private method
+  ├── _ensure_no_duplicate(key)              ← Private method
+  ├── _enrich_with_defaults(data)            ← Private method
+  ├── _persist_to_database(data)             ← Private method
+  │     └── repo.save(data)                  ← Click in, same structure
+  ├── _charge_payment(order_id, amount)      ← Private method
+  │     └── payment.charge(order_id, amount) ← Click in, same structure
+  ├── _notify_order_created(order_id)        ← Private method
+  └── _build_result(order_id, data)          ← Private method
+```
+
+### Private Method Naming Convention
+
+| Verb Prefix | Semantics | Example |
+|:---|:---|:---|
+| `validate` / `check` | Validate; raise on failure | `_validate_email_format(email)` |
+| `ensure` | Assert a condition holds | `_ensure_no_duplicate(key)` |
+| `enrich` / `fill` | Populate defaults/derived fields | `_enrich_with_defaults(data)` |
+| `persist` / `save` | Write to storage | `_persist_to_database(data)` |
+| `notify` / `send` | Send notification/event | `_notify_order_created(order_id)` |
+| `build` / `assemble` | Construct return object | `_build_result(order_id, data)` |
+| `query` / `find` / `fetch` | Retrieve data | `_find_existing_user(email)` |
+| `transform` / `convert` | Convert data format | `_transform_to_internal(raw)` |
+
+### Rules
+
+1. **Public methods only orchestrate** — body contains only private method calls and simple variable passing; no `if`/`try`/`for` procedural logic in the public method body
+2. **Private methods are atomic steps** — each does one thing; the method name describes that thing
+3. **Recursive layering** — every layer follows the same pattern: public = table of contents, private = chapters
+4. **When in doubt, extract** — if a block of code needs a comment to explain "what", extract it into a private method whose name replaces the comment
+5. **Prefix with `_`** — all private methods use the Python single-underscore convention
+
+---
+
 ## Imports
 
 ```python
