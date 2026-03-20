@@ -83,13 +83,13 @@ Invoke `/req-3-code REQ-xxx`.
 - High quality code: thorough logging, comments, high cohesion / low coupling
 - Generate automation scripts (.bat + .sh) in `scripts/`
 
-### Stage 4: Requirement Review
+### Stage 4: Security Review
 
-Invoke `/req-4-review REQ-xxx`.
+Invoke `/req-4-security REQ-xxx`.
 
-- Compare implementation against requirements item by item
-- When multiple versions exist in change log, latest version takes precedence
-- Ensure latest version has no undeclared changes to previously confirmed content
+- Scan for injection attacks, data leakage, auth issues, config vulnerabilities
+- Directly fix critical/high severity issues
+- Report medium/low issues to user for confirmation
 
 ### Stage 5: Code Cleanup
 
@@ -101,18 +101,26 @@ Invoke `/req-5-cleanup REQ-xxx`.
 - **Never alter business logic** — purely structural optimization
 - Present findings to user for approval before applying changes
 
-### Stage 6: Verification
+### Stage 6: Requirement Review
 
-Invoke `/req-6-verify REQ-xxx`.
+Invoke `/req-6-review REQ-xxx`.
+
+- Compare implementation against requirements item by item
+- When multiple versions exist in change log, latest version takes precedence
+- Ensure latest version has no undeclared changes to previously confirmed content
+
+### Stage 7: Verification
+
+Invoke `/req-7-verify REQ-xxx`.
 
 - Build check
 - Runtime check
 - Automated testing
 - Generate verification scripts (.bat + .sh) in `scripts/`
 
-### Stage 7: Archive
+### Stage 8: Archive
 
-Invoke `/req-7-done REQ-xxx`.
+Invoke `/req-8-done REQ-xxx`.
 
 - Run final consistency check
 - Update `index.md` status to `Completed`
