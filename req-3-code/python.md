@@ -44,6 +44,54 @@ main → core → all other layers (via callback injection)
 - Config class only loads and displays values — it never knows which fields belong to which implementation
 - Fail fast: validate at startup, not at first use
 
+## Common Code Extraction
+
+Proactively extract shared logic during coding — do NOT leave it for later.
+
+### Rules
+
+- **2-occurrence rule**: if the same logic appears (or is about to appear) in 2+ places, immediately extract it
+- **Where to place**: `utils/` or `common/` package at the appropriate layer level
+- **What qualifies**: data format conversion, validation patterns, string/date manipulation, logging helpers, retry/backoff wrappers, config parsing, common business calculations
+- **Naming**: clear, descriptive names — `DateRangeValidator`, `format_currency()`, not `helper1` or `do_stuff()`
+- **Do NOT over-abstract**: only extract when there is actual duplication or near-certain reuse
+
+### Example
+
+```
+app/
+├── utils/
+│   ├── date_utils.py          # format_date_range(), parse_iso_date()
+│   ├── validation.py          # validate_email(), validate_phone()
+│   └── retry.py               # retry_with_backoff()
+├── common/
+│   ├── constants.py           # Shared constants across modules
+│   └── types.py               # Shared TypeAlias, dataclass definitions
+├── service_a/
+│   └── handler.py             # Uses utils/validation.py
+└── service_b/
+    └── handler.py             # Also uses utils/validation.py
+```
+
+```python
+# utils/validation.py — extracted because 3 services all validate emails
+def validate_email(email: str) -> None:
+    """Validate email format; raise ValueError if invalid."""
+    if not email or "@" not in email:
+        raise ValueError(f"Invalid email format: {email}")
+
+# utils/retry.py — extracted because multiple external calls need retry
+def retry_with_backoff(fn, max_retries: int = 3, base_delay: float = 1.0):
+    """Retry a callable with exponential backoff."""
+    for attempt in range(max_retries):
+        try:
+            return fn()
+        except Exception:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(base_delay * (2 ** attempt))
+```
+
 ## Methods as Documentation
 
 ### Core Philosophy
@@ -64,15 +112,20 @@ class OrderService:
         self._notifier = notifier
 
     def create_order(self, data: OrderData) -> OrderResult:
-        """Public method: reads like the business flow itself.
-        Each line is a 'what', not a 'how'.
-        """
+        """Public method: a numbered flowchart of the business process."""
+        # 1. Validate required fields
         self._validate_order_data(data)
+        # 2. Reject duplicate submissions
         self._ensure_no_duplicate(data.idempotency_key)
+        # 3. Fill in default values (currency, timestamps, etc.)
         enriched = self._enrich_with_defaults(data)
+        # 4. Persist order to database
         order_id = self._persist_to_database(enriched)
+        # 5. Charge payment
         self._charge_payment(order_id, enriched.amount)
+        # 6. Notify downstream systems
         self._notify_order_created(order_id)
+        # 7. Build and return result
         return self._build_result(order_id, enriched)
 
     # ══════════════════════════════════════════════
@@ -82,45 +135,57 @@ class OrderService:
     # ══════════════════════════════════════════════
 
     def _validate_order_data(self, data: OrderData) -> None:
+        logger.debug("Validating order data, customer_id=%s, item_count=%d",
+                      data.customer_id, len(data.items) if data.items else 0)
         missing = []
         if not data.customer_id:
             missing.append("customer_id")
         if not data.items:
             missing.append("items")
         if missing:
+            logger.warning("Order validation failed, missing fields: %s", missing)
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        logger.info("Order data validated, customer_id=%s", data.customer_id)
 
     def _ensure_no_duplicate(self, idempotency_key: str) -> None:
+        logger.debug("Checking duplicate, idempotency_key=%s", idempotency_key)
         if self._repo.find_by_key(idempotency_key):
+            logger.warning("Duplicate order detected, key=%s", idempotency_key)
             raise ValueError(f"Duplicate order: {idempotency_key}")
 
     def _enrich_with_defaults(self, data: OrderData) -> OrderData:
+        currency = data.currency or "USD"
+        logger.debug("Enriching order defaults, currency=%s", currency)
         return OrderData(
             customer_id=data.customer_id,
             items=data.items,
-            currency=data.currency or "USD",
+            currency=currency,
             created_at=datetime.now(),
         )
 
     def _persist_to_database(self, data: OrderData) -> int:
         order_id = self._repo.save(data)
-        logger.info("Order persisted, id=%d", order_id)
+        logger.info("Order persisted, id=%d, customer_id=%s", order_id, data.customer_id)
         return order_id
 
     def _charge_payment(self, order_id: int, amount: Decimal) -> None:
+        logger.info("Charging payment, order_id=%d, amount=%s", order_id, amount)
         self._payment.charge(order_id, amount)
+        logger.info("Payment charged successfully, order_id=%d", order_id)
 
     def _notify_order_created(self, order_id: int) -> None:
+        logger.info("Sending order_created event, order_id=%d", order_id)
         self._notifier.send("order_created", {"order_id": order_id})
 
     def _build_result(self, order_id: int, data: OrderData) -> OrderResult:
+        logger.debug("Building result, order_id=%d", order_id)
         return OrderResult(id=order_id, status="created", currency=data.currency)
 ```
 
 **Anti-pattern (do NOT write like this):**
 
 ```python
-# ✗ Wrong: all logic flattened in the public method — reader must parse every line
+# ✗ Wrong: no step numbers, no logging, all logic flattened — reader must parse every line
 def create_order(self, data: OrderData) -> OrderResult:
     if not data.customer_id or not data.items:
         raise ValueError("Missing required fields")
@@ -133,7 +198,7 @@ def create_order(self, data: OrderData) -> OrderResult:
     self._payment.charge(order_id, data.amount)
     self._notifier.send("order_created", {"order_id": order_id})
     return OrderResult(id=order_id, status="created", currency=data.currency)
-# Same logic, but the reader must read every line to understand the business flow
+# Same logic, but: no numbered steps, no logs, can't trace what happened in production
 ```
 
 ### Recursive Application
@@ -167,10 +232,16 @@ OrderService.create_order()                  ← Public method, reads like a bus
 ### Rules
 
 1. **Public methods only orchestrate** — body contains only private method calls and simple variable passing; no `if`/`try`/`for` procedural logic in the public method body
-2. **Private methods are atomic steps** — each does one thing; the method name describes that thing
-3. **Recursive layering** — every layer follows the same pattern: public = table of contents, private = chapters
-4. **When in doubt, extract** — if a block of code needs a comment to explain "what", extract it into a private method whose name replaces the comment
-5. **Prefix with `_`** — all private methods use the Python single-underscore convention
+2. **Numbered step comments in public methods** — every line in the public method body must have a numbered comment (`# 1. ...`, `# 2. ...`) describing the business step in plain language. The public method is a numbered flowchart
+3. **Private methods are atomic steps** — each does one thing; the method name describes that thing
+4. **Sufficient logging in private methods** — every private method must log at entry or key outcome:
+   - `logger.info` — key milestones: data persisted, payment charged, event sent
+   - `logger.debug` — intermediate values: inputs received, defaults applied
+   - `logger.warning` — expected failures: validation failed, duplicate detected
+   - Goal: by reading logs alone, you can reconstruct the full business flow
+5. **Recursive layering** — every layer follows the same pattern: public = table of contents, private = chapters
+6. **When in doubt, extract** — if a block of code needs a comment to explain "what", extract it into a private method whose name replaces the comment
+7. **Prefix with `_`** — all private methods use the Python single-underscore convention
 
 ---
 

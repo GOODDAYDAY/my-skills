@@ -406,16 +406,20 @@ public class XxxBizServiceImpl implements IXxxBizService {
     private final IExternalService externalService;
 
     /**
-     * Public method: reads like the business flow itself.
-     * Each line is a "what", not a "how".
+     * Public method: a numbered flowchart of the business process.
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public XxxDTO doAction(XxxDTO dto) {
+        // 1. Decrypt sensitive field from request
         String decryptedValue = decryptSensitiveField(dto.getEncryptedField());
+        // 2. Fill in default values and derived fields
         XxxDTO enrichedDto = enrichWithDefaults(dto, decryptedValue);
+        // 3. Persist to database
         Long savedId = persistToDatabase(enrichedDto);
+        // 4. Notify downstream systems
         notifyDownstream(savedId);
+        // 5. Build and return result
         return buildResult(savedId, enrichedDto);
     }
 
@@ -426,33 +430,44 @@ public class XxxBizServiceImpl implements IXxxBizService {
     // ══════════════════════════════════════════════
 
     private String decryptSensitiveField(String encrypted) {
+        log.debug("Decrypting sensitive field");
         try {
-            return securityService.decrypt(encrypted);
+            String decrypted = securityService.decrypt(encrypted);
+            log.info("Sensitive field decrypted successfully");
+            return decrypted;
         } catch (Exception e) {
+            log.warn("Sensitive field decryption failed: {}", e.getMessage());
             throw new BizException(ErrorCodeEnum.DECRYPT_FAILED);
         }
     }
 
     private XxxDTO enrichWithDefaults(XxxDTO dto, String decryptedValue) {
+        String field2 = dto.getField2() != null ? dto.getField2() : "default";
+        log.debug("Enriching defaults, field2={}", field2);
         return XxxDTO.builder()
                 .field1(decryptedValue)
-                .field2(dto.getField2() != null ? dto.getField2() : "default")
+                .field2(field2)
                 .build();
     }
 
     private Long persistToDatabase(XxxDTO dto) {
         Long id = dataService.save(dto);
         if (id == null) {
+            log.warn("Database save returned null id");
             throw new BizException(ErrorCodeEnum.SAVE_FAILED);
         }
+        log.info("Record persisted, id={}", id);
         return id;
     }
 
     private void notifyDownstream(Long id) {
+        log.info("Sending downstream event, id={}", id);
         externalService.sendEvent(id);
+        log.info("Downstream event sent successfully, id={}", id);
     }
 
     private XxxDTO buildResult(Long id, XxxDTO dto) {
+        log.debug("Building result, id={}", id);
         return XxxDTO.builder()
                 .id(id)
                 .field1(dto.getField1())
@@ -526,15 +541,22 @@ BizServiceA.doAction()                    ← Public method, reads like a busine
 
 1. **Business orchestration center** — Composes calls to dao, security, middleware, and other Services
 2. **Public methods only orchestrate** — Public method bodies should contain only private method calls and simple variable passing; no if/try/for procedural logic
-3. **Private methods are atomic business units** — Each private method does exactly one thing; the method name describes that thing
+3. **Numbered step comments in public methods** — every line in the public method body must have a numbered comment (`// 1. ...`, `// 2. ...`) describing the business step. The public method is a numbered flowchart
+4. **Private methods are atomic business units** — Each private method does exactly one thing; the method name describes that thing
 4. **Transaction boundary at Biz layer** — `@Transactional` is only annotated on Biz public methods
 5. **Use AOP for pre-validation** — Use `@ValueCheckers` or `@BasicCheck` for parameter/business validation; validation logic is extracted into a dedicated ValidationBizService
 6. **Only throw BizException** — `throw new BizException(ErrorCodeEnum.XXX)`; never throw raw exceptions
-7. **Logging conventions**:
-    - `log.info` — Key flow milestones (start, completion)
+7. **Sufficient logging in private methods** — every private method must log at entry or key outcome:
+    - `log.info` — Key flow milestones (start, completion, data persisted, event sent)
     - `log.warn` — Expected failures (wrong password, validation failures)
     - `log.error` — Unexpected failures (database errors, service unavailability)
     - `log.debug` — Debug information (intermediate variables, detailed steps)
+    - Goal: by reading logs alone, you can reconstruct the full business flow without looking at code
+8. **Proactive common code extraction** — if the same logic appears in 2+ Biz services, immediately extract it:
+    - **Where**: `{domain}-common` module for domain-internal shared logic; root `common` module for cross-domain utilities
+    - **What qualifies**: data format conversion, validation patterns, string/date manipulation, common business calculations, retry wrappers
+    - **How**: extract as static utility methods or shared Service interfaces; callers depend on the interface, not the implementation
+    - **Do NOT over-abstract**: only extract when there is actual duplication or near-certain reuse
 
 ---
 
