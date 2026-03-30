@@ -26,10 +26,40 @@ PlantUML not installed. Please install first:
 
 1. Install Java (JDK 8+): https://adoptium.net/
 2. Install PlantUML:
-   - Windows: choco install plantuml
+   - Windows: winget install --id plantuml.plantuml -e  (or: choco install plantuml)
    - macOS:   brew install plantuml
-   - Linux:   apt install plantuml
+   - Linux:   sudo apt install plantuml  (or: dnf / pacman)
 3. Verify: plantuml -version
+```
+
+## Global `puml2svg` Command Setup
+
+Install once to convert `.puml` → `.svg` from any directory with a short command.
+Install scripts are in `_shared/scripts/`.
+
+### macOS / Linux
+
+```bash
+bash _shared/scripts/install-puml2svg.sh
+```
+
+Handles: PlantUML installation (brew / apt / dnf / pacman), script creation, PATH fallback, and verification.
+
+### Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -File _shared/scripts/install-puml2svg.ps1
+```
+
+Handles: PlantUML installation (winget / choco / scoop), `puml2svg.bat` creation in `%USERPROFILE%\.local\bin`, PATH registration, and verification.
+
+### Usage (all platforms)
+
+```bash
+puml2svg                      # convert all .puml in current directory
+puml2svg diagram.puml         # convert a single file
+puml2svg a.puml b.puml        # convert multiple files
+puml2svg ~/any/path/file.puml # absolute path works from anywhere
 ```
 
 ## Workflow
