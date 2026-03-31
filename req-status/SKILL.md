@@ -16,7 +16,7 @@ Quickly check requirement status without manually reading `index.md`.
 ### View All Requirements
 
 1. Read `requirements/index.md`
-2. Output formatted status table
+2. Output the **Active** section only by default — do not list Archived rows
 3. Include statistics:
 
 ```markdown
@@ -24,15 +24,16 @@ Quickly check requirement status without manually reading `index.md`.
 
 | ID | Name | Status | Updated |
 |:---|:---|:---|:---|
-| REQ-001 | User Login | Completed | 2024-01-15 |
 | REQ-002 | Data Export | In Development | 2024-01-20 |
 | REQ-003 | Dashboard | Technical Design | 2024-01-22 |
 
 ### Summary
-- Total: 3
-- Completed: 1
-- In Progress: 2
+- Active: 2
+- Archived: 1 (run `/req-status archived` to list)
+- archive-threshold: 5 (current Completed in Active: 0)
 ```
+
+If user passes `archived` as argument, show the Archived section instead.
 
 ### View Single Requirement
 

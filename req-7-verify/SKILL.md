@@ -52,12 +52,14 @@ Attempt to run the project's entry point to ensure it starts correctly:
 
 1. Check if test files already exist
 2. If not, **generate test cases based on the requirement document's acceptance criteria**
-3. **Web project special requirement**: use Python + Playwright for end-to-end testing
+3. **Web project special requirement**: use Playwright for end-to-end testing, matching the project's language:
+   - TypeScript/Node.js projects → Playwright with TypeScript (`tests/e2e/*.spec.ts`)
+   - Python projects → Playwright with Python (`tests/e2e/test_e2e_<feature>.py`)
+   - Do NOT introduce a different language runtime just for E2E tests
    - Place test scripts in `tests/e2e/`
    - Design test flows based on requirement features and acceptance criteria
    - Test not only UI interactions (click, input, navigation)
    - Also test data flow (submit data, verify database/API response is correct)
-   - Test file naming: `test_e2e_<feature>.py`
 4. Unit/integration tests:
 
 | Technology | Command |
@@ -104,3 +106,10 @@ If scripts already exist, check if they need updating.
 ```
 
 When all checks pass, inform user they can proceed to the archive stage.
+
+### Step 7: Commit & Tag
+
+```bash
+git add -A && git commit -m "test(REQ-xxx): verification tests and scripts"
+git tag REQ-xxx-verified
+```

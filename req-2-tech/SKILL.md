@@ -122,3 +122,10 @@ Present the technical specification summary and **wait for user confirmation**:
 After user approval:
 1. Update `technical.md` status to `Technical Finalized`
 2. Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Technical Finalized`
+
+### Step 6: Commit & Tag
+
+```bash
+git add -A && git commit -m "docs(REQ-xxx): technical design complete"
+git tag REQ-xxx-designed
+```

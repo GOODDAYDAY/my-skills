@@ -55,6 +55,16 @@ When multiple requirements are in progress simultaneously:
 
 ## Workflow
 
+### Before Starting: Create Feature Branch
+
+If starting a new requirement (not resuming an existing one):
+
+```bash
+git checkout -b feat/REQ-xxx-<short-name>
+```
+
+Each requirement gets its own branch, isolating work from main and enabling clean review before merge.
+
 ### Stage 1: Requirement Analysis
 
 Invoke `/req-1-analyze $ARGUMENTS`.

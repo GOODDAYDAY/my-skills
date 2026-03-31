@@ -105,3 +105,17 @@ For **Medium and Low** severity issues:
 ### Step 5: Update Status
 
 Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Update `requirements/index.md` status to `Security Reviewed`.
+
+### Step 6: Commit & Tag
+
+If any security fixes were applied in this stage:
+
+```bash
+git add -A && git commit -m "fix(REQ-xxx): security review fixes"
+```
+
+Tag the stage completion regardless:
+
+```bash
+git tag REQ-xxx-security
+```

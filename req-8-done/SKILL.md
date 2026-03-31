@@ -38,6 +38,7 @@ Before archiving, execute the following checklist. **All items must pass.**
 
 ### Git
 - [ ] All changes are committed (no uncommitted modifications)
+- [ ] On a feature branch (feat/REQ-xxx-*), not directly on main
 ```
 
 If any check fails:
@@ -64,7 +65,14 @@ Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Modif
 - Set the requirement's status to `Completed`
 - Update the date
 
-### Step 5: Output Summary
+### Step 5: Archive Threshold Check
+
+1. Read the `<!-- archive-threshold: N -->` comment from `index.md` (default: `5` if not present)
+2. Count `Completed` entries in the **Active** section
+3. If count >= threshold, notify the user:
+   > "X requirements completed in Active (threshold: N). Consider running `/req-archive` to batch-archive and generate a milestone summary."
+
+### Step 6: Output Summary
 
 ```markdown
 ## REQ-xxx <Name> — Completed
