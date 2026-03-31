@@ -15,6 +15,9 @@ If `$ARGUMENTS` is empty or unclear, **proactively guide the user**:
 - "What problem does it solve?"
 - "Who are the target users?"
 - "Any reference products or interfaces?"
+- "Do you have any mockups, screenshots, or UI references? Drag them into the chat."
+
+If the user provides images or screenshots, extract requirements from them directly — visual references take precedence over verbal descriptions when both exist.
 
 Keep asking until you have enough information to begin analysis.
 
@@ -47,7 +50,7 @@ After presenting the expansion, **wait for user feedback**:
 
 After user approval:
 
-1. Determine REQ number: read `requirements/index.md`, take the next number
+1. Determine REQ number: read `requirements/index.md`, scan **both** Active and Archived sections to find the highest existing REQ number, increment by 1
 2. Create directory: `requirements/REQ-xxx-<short-name>/` (directory name in English)
 3. Write `requirement.md` in the following format:
 
@@ -106,3 +109,10 @@ Read `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` for the complete PlantUML spec
 Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for index.md format and status enum.
 
 Add the requirement record to `requirements/index.md` with status `Requirement Finalized`. If `index.md` does not exist, create it per the shared specification.
+
+### Step 6: Commit & Tag
+
+```bash
+git add -A && git commit -m "docs(REQ-xxx): requirement analysis complete"
+git tag REQ-xxx-analyzed
+```

@@ -40,15 +40,34 @@ Based on the technology stack in `technical.md`, check `${CLAUDE_SKILL_DIR}/` fo
 - Java → read `${CLAUDE_SKILL_DIR}/java.md`
 - Others → load matching `.md` if exists, otherwise use general best practices
 
+### Step 2.5: Write Acceptance Tests First
+
+Before coding any module, generate tests based on the acceptance criteria in `requirement.md`:
+
+1. For each acceptance criterion, write a failing test that directly verifies it
+2. Place tests in `tests/` mirroring the source structure
+3. Name tests to map clearly to requirement IDs (e.g., `test_F01_user_can_login`)
+
+This defines the contract upfront. Implementation must make these tests pass. Do not skip this step — tests written after implementation tend to verify code rather than requirements.
+
 ### Step 3: Code
 
-Develop module by module following the technical document's module breakdown:
+Develop module by module following the technical document's module breakdown.
+
+**Before implementing: analyze module dependencies from `technical.md`.**
+- Identify modules with no inter-dependencies
+- If 2+ independent modules exist, implement them using parallel sub-agents to save time
+- Modules with dependencies must remain sequential
 
 1. Set up project structure first (if new project)
 2. **Project structure rule**: source code must NOT be placed directly under project root `src/`. Must be organized in sub-layer directories like `backend/`, `frontend/`, `app/`, `shared/`, etc. `src/` may only appear inside sub-layers
 3. Implement features in module order
 4. Briefly inform user of progress after completing each module
 5. Key logic in code must correspond to requirement/technical documents
+6. After completing each module: do a quick inline review (extract shared logic, rename vague identifiers, remove dead branches), then commit immediately:
+   ```bash
+   git add -A && git commit -m "feat(REQ-xxx): implement <ModuleName> module"
+   ```
 
 ### Code Quality Requirements
 
@@ -221,3 +240,12 @@ At minimum:
 ### Step 5: Update Status
 
 Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Development Done`.
+
+### Step 6: Commit & Tag
+
+Commit any remaining uncommitted files (may be empty if all modules were committed individually):
+
+```bash
+git add -A && git commit -m "feat(REQ-xxx): implementation complete" --allow-empty
+git tag REQ-xxx-coded
+```

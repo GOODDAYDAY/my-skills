@@ -34,6 +34,8 @@ This stage is strictly about **structural optimization**. The following rules ar
 
 Scan all code produced by this requirement. **Do not make any changes yet** — only collect findings.
 
+> Note: `req-3-code` already enforces real-time extraction during coding (2-occurrence rule and per-module inline review). Focus this scan on **cross-module duplication** that only became apparent after all modules were written, not on intra-module issues already handled during coding.
+
 #### 2.1 Unused Code Elements
 - **Unused imports**: imported but never referenced modules, packages, classes
 - **Unused variables**: declared but never read
@@ -146,3 +148,17 @@ After cleanup, verify that nothing is broken:
 ### Step 7: Update Status
 
 Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Update `requirements/index.md` status to `Code Cleaned`.
+
+### Step 8: Commit & Tag
+
+If any changes were applied in this stage:
+
+```bash
+git add -A && git commit -m "refactor(REQ-xxx): code cleanup complete"
+```
+
+Tag the stage completion regardless:
+
+```bash
+git tag REQ-xxx-cleaned
+```

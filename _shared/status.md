@@ -25,16 +25,26 @@ Template (create if not exists):
 ```markdown
 # Requirement Index
 
+<!-- archive-threshold: 5 -->
+
+## Active
+
 | ID | Name | Status | Updated | Description |
 |:---|:---|:---|:---|:---|
+
+## Archived
+
+| ID | Name | Completed | Description |
+|:---|:---|:---|:---|
 ```
 
-Adding a record:
-
-```markdown
-| REQ-xxx | <requirement name> | <status> | <date> | <brief description> |
-```
+- New requirements go into the **Active** section
+- The `archive-threshold` comment controls how many Completed entries in Active trigger the `/req-archive` prompt — adjust per project (default: 5)
 
 ## Updating Status
 
-When updating `index.md`, only change the `Status` and `Updated` columns for the target REQ. Do not modify other rows.
+When updating `index.md`, only change the `Status` and `Updated` columns for the target REQ in the **Active** section. Do not touch other rows or the Archived section.
+
+## Determining Next REQ Number
+
+Scan **both** Active and Archived sections to find the highest existing REQ number. Increment by 1.
