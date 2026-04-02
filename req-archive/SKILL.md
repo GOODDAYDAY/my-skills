@@ -7,8 +7,8 @@ argument-hint: ""
 # req-archive
 > Version: v1 | Date: 2026-04-02 | Author: system
 
-## 1. 概述
-将 `requirements/index.md` Active 区块中所有 Completed 需求批量归档，并生成里程碑摘要文档。
+## 1. Overview
+Batch-archive all Completed requirements from the Active section of `requirements/index.md` and generate a milestone summary document.
 
 ```mermaid
 flowchart LR
@@ -19,7 +19,7 @@ flowchart LR
 ```
 **Figure 1.1 — req-archive batch archive overview**
 
-## 2. 触发时机
+## 2. When to Trigger
 
 ```mermaid
 flowchart LR
@@ -30,9 +30,9 @@ flowchart LR
 ```
 **Figure 2.1 — Archive trigger conditions**
 
-由 `/req-8-done` 触发（归档阈值达到），或用户随时手动运行。
+Triggered by `/req-8-done` when the archive threshold is reached, or run manually by the user at any time.
 
-## 3. 流程总览
+## 3. Overall Flow
 
 ```mermaid
 flowchart TD
@@ -46,7 +46,7 @@ flowchart TD
 ```
 **Figure 3.1 — req-archive batch archive flow**
 
-## 4. 详细步骤
+## 4. Steps
 
 ```mermaid
 flowchart TD
@@ -57,18 +57,18 @@ flowchart TD
 ```
 **Figure 4.1 — Detailed step sequence**
 
-### 4.1 加载 Active 已完成需求
-1. 读取 `requirements/index.md`
-2. 收集 **Active** 区块中所有状态为 `Completed` 的行
-3. 若无，通知用户并退出
+### 4.1 Load Active Completed Requirements
+1. Read `requirements/index.md`
+2. Collect all rows with status `Completed` from the **Active** section
+3. If none found, notify the user and exit
 
-### 4.2 生成里程碑摘要
-针对每个已完成需求，读取其 `requirement.md` 和 `technical.md`，提取：
-- 所构建内容的单行描述
-- 新引入的共享模块/工具（来自 technical.md § Shared Modules & Reuse Strategy）
-- 确立的关键技术决策（来自 technical.md § Design Principles 或 Risks & Notes）
+### 4.2 Generate Milestone Summary
+For each completed requirement, read its `requirement.md` and `technical.md` and extract:
+- A one-line description of what was built
+- New shared modules/utilities introduced (from technical.md § Shared Modules & Reuse Strategy)
+- Key technical decisions established (from technical.md § Design Principles or Risks & Notes)
 
-若 `requirements/archive/` 目录不存在则创建。写入 `requirements/archive/milestone-<YYYY-MM-DD>.md`：
+Create `requirements/archive/` if it does not exist. Write `requirements/archive/milestone-<YYYY-MM-DD>.md`:
 
 ```markdown
 # Milestone — <YYYY-MM-DD>
@@ -97,22 +97,22 @@ Patterns, constraints, or architectural decisions confirmed across this batch:
 - Active requirements remaining: Y
 ```
 
-### 4.3 更新 index.md
-将所有 Completed 行从 **Active** 移至 **Archived** 区块：
-- 在 Archived 区块中，将 `Status` + `Updated` 列替换为单个 `Completed` 日期列
-- 保持所有其他行内容不变
-- 不触碰非 Completed 状态的行
+### 4.3 Update index.md
+Move all Completed rows from the **Active** section to the **Archived** section:
+- In the Archived section, replace the `Status` + `Updated` columns with a single `Completed` date column
+- Leave all other row content unchanged
+- Do not touch rows with non-Completed status
 
-### 4.4 提交与打标签
+### 4.4 Commit & Tag
 
 ```bash
 git add -A && git commit -m "chore: archive milestone <YYYY-MM-DD>"
 git tag milestone-<YYYY-MM-DD>
 ```
 
-### 4.5 输出结果
-通知用户：
-- 已归档多少个需求
-- 里程碑摘要位置：`requirements/archive/milestone-<date>.md`
-- 剩余活跃需求数量
-- 已创建 Git tag：`milestone-<date>`
+### 4.5 Output Result
+Notify the user:
+- How many requirements were archived
+- Milestone summary location: `requirements/archive/milestone-<date>.md`
+- Number of remaining active requirements
+- Git tag created: `milestone-<date>`

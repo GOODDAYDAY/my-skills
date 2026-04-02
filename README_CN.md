@@ -2,6 +2,8 @@
 
 个人 Claude Code Skills 仓库。一套完整的需求驱动开发工作流——从需求分析到最终交付。
 
+> **注意：** 所有 SKILL.md 文件现已改为英文编写。本 README 保留中文版本供参考。
+
 [English](./README.md)
 
 ## 安装

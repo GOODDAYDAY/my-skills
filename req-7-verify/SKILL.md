@@ -7,8 +7,8 @@ argument-hint: "[REQ-xxx]"
 # req-7-verify
 > Version: v1 | Date: 2026-04-02 | Author: system
 
-## 1. 概述
-你负责验证阶段。确保代码能够构建、运行并通过测试。
+## 1. Overview
+You are responsible for the verification stage — ensure the code can build, run, and pass tests.
 
 ```mermaid
 flowchart LR
@@ -20,7 +20,7 @@ flowchart LR
 ```
 **Figure 1.1 — req-7-verify three-layer pipeline**
 
-## 2. 前置条件
+## 2. Prerequisites
 
 ```mermaid
 flowchart LR
@@ -30,10 +30,10 @@ flowchart LR
 ```
 **Figure 2.1 — Prerequisites check**
 
-- `$ARGUMENTS` 提供 REQ 编号
-- 编码工作已完成
+- `$ARGUMENTS` provides a REQ number
+- Coding must be complete
 
-## 3. 流程总览
+## 3. Overall Flow
 
 ```mermaid
 flowchart TD
@@ -45,10 +45,10 @@ flowchart TD
     D --> E[Generate / Update Scripts]
     E --> F[Output Report]
     F --> G[Commit and Tag]
-**Figure 3.1 — req-7-verify three-layer verification pipeline**
 ```
+**Figure 3.1 — req-7-verify three-layer verification pipeline**
 
-## 4. 断点恢复
+## 4. Breakpoint Recovery
 
 ```mermaid
 flowchart LR
@@ -61,15 +61,15 @@ flowchart LR
 ```
 **Figure 4.1 — Verification breakpoint recovery**
 
-读取 `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` 获取恢复规范。
+Read `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` for recovery specifications.
 
-若上次验证被中断：
-1. 检查 `scripts/` 下是否已有脚本
-2. 检查测试文件是否已存在
-3. 若存在，运行现有脚本查看哪些通过/失败
-4. 仅修复失败项，不重新生成已通过项
+If a previous verification was interrupted:
+1. Check whether scripts already exist under `scripts/`
+2. Check whether test files already exist
+3. If they exist, run the existing scripts to see which pass/fail
+4. Fix only the failing items — do not regenerate passing ones
 
-## 5. 详细步骤
+## 5. Steps
 
 ```mermaid
 flowchart TD
@@ -82,10 +82,10 @@ flowchart TD
 ```
 **Figure 5.1 — Verification step sequence**
 
-### 5.1 识别项目类型
-读取 `requirements/REQ-xxx-*/technical.md`，确定技术栈和构建方式。
+### 5.1 Identify Project Type
+Read `requirements/REQ-xxx-*/technical.md` to determine the technology stack and build method.
 
-### 5.2 构建检查
+### 5.2 Build Check
 
 ```mermaid
 flowchart LR
@@ -97,8 +97,8 @@ flowchart LR
     B & C & D & E & F --> G{Pass?}
     G -- No --> H[Fix and Retry]
     G -- Yes --> I[Continue]
-**Figure 5.2 — Build check by technology stack**
 ```
+**Figure 5.2 — Build check by technology stack**
 
 | Technology | Command |
 |:---|:---|
@@ -108,15 +108,15 @@ flowchart LR
 | TypeScript | `tsc --noEmit` |
 | Go | `go build ./...` |
 
-构建必须通过。若出现错误，修复后重试。
+The build must pass. Fix errors and retry if any occur.
 
-### 5.3 运行时检查
-尝试运行项目入口点，确认可正常启动：
-- CLI 工具：执行 `--help` 或简单命令
-- Web 服务：启动并检查健康检查端点
-- 库：尝试 import/load
+### 5.3 Runtime Check
+Attempt to run the project entry point and confirm it starts correctly:
+- CLI tools: execute `--help` or a simple command
+- Web services: start up and check a health-check endpoint
+- Libraries: attempt import/load
 
-### 5.4 自动化测试
+### 5.4 Automated Testing
 
 ```mermaid
 flowchart TD
@@ -131,20 +131,20 @@ flowchart TD
     H -- No --> I[Fix failing tests]
     I --> D
     H -- Yes --> J[Continue]
-**Figure 5.4 — Automated testing flow**
 ```
+**Figure 5.4 — Automated testing flow**
 
-1. 检查测试文件是否已存在
-2. 若不存在，**根据需求文档的验收标准生成测试用例**
-3. **Web 项目特殊要求**：使用 Playwright 进行端到端测试，与项目语言保持一致：
-  - TypeScript/Node.js 项目 → Playwright with TypeScript（`tests/e2e/*.spec.ts`）
-  - Python 项目 → Playwright with Python（`tests/e2e/test_e2e_<feature>.py`）
-  - 不得为 E2E 测试引入不同语言运行时
-  - 测试脚本放置在 `tests/e2e/`
-  - 根据需求功能和验收标准设计测试流程
-  - 测试不仅限于 UI 交互（点击、输入、导航）
-  - 同时测试数据流（提交数据、验证数据库/API 响应正确）
-4. 单元/集成测试命令：
+1. Check whether test files already exist
+2. If not, **generate test cases from the acceptance criteria in the requirement document**
+3. **Special requirement for web projects**: use Playwright for end-to-end tests, matching the project language:
+  - TypeScript/Node.js projects → Playwright with TypeScript (`tests/e2e/*.spec.ts`)
+  - Python projects → Playwright with Python (`tests/e2e/test_e2e_<feature>.py`)
+  - Do NOT introduce a different language runtime for E2E tests
+  - Test scripts go in `tests/e2e/`
+  - Design test flows based on requirement features and acceptance criteria
+  - Tests are not limited to UI interaction (clicks, input, navigation)
+  - Also test data flow (submit data, verify database/API response is correct)
+4. Unit/integration test commands:
 
 | Technology | Command |
 |:---|:---|
@@ -154,22 +154,22 @@ flowchart TD
 | TypeScript | `npm test` |
 | Go | `go test ./...` |
 
-5. 所有测试必须通过
+5. All tests must pass
 
-### 5.5 生成/更新自动化脚本
-读取 `${CLAUDE_SKILL_DIR}/../_shared/scripts.md` 获取脚本规范。
+### 5.5 Generate / Update Automation Scripts
+Read `${CLAUDE_SKILL_DIR}/../_shared/scripts.md` for script specifications.
 
-在 `scripts/` 下生成验证脚本（.bat + .sh），严格遵循共享脚本规范。
+Generate verification scripts under `scripts/` (.bat + .sh), strictly following the shared script specifications.
 
-至少需要：
-- `scripts/build.bat` + `scripts/build.sh` — 构建/编译
-- `scripts/test.bat` + `scripts/test.sh` — 运行所有测试（单元 + 集成）
-- `scripts/test-e2e.bat` + `scripts/test-e2e.sh` — 运行 E2E 测试（Web 项目）
-- `scripts/run.bat` + `scripts/run.sh` — 启动/运行
+At minimum:
+- `scripts/build.bat` + `scripts/build.sh` — build/compile
+- `scripts/test.bat` + `scripts/test.sh` — run all tests (unit + integration)
+- `scripts/test-e2e.bat` + `scripts/test-e2e.sh` — run E2E tests (web projects)
+- `scripts/run.bat` + `scripts/run.sh` — start/run
 
-若脚本已存在，检查是否需要更新。
+If scripts already exist, check whether they need updating.
 
-### 5.6 输出报告
+### 5.6 Output Report
 
 ```markdown
 ## Verification Report
@@ -188,9 +188,9 @@ flowchart TD
 1. ...
 ```
 
-所有检查通过后，通知用户可进入归档阶段。
+After all checks pass, notify the user they can proceed to the archive stage.
 
-### 5.7 提交与打标签
+### 5.7 Commit & Tag
 
 ```bash
 git add -A && git commit -m "test(REQ-xxx): verification tests and scripts"
