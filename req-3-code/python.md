@@ -1,10 +1,30 @@
 # Python Conventions
+> Version: v1 | Date: 2026-04-02 | Author: system
 
-## Modularization
+## 1. Modularization
 
-### Layer Structure
+```mermaid
+flowchart TD
+    MAIN[main.py\nSingle entry point]
+    CORE[core/\nOrchestration — wires layers together]
+    CONFIG[config/\nSettings, constants, shared definitions]
+    LAYER[layer/\nOne directory per responsibility]
+    BASE[base.py\nABC defining layer contract]
+    IMPL[impl/\nOne folder per implementation]
+    HANDLER[handler.py\nConcrete class]
 
+    MAIN --> CORE
+    MAIN --> CONFIG
+    CORE --> LAYER
+    LAYER --> BASE
+    LAYER --> IMPL
+    IMPL --> HANDLER
 ```
+**Figure 1.1 — Layer structure and discovery flow**
+
+### 1.1 Layer Structure
+
+```text
 app/
 ├── main.py                # Single entry point
 ├── config/                # Settings, constants, shared definitions
@@ -20,9 +40,9 @@ app/
 - Each implementation module exports one class with a **conventional name** (e.g., all implementations in the same layer export the same class name)
 - Core discovers implementations via `importlib` + folder name — no registry, no match-case, no if-else chain
 
-### Dependency Rules
+### 1.2 Dependency Rules
 
-```
+```text
 main → core → all other layers (via callback injection)
 ```
 
@@ -31,34 +51,40 @@ main → core → all other layers (via callback injection)
 - `config/` is the only package shared across all layers
 - Core injects callbacks into passive layers; passive layers call them without knowing who's behind
 
-### Adding a New Implementation
-
+### 1.3 Adding a New Implementation
 1. Create `<layer>/<name>/handler.py`
 2. Export a class with the layer's conventional name, inheriting from `base.py`
 3. Implement the abstract methods + a `validate()` for its own config
 4. Done — core picks it up automatically. No wiring code, no config change
 
-### Self-Validating Modules
-
+### 1.4 Self-Validating Modules
 - Each implementation validates its own config in `validate()` or `authenticate()`
 - Config class only loads and displays values — it never knows which fields belong to which implementation
 - Fail fast: validate at startup, not at first use
 
-## Common Code Extraction
+## 2. Common Code Extraction
+
+```mermaid
+flowchart LR
+    A[Same logic\nappears in 2+ places] --> B[Extract immediately]
+    B --> C[Place in utils/ or common/\nat appropriate layer]
+    C --> D[Clear descriptive name\nDateRangeValidator etc.]
+    D --> E[Clean interface\ncallers need not know internals]
+```
+**Figure 2.1 — 2-occurrence rule: extract immediately**
 
 Proactively extract shared logic during coding — do NOT leave it for later.
 
-### Rules
-
+### 2.1 Rules
 - **2-occurrence rule**: if the same logic appears (or is about to appear) in 2+ places, immediately extract it
 - **Where to place**: `utils/` or `common/` package at the appropriate layer level
 - **What qualifies**: data format conversion, validation patterns, string/date manipulation, logging helpers, retry/backoff wrappers, config parsing, common business calculations
 - **Naming**: clear, descriptive names — `DateRangeValidator`, `format_currency()`, not `helper1` or `do_stuff()`
 - **Do NOT over-abstract**: only extract when there is actual duplication or near-certain reuse
 
-### Example
+### 2.2 Example
 
-```
+```text
 app/
 ├── utils/
 │   ├── date_utils.py          # format_date_range(), parse_iso_date()
@@ -92,15 +118,14 @@ def retry_with_backoff(fn, max_retries: int = 3, base_delay: float = 1.0):
             time.sleep(base_delay * (2 ** attempt))
 ```
 
-## Methods as Documentation
+## 3. Methods as Documentation
 
-### Core Philosophy
-
+### 3.1 Core Philosophy
 The essence of a service/orchestration class is **orchestration** — a public method calls a sequence of steps, where each step is a semantically clear private method. **Reading the public method should feel like reading a business flowchart — no comments needed to understand what the business is doing.**
 
 This principle applies recursively: service calls service, handler calls handler — every layer should decompose complex logic into clearly-named private methods. The end result: **anyone opening any method sees a sequence of method calls, not a block of procedural code. Want details? Click into a method. Don't care? Skip it. Drill down layer by layer, each level is crystal clear.**
 
-### Template
+### 3.2 Template
 
 ```python
 class OrderService:
@@ -185,7 +210,7 @@ class OrderService:
 **Anti-pattern (do NOT write like this):**
 
 ```python
-# ✗ Wrong: no step numbers, no logging, all logic flattened — reader must parse every line
+# Wrong: no step numbers, no logging, all logic flattened — reader must parse every line
 def create_order(self, data: OrderData) -> OrderResult:
     if not data.customer_id or not data.items:
         raise ValueError("Missing required fields")
@@ -201,9 +226,9 @@ def create_order(self, data: OrderData) -> OrderResult:
 # Same logic, but: no numbered steps, no logs, can't trace what happened in production
 ```
 
-### Recursive Application
+### 3.3 Recursive Application
 
-```
+```text
 OrderService.create_order()                  ← Public method, reads like a business flow
   ├── _validate_order_data(data)             ← Private method
   ├── _ensure_no_duplicate(key)              ← Private method
@@ -216,7 +241,7 @@ OrderService.create_order()                  ← Public method, reads like a bus
   └── _build_result(order_id, data)          ← Private method
 ```
 
-### Private Method Naming Convention
+### 3.4 Private Method Naming Convention
 
 | Verb Prefix | Semantics | Example |
 |:---|:---|:---|
@@ -229,23 +254,31 @@ OrderService.create_order()                  ← Public method, reads like a bus
 | `query` / `find` / `fetch` | Retrieve data | `_find_existing_user(email)` |
 | `transform` / `convert` | Convert data format | `_transform_to_internal(raw)` |
 
-### Rules
-
+### 3.5 Rules
 1. **Public methods only orchestrate** — body contains only private method calls and simple variable passing; no `if`/`try`/`for` procedural logic in the public method body
 2. **Numbered step comments in public methods** — every line in the public method body must have a numbered comment (`# 1. ...`, `# 2. ...`) describing the business step in plain language. The public method is a numbered flowchart
 3. **Private methods are atomic steps** — each does one thing; the method name describes that thing
 4. **Sufficient logging in private methods** — every private method must log at entry or key outcome:
-   - `logger.info` — key milestones: data persisted, payment charged, event sent
-   - `logger.debug` — intermediate values: inputs received, defaults applied
-   - `logger.warning` — expected failures: validation failed, duplicate detected
-   - Goal: by reading logs alone, you can reconstruct the full business flow
+  - `logger.info` — key milestones: data persisted, payment charged, event sent
+  - `logger.debug` — intermediate values: inputs received, defaults applied
+  - `logger.warning` — expected failures: validation failed, duplicate detected
+  - Goal: by reading logs alone, you can reconstruct the full business flow
 5. **Recursive layering** — every layer follows the same pattern: public = table of contents, private = chapters
 6. **When in doubt, extract** — if a block of code needs a comment to explain "what", extract it into a private method whose name replaces the comment
 7. **Prefix with `_`** — all private methods use the Python single-underscore convention
 
----
+## 4. Imports
 
-## Imports
+```mermaid
+flowchart LR
+    A[imports] --> B[1. stdlib\nos logging etc.]
+    A --> C[2. third-party\nrequests etc.]
+    A --> D[3. local\nabsolute only]
+    B --> E[blank line between groups]
+    C --> E
+    D --> E
+```
+**Figure 4.1 — Import ordering**
 
 ```python
 import os               # 1. stdlib
@@ -260,13 +293,32 @@ from myapp.utils import helper   # 3. local (absolute only)
 - Always absolute imports, never relative
 - Inline imports only to break circular dependencies
 
-## Type Hints
+## 5. Type Hints
+
+```mermaid
+flowchart LR
+    A[Type annotations] --> B[str | None\nPython 3.10+ union]
+    A --> C[TypeAlias\ncomplex callbacks]
+    A --> D[@dataclass\nstructured data]
+    A --> E[@dataclass frozen=True\nimmutable config]
+```
+**Figure 5.1 — Type hint patterns**
 
 - Python 3.10+ union syntax: `str | None` instead of `Optional[str]`
 - `TypeAlias` for complex callback signatures
 - `@dataclass` for structured data; `@dataclass(frozen=True)` for immutable config
 
-## Naming
+## 6. Naming
+
+```mermaid
+flowchart LR
+    A[Identifier] --> B[Class → PascalCase\nUserService]
+    A --> C[Function/method → snake_case\nget_user]
+    A --> D[Private → _prefix\n_validate]
+    A --> E[Constant → UPPER_SNAKE\nMAX_RETRIES]
+    A --> F[Logger → per-module\nlogging.getLogger]
+```
+**Figure 6.1 — Python naming conventions**
 
 | Kind | Style | Example |
 |:---|:---|:---|
@@ -277,7 +329,17 @@ from myapp.utils import helper   # 3. local (absolute only)
 | Private constant | `_` + UPPER | `_DEFAULT_TIMEOUT = 30` |
 | Logger | per-module | `logger = logging.getLogger("app.module")` |
 
-## Logging
+## 7. Logging
+
+```mermaid
+flowchart LR
+    A[Log event] --> B{Level?}
+    B --> C[debug: diagnostics\nintermediate values]
+    B --> D[info: state changes\nkey milestones]
+    B --> E[warning: non-fatal\nexpected issues]
+    B --> F[exception: caught error\nwith traceback]
+```
+**Figure 7.1 — Python logging levels**
 
 ```python
 logger = logging.getLogger("app.service.auth")
@@ -292,7 +354,20 @@ logger.exception("Failed to process %s", item_id)
 - `debug` for diagnostics, `info` for state changes, `warning` for non-fatal issues, `exception` for caught errors with traceback
 - Truncate large values before logging; never log secrets
 
-## Error Handling
+## 8. Error Handling
+
+```mermaid
+flowchart TD
+    A[Handle error] --> B[Guard clause style\nhappy path first]
+    B --> C[Check primary source]
+    C --> D{Found?}
+    D -- Yes --> E[Return immediately]
+    D -- No --> F[Check fallback]
+    F --> G{Found?}
+    G -- Yes --> E
+    G -- No --> H[raise RuntimeError]
+```
+**Figure 8.1 — Guard clause error handling pattern**
 
 ```python
 # Guard clause style — happy path reads top-down, errors at bottom
@@ -319,7 +394,16 @@ if missing:
 - Prefer standard exceptions (`ValueError`, `RuntimeError`, `EnvironmentError`)
 - `except SpecificException` preferred; bare `except Exception` only with `logger.exception()`
 
-## Async
+## 9. Async
+
+```mermaid
+flowchart LR
+    A[I/O operation] --> B{Blocking?}
+    B -- No native async --> C[asyncio.to_thread\nwrap in thread]
+    B -- Native async --> D[async/await directly]
+    D --> E[aiohttp ClientSession\ncontext manager]
+```
+**Figure 9.1 — Async I/O decision**
 
 ```python
 # async for all I/O
@@ -334,7 +418,15 @@ async with aiohttp.ClientSession() as session:
         data = await resp.json()
 ```
 
-## Docstrings
+## 10. Docstrings
+
+```mermaid
+flowchart LR
+    A[Module] --> B[Module-level docstring\nRequired: one sentence why]
+    A --> C[ABC / complex public API] --> D[Function docstring\nRequired]
+    A --> E[Simple function] --> F[No docstring needed]
+```
+**Figure 10.1 — Docstring requirements by scope**
 
 ```python
 """Module purpose — one sentence explaining why this exists.
@@ -347,13 +439,30 @@ Optional detail on design, constraints, or non-obvious behavior.
 - Function/method docstrings only on ABCs or complex public APIs
 - English only
 
-## Path Handling
+## 11. Path Handling
+
+```mermaid
+flowchart LR
+    A[File path needed] --> B[pathlib.Path\nnever string concat]
+    B --> C[.resolve()\nfor absolute path]
+    B --> D[.parent\nfor relative navigation]
+```
+**Figure 11.1 — Path handling with pathlib**
 
 - Always `pathlib.Path`, never string concatenation
 - `.resolve()` for absolute paths
 - `.parent` chaining for relative navigation
 
-## General Style
+## 12. General Style
+
+```mermaid
+flowchart LR
+    A[Style rules] --> B[Guard clauses\nover nested if-else]
+    A --> C[No empty __init__.py\nunless needed]
+    A --> D[Single entry point\nif __name__ == __main__]
+    A --> E[async/await\nfor all I/O-bound ops]
+```
+**Figure 12.1 — General style principles**
 
 - Guard clauses over nested if-else
 - No empty `__init__.py` — only when package-level init is needed
