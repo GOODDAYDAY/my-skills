@@ -98,7 +98,31 @@ Bold (`**text**`) for key terms on first introduction and critical warnings. Ita
 
 ## 8. Lists
 
-Ordered lists for sequential steps. Unordered lists for non-sequential enumerations. Sub-lists: indent with 2 spaces. Maximum nesting depth: 2 levels — deeper structure belongs in headings.
+### 8.1 Bullets vs. Prose
+
+**Prefer bullet lists over dense paragraphs.** When a section contains 2+ distinct facts, properties, steps, or constraints, break them into bullets — do not pack them into a single paragraph.
+
+Bad (dense paragraph):
+```
+Dispatcher 是用户的唯一入口，负责接收消息、调用 Claude、解析回复、任务入队、路由 Executor、通知用户。进程由 asyncio.run 驱动，阻塞于 feishu_client.start()。
+```
+
+Good (bullets):
+```
+- Dispatcher 是用户的唯一入口，负责：
+  - 接收 Feishu 消息 → 调用 Claude → 解析回复 → 发送卡片或文本 → 任务入队 → 路由到 Executor → 通知用户
+- 进程由 `asyncio.run(app.run())` 驱动，阻塞于 `feishu_client.start()`。
+```
+
+Use a paragraph only when the content is a single continuous thought that cannot be cleanly separated — such as a one-sentence summary or a flowing explanation.
+
+### 8.2 Sub-lists
+
+Use a sub-list (2-space indent) when a bullet has a detail, exception, or elaboration that belongs to it rather than being a peer point. Do not repeat the parent concept in the sub-bullet; it should add new information only.
+
+### 8.3 Ordered vs. Unordered
+
+Ordered lists for sequential steps where order matters. Unordered lists for all other cases. Maximum nesting depth: 2 levels — deeper structure belongs in headings.
 
 ## 9. Document Header
 
