@@ -118,7 +118,12 @@ flowchart TD
 
 1. 确定 REQ 编号：读取 `requirements/index.md`，扫描 Active 和 Archived **两个**部分以找到最高现有 REQ 编号，加 1 递增
 2. 创建目录：`requirements/REQ-xxx-<short-name>/`（目录名使用英文）
-3. 按以下格式写入 `requirement.md`：
+3. 通过 `Skill` tool 调用 `write-doc`，传入以下信息：
+   - 使用下方嵌入模板作为文档结构
+   - 将 diverge/converge 阶段确认的完整需求内容填入各章节
+   - 保存路径：`requirements/REQ-xxx-<short-name>/requirement.md`
+
+   模板：
 
 ```markdown
 # REQ-xxx <Requirement Name>

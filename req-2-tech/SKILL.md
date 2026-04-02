@@ -125,7 +125,12 @@ flowchart TD
 **等待用户选择**：选 A / 选 B / 描述融合方式。用户选定后，以所选方向作为编写 technical.md 的基础。
 
 ### 4.4 编写技术规范
-在同一目录下创建 `technical.md`，格式如下：
+通过 `Skill` tool 调用 `write-doc`，传入以下信息：
+- 使用下方嵌入模板作为文档结构
+- 将 diverge/converge 阶段选定的技术方案填入各章节
+- 保存路径：与 `requirement.md` 同目录下的 `technical.md`
+
+模板：
 
 ```markdown
 # REQ-xxx Technical Design
