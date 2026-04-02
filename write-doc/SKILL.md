@@ -36,76 +36,77 @@ Output a heading outline for user review:
 ...
 ```
 
-Rules for the outline:
-- Aim for at least 10 subsections (`###` or deeper) per `##` section
+Rules:
+- At least 10 subsections (`###` or deeper) per `##` section
 - Every concept, rule, pattern, or scenario gets its own heading
-- Mark planned Mermaid diagrams: `[DIAGRAM: flowchart of X]`
+- Mark planned Mermaid diagrams inline: `[DIAGRAM: flowchart of X]`
 - At least one diagram per `##` section
 
 **Wait for user approval before writing.**
 
-### Step 4: Internal Loop — Write → Review → Simplify
+### Step 4: Internal Loop — max 3 iterations
 
-Run this loop (max 3 iterations) until the document is stable (no structural changes between iterations):
+Repeat until stable (no structural changes between iterations), then exit.
 
 #### 4.1 Write / Revise
 
-On the first iteration: write the full document.
-On subsequent iterations: apply only the changes identified in the previous Review and Simplify steps — do not rewrite from scratch.
+First iteration: write the full document.
+Subsequent iterations: apply only the fixes identified in the previous iteration's review steps — do not rewrite from scratch.
 
 Writing rules (from `_shared/markdown.md`):
-- `# Title` followed immediately by `> Version | Date` metadata line
+- `# Title` then immediately `> Version | Date` metadata
 - All headings numbered: `## 1.`, `### 1.1`, `#### 1.1.1`
-- One blank line before each heading; no blank lines after a heading before its first content line
+- One blank line before each heading; no blank line between a heading and its first content
 - No consecutive blank lines; no `---` / `***` / `___` dividers
-- Mermaid diagrams placed immediately after the introducing content, with bold caption below: `**Figure X.X — description**`; all diagram text in English
-- Each section must be substantive; include concrete examples and code snippets where relevant
+- Mermaid diagrams placed right after the introducing content, bold caption below: `**Figure X.X — description**`; all diagram text in English
+- Every section substantive; include concrete examples and code snippets where relevant
 
 #### 4.2 Format Review
 
-Check every item — fix violations immediately before proceeding:
+Fix any violation immediately:
 - [ ] All headings numbered correctly and sequentially
 - [ ] No `---` dividers anywhere
 - [ ] No consecutive blank lines
+- [ ] No blank line between a heading and its first line of content
 - [ ] Every `##` section has at least one Mermaid diagram
 - [ ] All diagram text in English with bold captions
 - [ ] Document starts with `# Title` and metadata blockquote
 
 #### 4.3 Content Review
 
-For each `##` section, verify:
-- [ ] Coverage: does it address what the heading promises? No missing sub-topics
-- [ ] Accuracy: are claims correct and not contradicted elsewhere?
-- [ ] Depth: are there vague or shallow subsections that need expansion?
-- [ ] Examples: does each significant concept have a concrete example or code snippet?
-
-Record each gap as a numbered finding: `[CR-01] Section 3.2 — missing error handling example`.
+For each `##` section, check and fix directly:
+- **Coverage**: does the content deliver exactly what the heading promises? If a heading says "最佳实践", there must be concrete actionable practices — not just description
+- **Depth**: are there vague or shallow subsections that need expansion?
+- **Examples**: does each significant concept have a concrete example or code snippet?
+- **Knowledge continuity**: reading as the target audience, are there concept jumps where a term or idea appears without prior introduction? Fill any gaps
 
 #### 4.4 Simplify
 
-**Goal: prevent the document from growing with each iteration.** For every section, actively look for content to cut or merge:
-
-- **Remove duplicates**: if the same point is made in two places, keep the better one and delete the other
-- **Merge thin headings**: if two adjacent `###` or `####` sections together form only 2–3 sentences, merge them under one heading
-- **Trim verbose prose**: cut filler phrases, redundant transitions, and over-explained obvious points
+Actively look for content to cut or merge — fix directly:
+- **Remove duplicates**: same point made in two places → keep the better one, delete the other
+- **Merge thin headings**: two adjacent `###`/`####` sections that together form only 2–3 sentences → merge under one heading
+- **Trim verbose prose**: cut filler phrases, redundant transitions, over-explained obvious points
 - **Reduce example overload**: if a concept has 3 examples and 1 suffices, cut 2
-- **Cut unearned headings**: a heading that contributes nothing beyond restating the parent section's content should be removed
+- **Cut unearned headings**: a heading whose content merely restates the parent section → remove
+- **Diagram value**: for each diagram, ask "does this show something the surrounding text cannot convey as clearly?" If not, remove the diagram and strengthen the text instead
 
-Record each cut as: `[S-01] Merged 3.2.1 and 3.2.2 — both said the same thing`.
+#### 4.5 Terminology Consistency
 
-#### 4.5 Convergence Check
+Scan the full document and fix inconsistencies:
+- Same concept named differently across sections (e.g., "Agent" vs "agent", "工作流" vs "Workflow" vs "工作流程")
+- Capitalization inconsistencies for proper nouns and technical terms
+- Language mixing: decide per term whether to use Chinese or English, then apply uniformly
+- Abbreviations: each abbreviation introduced once on first use, then used consistently
 
-After completing 4.2–4.4, assess stability:
-- If there are open `[CR-xx]` findings **or** structural changes from Simplify → loop back to 4.1
-- If only minor wording fixes remain and no structural changes → exit the loop
-- If iteration count reaches 3 → exit regardless, note remaining open findings
+#### 4.6 Convergence Check
+
+- Structural changes were made in 4.2–4.5 → loop back to 4.1
+- Only minor wording fixes, no structural changes → exit loop
+- Iteration count reached 3 → exit regardless
 
 ### Step 5: Deliver
 
-Present the final document with a brief summary:
-- Iterations run
-- Key changes made in final round
-- Any remaining open findings (if exited at max iterations)
+Present the final document with a brief summary of what changed across iterations.
 
 Ask the user:
 - "Any sections to expand or cut?"
