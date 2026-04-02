@@ -5,17 +5,19 @@ argument-hint: "[REQ-xxx]"
 ---
 
 # req-2-tech — 技术设计
-> Version: v1 | Date: 2026-04-02 | Author: system
+> Version: v2 | Date: 2026-04-02 | Author: system
 
 ## 1. 角色定义
 你负责技术设计阶段，基于已确认的需求文档编写技术规范。
 
 ```mermaid
 flowchart LR
-    A[requirement.md\nFinalized] --> B[Write technical.md]
-    B --> C[Generate diagrams]
-    C --> D[User review loop]
-    D --> E[Status: Technical Finalized]
+    A[requirement.md\nFinalized] --> B[Diverge: multi-agent design]
+    B --> C[Converge: user selects direction]
+    C --> D[Write technical.md]
+    D --> E[Generate diagrams]
+    E --> F[User review loop]
+    F --> G[Status: Technical Finalized]
 ```
 **Figure 1.1 — req-2-tech stage overview**
 
@@ -29,17 +31,21 @@ flowchart TD
     D -->|Yes, incomplete| E[Show existing content\nAsk: continue or restart?]
     D -->|No| F[Read requirement.md]
     E --> F
-    F --> G[Write technical.md]
-    G --> H[Generate PlantUML Diagrams]
-    H --> I[Present to User]
-    I --> J{User\nApproved?}
-    J -->|Revise| G
-    J -->|Approved| K[Finalize technical.md]
-    K --> L[Update index.md]
-    L --> M[Commit & Tag]
-    M --> E2([Done])
+    F --> G[Diverge: A+B+C design]
+    G --> H[Converge: present synthesis]
+    H --> I{User\nselects direction?}
+    I -->|Revise| G
+    I -->|Selected| J[Write technical.md]
+    J --> K[Generate PlantUML Diagrams]
+    K --> L[Present to User]
+    L --> M{User\nApproved?}
+    M -->|Revise| J
+    M -->|Approved| N[Finalize technical.md]
+    N --> O[Update index.md]
+    O --> P[Commit & Tag]
+    P --> E2([Done])
 ```
-**Figure 2.1 — Technical design flow: read requirement → design → review → finalize**
+**Figure 2.1 — Technical design flow: read requirement → diverge → converge → write → finalize**
 
 ## 3. 前置条件
 
@@ -49,7 +55,7 @@ flowchart LR
     B -- No --> C[Prompt user:\ncomplete req-1-analyze first]
     B -- Yes --> D{technical.md\nalready exists?}
     D -- Yes incomplete --> E[Show content\nask continue or restart]
-    D -- No --> F[Proceed to write technical.md]
+    D -- No --> F[Proceed to diverge analysis]
 ```
 **Figure 3.1 — Prerequisites check flow**
 
@@ -68,18 +74,57 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[4.1 Read requirement.md] --> B[4.2 Write technical.md]
-    B --> C[4.3 Generate diagrams]
-    C --> D[4.4 User review loop]
-    D --> E[4.5 Finalize: status Technical Finalized]
-    E --> F[4.6 Commit and tag]
+    A[4.1 Read requirement.md] --> B[4.2 Diverge: A+B+C design]
+    B --> C[4.3 Converge: user selects direction]
+    C --> D[4.4 Write technical.md]
+    D --> E[4.5 Generate diagrams]
+    E --> F[4.6 User review loop]
+    F --> G[4.7 Finalize: status Technical Finalized]
+    G --> H[4.8 Commit and tag]
 ```
 **Figure 4.1 — Technical design step sequence**
 
 ### 4.1 读取需求文档
 读取对应的 `requirement.md`，理解所有功能和验收标准。
 
-### 4.2 编写技术规范
+### 4.2 发散设计（Diverge）
+
+读取 `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` 获取完整模式规范（角色定义、Round 3 消息传递模型、实现约束）。
+
+通过 `Agent` tool 启动三轮 subagent 分析：
+
+**Round 1（并行）**：同时启动 Agent A 和 Agent B：
+- **Agent A（简单直接）**：模块数 ≤ 3，最少依赖，不考虑扩展，能跑就行
+- **Agent B（可扩展）**：分层/模块化，考虑 10x 规模，接口清晰
+
+**Round 2（顺序）**：启动 Agent C，读取 A+B 完整输出：
+- **Agent C（核心矛盾）**：指出"两种架构在哪个关键决策上产生了分歧（如数据耦合 / 部署复杂度 / 团队能力匹配）"，给出判断，必须具体命名矛盾点
+
+**Round 3（并行）**：同时启动 Agent A v2 和 Agent B v2（新实例），各自 prompt 按 `diverge-converge.md` 规范包含 Round 1 双方方案 + C 的质疑全文 + 回应任务。
+
+### 4.3 汇总与用户选择（Converge）
+
+主 agent 整理三轮输出，按 `diverge-converge.md` Synthesis 格式呈现：
+
+1. **三方立场速览**（各一句话）
+2. **核心矛盾点**（C 指出的具体分歧）
+3. **对比表**
+
+| 维度 | Agent A（简单直接）| Agent B（可扩展）|
+|:---|:---|:---|
+| 模块数 | | |
+| 复杂度 | | |
+| 可维护性 | | |
+| 适用场景 | | |
+| 安全设计 | | |
+| 可测试性 | | |
+| 代码整洁度 | | |
+
+4. **推荐方向**（基于上下文判断）
+
+**等待用户选择**：选 A / 选 B / 描述融合方式。用户选定后，以所选方向作为编写 technical.md 的基础。
+
+### 4.4 编写技术规范
 在同一目录下创建 `technical.md`，格式如下：
 
 ```markdown
@@ -151,7 +196,7 @@ Explicitly list which components/utilities/logic are shared, and how they are re
 
 变更日志格式与规则见 `${CLAUDE_SKILL_DIR}/../_shared/changelog.md`。`Affected Scope` 列必须准确填写（如 Module 4.1、API 6.2）。
 
-### 4.3 生成图表
+### 4.5 生成图表
 
 ```mermaid
 flowchart LR
@@ -166,7 +211,7 @@ flowchart LR
     G --> H
     H --> I([Done])
 ```
-**Figure 4.3 — PlantUML diagram generation decision tree**
+**Figure 4.5 — PlantUML diagram generation decision tree**
 
 读取 `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` 获取完整 PlantUML 规范（环境检测、语法、SVG 转换）。严格遵循该流程。
 按需生成以下图表（至少 1-2 张）：
@@ -175,18 +220,18 @@ flowchart LR
 - **类图**：`tech-class.puml`（数据模型/核心类）
 - **ER 图**：`tech-er.puml`（若涉及数据库）
 
-### 4.4 用户审查
+### 4.6 用户审查
 展示技术规范摘要并**等待用户确认**：
 - 重点关注技术栈、架构设计和模块复用策略
 - 用户可要求调整
 - 循环直到用户批准
 
-### 4.5 最终确认
+### 4.7 最终确认
 用户批准后：
 1. 将 `technical.md` 状态更新为 `Technical Finalized`
 2. 读取 `${CLAUDE_SKILL_DIR}/../_shared/status.md` 获取状态规范，将 `requirements/index.md` 状态更新为 `Technical Finalized`
 
-### 4.6 提交与标签
+### 4.8 提交与标签
 
 ```bash
 git add -A && git commit -m "docs(REQ-xxx): technical design complete"

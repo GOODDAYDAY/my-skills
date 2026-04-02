@@ -55,8 +55,12 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[4.1 Understand\nask + analyze] --> B[4.2 Technical plan\nin conversation]
-    B --> C[4.3 Code\nvia /req-3-code override]
+    A[4.1 Understand\nask + analyze] --> A2[4.1b Diverge: A+B+C analysis]
+    A2 --> A3[4.1c Converge: user selects direction]
+    A3 --> B[4.2 Technical plan\nin conversation]
+    B --> B2[4.2b Diverge: A+B+C design]
+    B2 --> B3[4.2c Converge: user selects direction]
+    B3 --> C[4.3 Code\nvia /req-3-code override]
     C --> D[4.4 Security\nvia /req-4-security override]
     D --> E[4.5 Cleanup\nvia /req-5-cleanup override]
     E --> F[4.6 Review\nvia /req-6-review override]
@@ -74,7 +78,15 @@ flowchart TD
 
 若 `$ARGUMENTS` 已提供描述，直接推进。
 
-在**对话中**展开需求并呈现以下内容供用户审阅：
+**Diverge-Converge（需求分析）**：读取 `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` 获取完整模式规范。通过 `Agent` tool 启动三轮 subagent 分析（在对话中完成，不生成文件）：
+
+- **Round 1（并行）**：Agent A（核心路径，最多 5 条 F-xx）+ Agent B（完整视野，覆盖所有场景）
+- **Round 2（顺序）**：Agent C（核心矛盾）读取 A+B，指出本质分歧，判断真实问题
+- **Round 3（并行）**：Agent A v2 + Agent B v2 各自回应 C 的质疑
+
+主 agent 整理后呈现 Synthesis（三方立场速览 + 核心矛盾 + 对比表含安全敏感点/可测试性维度 + 推荐），**等待用户选择方向**。
+
+用户选定后，在**对话中**展开最终需求并呈现以下内容供用户审阅：
 1. **构建目标** — 一段式摘要
 2. **功能性需求** — 编号列表（F-01、F-02、……），每条包含主流程 + 边界情况
 3. **范围外** — 明确排除的内容
@@ -83,7 +95,16 @@ flowchart TD
 **等待用户批准后方可继续。**
 
 ### 4.2 Stage 2：技术方案
-在**对话中**呈现以下内容：
+
+**Diverge-Converge（技术设计）**：读取 `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` 获取完整模式规范。通过 `Agent` tool 启动三轮 subagent 分析（在对话中完成，不生成文件）：
+
+- **Round 1（并行）**：Agent A（简单直接，模块数 ≤ 3）+ Agent B（可扩展，考虑 10x 规模）
+- **Round 2（顺序）**：Agent C（核心矛盾）读取 A+B，指出架构关键分歧点
+- **Round 3（并行）**：Agent A v2 + Agent B v2 各自回应 C 的质疑
+
+主 agent 整理后呈现 Synthesis（三方立场速览 + 核心矛盾 + 对比表含安全设计/可测试性/代码整洁度维度 + 推荐），**等待用户选择方向**。
+
+用户选定后，在**对话中**呈现以下内容：
 1. **技术栈** — 语言、框架、关键库及选型理由
 2. **模块拆分** — 模块名、职责、预期源文件
 3. **关键设计决策** — 架构选择、共享模块、复用策略
