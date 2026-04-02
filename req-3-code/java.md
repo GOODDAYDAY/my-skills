@@ -1,10 +1,30 @@
 # Java Web Service Coding Standard
+> Version: v1 | Date: 2026-04-02 | Author: system
 
 ## 1. Maven Multi-Module POM Structure
 
+```mermaid
+flowchart TD
+    A[Root POM: parent] --> B[common]
+    A --> C[web-base]
+    A --> D[redis-client]
+    A --> E[mongo-client]
+    A --> F[kafka]
+    A --> G[gateway]
+    A --> H[domain-a aggregator]
+    A --> I[domain-b aggregator]
+    H --> H1[domain-a-api]
+    H --> H2[domain-a-common]
+    H --> H3[domain-a-dao]
+    H --> H4[domain-a-biz]
+    H --> H5[domain-a-controller]
+```
+**Figure 1.1 — Maven multi-module hierarchy**
+
 ### 1.1 Three POM Roles
 
-|------|-----------|---------|---------|
+| Role | Packaging | Responsibility | Example |
+|:---|:---|:---|:---|
 | **Root POM (Global Manager)** | `pom` | Unified versioning, dependency management, global plugins | `parent/pom.xml` |
 | **Aggregator POM (Domain Entry)** | `pom` | Groups all sub-modules of a business domain | `{domain}/pom.xml` |
 | **Leaf Module** | `jar` (default) | Actual code-producing module | `{domain}-biz`, `common`, etc. |
@@ -30,19 +50,16 @@
 ```
 
 **The root POM does exactly four things:**
-
 1. **`<properties>`** — Centralized declaration of all dependency version numbers
 2. **`<dependencyManagement>`** — Imports Spring Boot BOM + Spring Cloud BOM, declares all third-party dependency versions (child modules reference them **without specifying version**)
 3. **Global `<dependencies>`** — Only dependencies needed by 100% of modules (Lombok, spring-boot-starter-test)
 4. **Global `<build><plugins>`** — compiler, surefire, flatten, code quality plugins (checkstyle/PMD/SpotBugs)
 
 **Key practices:**
-
 - Use `${revision}` + `flatten-maven-plugin(resolveCiFriendliesOnly)` for version management — all child modules reference `${revision}`, change once to update everywhere
 - Internal module cross-references are also declared in `<dependencyManagement>` to keep versions consistent
 
 ### 1.3 Aggregator POM (Business Domain)
-
 Each business domain is a `packaging=pom` intermediate layer that groups its sub-modules:
 
 ```xml
@@ -71,7 +88,7 @@ Each business domain is a `packaging=pom` intermediate layer that groups its sub
 
 ### 1.4 Two Flavors of Leaf Module POMs
 
-#### Library Module (non-deployable: common, dao, biz, api, etc.)
+#### 1.4.1 Library Module (non-deployable: common, dao, biz, api, etc.)
 
 ```xml
 <parent>
@@ -103,7 +120,7 @@ Each business domain is a `packaging=pom` intermediate layer that groups its sub
 
 **Key trait: No `spring-boot-maven-plugin` — produces a plain jar, not independently runnable.**
 
-#### Service Module (deployable: controller, gateway)
+#### 1.4.2 Service Module (deployable: controller, gateway)
 
 ```xml
 <parent>
@@ -152,58 +169,46 @@ Each business domain is a `packaging=pom` intermediate layer that groups its sub
 
 **Key trait: Has `spring-boot-maven-plugin` + `repackage`, specifies `mainClass` — this is an independently runnable deployment unit.**
 
----
-
 ## 2. Layered Architecture Within a Business Domain
 
-Each business domain consists of 5-6 sub-modules with a strict top-down dependency flow:
+```mermaid
+flowchart TD
+    CTRL[domain-controller\nREST entry, independently deployable]
+    BIZ[domain-biz\nBusiness orchestration layer]
+    DAO[domain-dao\nData access]
+    SEC[domain-security\nAuth/Crypto]
+    MW[Middleware clients\nredis/mongo/kafka]
+    COM[domain-common\nDomain-internal constants]
+    API[domain-api\nRequest/Response DTO]
 
+    CTRL --> BIZ
+    BIZ --> DAO
+    BIZ --> SEC
+    BIZ --> MW
+    DAO --> COM
+    CTRL --> API
 ```
-                   ┌─────────────────┐
-                   │  {domain}-controller  │  ← Independently deployable Spring Boot service
-                   │  (REST entry)         │
-                   └────────┬────────┘
-                            │ depends on
-                   ┌────────▼────────┐
-                   │   {domain}-biz      │  ← Business orchestration layer
-                   │   (Service composition) │
-                   └──┬─────┬────┬───┘
-                      │     │    │
-          ┌───────────┘     │    └───────────┐
-          ▼                 ▼                 ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────────┐
-│ {domain}-dao │  │{domain}-security│  │ Middleware clients │
-│ (Data access)│  │ (Auth/Crypto)  │  │(redis/mongo/kafka) │
-└──────┬───────┘  └──────────────┘  └──────────────────┘
-       │
-       ▼
-┌──────────────┐    ┌──────────────┐
-│{domain}-common│    │ {domain}-api │
-│(Domain-internal│    │(Request/     │
-│  constants)   │    │ Response DTO)│
-└──────────────┘    └──────────────┘
-```
+**Figure 2.1 — Strict top-down dependency flow within a business domain**
 
-### Layer Responsibilities
+### 2.1 Layer Responsibilities
 
 | Sub-module | Responsibility | Visibility |
-|------------|---------------|------------|
-| **{domain}-api** | Request/Response DTOs, pure POJOs with Jakarta Validation annotations | **Only referenced by controller and external domains** (see below) |
+|:---|:---|:---|
+| **{domain}-api** | Request/Response DTOs, pure POJOs with Jakarta Validation annotations | Only referenced by controller and external domains |
 | **{domain}-common** | Domain-internal shared enums, constants, internal DTOs | Domain-internal only |
 | **{domain}-dao** | Entity + MyBatis Mapper + DAO Service (data access encapsulation) | Domain-internal only |
 | **{domain}-security** | Security: JWT, encryption, authentication logic | Domain-internal only |
 | **{domain}-biz** | **Core business orchestration**: composes dao/security/middleware to implement business flows | Only referenced by controller |
 | **{domain}-controller** | REST endpoints, **independently deployable** | Exposes HTTP API externally |
 
-### API Module Boundary (Critical)
-
+### 2.2 API Module Boundary (Critical)
 **The api module is only referenced by two types of consumers:**
 1. **The domain's own controller** — receives HTTP requests, deserializes them into Request objects
 2. **External domains** — cross-domain calls that depend on the api module for DTO definitions (e.g., gateway depends on user-api)
 
 **The biz layer never directly uses api Request/Response objects.** Data flows as follows:
 
-```
+```text
 HTTP Request
     ↓ (Spring deserialization)
 XxxRequest (api module)
@@ -249,20 +254,16 @@ public CompletionStage<ApiResult<XxxResponse>> action(@Valid @RequestBody XxxReq
 - **api module stays lightweight** — contains only interface contracts (validation annotations, etc.), does not leak into internal logic
 - **Clear responsibilities** — Request is "the external world's language", DTO is "the internal world's language", Controller is the translation layer
 
-### Dependency Rules
-
+### 2.3 Dependency Rules
 - **api module has zero business dependencies** — only Lombok + Validation annotations, so cross-domain references don't leak transitive dependencies
 - **biz does not depend on api** — biz interface parameters and return values use DTOs only, never referencing Request/Response
 - **dao does not depend on biz** — dao handles data access only, unaware of business logic
 - **controller does not depend on dao** — controller accesses data only through the biz layer
 - **No circular dependencies** — dependency direction is strictly top-down
 
----
-
 ## 3. Global Infrastructure Modules
 
 ### 3.1 common Module
-
 **Purpose**: Shared low-level utilities for all modules. Contains no web dependencies.
 
 Contents:
@@ -297,7 +298,6 @@ public class BizException extends RuntimeException {
 ```
 
 ### 3.2 web-base Module
-
 **Purpose**: Shared web infrastructure, depended on by all controller modules.
 
 Contents:
@@ -323,18 +323,24 @@ public class ApiResult<T> implements Serializable {
 ```
 
 ### 3.3 Middleware Client Modules
-
 **Purpose**: Each middleware is encapsulated as an independent module, imported by business domains as needed.
-
 - `redis-client` — Redisson wrapper
 - `mongo-client` — Spring Data MongoDB wrapper
 - `kafka` (contains kafka-producer, kafka-client) — Kafka client wrapper
 
 **Principle: Middleware modules contain no business logic — only connection/configuration/basic operation encapsulation.**
 
----
-
 ## 4. Controller Layer Coding Standard
+
+```mermaid
+flowchart LR
+    A[HTTP Request] --> B[Controller\nreceive + validate]
+    B --> C[Convert Request → DTO]
+    C --> D[Call BizService\ncompletableFuture async]
+    D --> E[Convert DTO → Response]
+    E --> F[Wrap ApiResult\nreturn]
+```
+**Figure 4.1 — Controller layer responsibilities**
 
 ### 4.1 Controller Template
 
@@ -387,7 +393,6 @@ public class XxxController {
 ```
 
 ### 4.2 Controller Layer Rules
-
 1. **Zero business logic** — Controller does exactly four things: receive params, convert, call Biz, wrap response
 2. **Fully async** — All endpoints return `CompletionStage<ApiResult<T>>`, executed via `bizThreadPool`
 3. **Only inject Biz interfaces** — Never directly inject dao-layer Services or operate on the database
@@ -395,29 +400,40 @@ public class XxxController {
 5. **Never handle exceptions** — Exceptions are caught globally by `@RestControllerAdvice`
 6. **Own the Request ↔ DTO ↔ Response conversion** — Controller is the translation layer between api and biz; Request/Response never penetrate into the Biz layer
 7. **Comment conventions**:
-    - **Class JavaDoc**: brief description of the Controller's responsibility. Must include `@author`, `@version` (format `X.Y, YYYY/M/D`), `@since`
-    - **Method JavaDoc**: every endpoint must have JavaDoc explaining the API's purpose, `@param` for each parameter, `@return` for the return value
-    - **No `@throws` needed**: exceptions are handled by the global exception handler, not by the Controller
-
----
+  - **Class JavaDoc**: brief description of the Controller's responsibility. Must include `@author`, `@version` (format `X.Y, YYYY/M/D`), `@since`
+  - **Method JavaDoc**: every endpoint must have JavaDoc explaining the API's purpose, `@param` for each parameter, `@return` for the return value
+  - **No `@throws` needed**: exceptions are handled by the global exception handler, not by the Controller
 
 ## 5. Biz Layer Coding Standard
 
 ### 5.1 Core Philosophy: Method Names + Comments + Logging — Trinity
 
-The essence of the Biz layer is **orchestration** — a public method calls a sequence of steps, where each step is a semantically clear private method. Method names are the best form of self-documentation, but **self-documenting names ≠ no comments, no logs**. All three serve different audiences and are equally mandatory:
+```mermaid
+flowchart LR
+    A[Public Method Entry] --> B[log.info: key input params]
+    B --> C[Step 1: private method call]
+    C --> D[Step 2: private method call]
+    D --> E[Step N: private method call]
+    E --> F[log.info: result summary]
+    F --> G[Return DTO]
+    C --> C1[log.debug: intermediate]
+    D --> D1[log.warn: expected failure]
+    E --> E1[log.error: unexpected failure]
+```
+**Figure 5.1 — Biz layer method structure and logging flow**
 
+The essence of the Biz layer is **orchestration** — a public method calls a sequence of steps, where each step is a semantically clear private method. Method names are the best form of self-documentation, but **self-documenting names ≠ no comments, no logs**. All three serve different audiences and are equally mandatory:
 1. **Method names (for developers reading code structure)** — describe the business step "what", e.g. `findActiveUserByEmail`, `verifyCodeHashOrFail`
 2. **Comments (for developers reading business context)** — explain "why" and business rules, with numbered steps in public methods to form a readable flow checklist
-   - Public methods: numbered step comments (`// 1.`, `// 2.`) forming a business flowchart
-   - Private methods: explain non-obvious business rules, edge cases, design decisions
-   - No noise comments: `// find user` next to `findUser()` is noise; `// find active users (excluding DELETED/DISABLED status)` adds value
+  - Public methods: numbered step comments (`// 1.`, `// 2.`) forming a business flowchart
+  - Private methods: explain non-obvious business rules, edge cases, design decisions
+  - No noise comments: `// find user` next to `findUser()` is noise; `// find active users (excluding DELETED/DISABLED status)` adds value
 3. **Logging (for ops/debugging at runtime)** — record runtime data and execution path
-   - Public method entry: `log.info` with key input parameters
-   - Public method exit: `log.info` with result summary
-   - Expected failures: `log.warn` (wrong password, validation failure, expired code)
-   - Unexpected exceptions: `log.error` with stack trace
-   - Debug details: `log.debug` for intermediate variables
+  - Public method entry: `log.info` with key input parameters
+  - Public method exit: `log.info` with result summary
+  - Expected failures: `log.warn` (wrong password, validation failure, expired code)
+  - Unexpected exceptions: `log.error` with stack trace
+  - Debug details: `log.debug` for intermediate variables
 
 This principle applies recursively downward from the Biz layer: Biz calls Biz, Biz calls Service, Service internals — every layer should decompose complex logic into clearly-named private methods. The end result: **anyone opening any method sees a sequence of method calls + numbered comments, like reading a business flow checklist. Want details? Click in. Don't care? Skip it. Drill down layer by layer, each level is clear. And when production breaks, the log trail can reconstruct exactly what happened at every step.**
 
@@ -555,7 +571,7 @@ public class XxxBizServiceImpl implements IXxxBizService {
 **Anti-pattern (do NOT write like this):**
 
 ```java
-// ✗ Wrong: all logic flattened in the public method — reader must parse every line
+// Wrong: all logic flattened in the public method — reader must parse every line
 @Override
 public XxxDTO doAction(XxxDTO dto) {
     String decryptedValue;
@@ -580,10 +596,9 @@ public XxxDTO doAction(XxxDTO dto) {
 ```
 
 ### 5.3 Recursive Application: Every Layer Follows the Same Pattern
-
 This approach is not limited to the Biz layer — **it applies recursively to every layer below**:
 
-```
+```text
 BizServiceA.doAction()                    ← Public method, reads like a business flow
   ├── validateInput(dto)                  ← Private method
   ├── bizServiceB.process(dto)            ← Calls another Biz — click in, same structure
@@ -602,7 +617,7 @@ BizServiceA.doAction()                    ← Public method, reads like a busine
 ### 5.4 Private Method Naming Convention
 
 | Verb Prefix | Semantics | Example |
-|-------------|-----------|---------|
+|:---|:---|:---|
 | `validate` / `check` | Validate; throw on failure | `validateEmailUniqueness(email)` |
 | `decrypt` / `encrypt` | Encryption/decryption | `decryptPassword(encrypted)` |
 | `enrich` / `fill` | Populate defaults/derived fields | `enrichWithDefaults(dto)` |
@@ -613,7 +628,6 @@ BizServiceA.doAction()                    ← Public method, reads like a busine
 | `transform` / `convert` | Convert data format | `transformToInternalFormat(raw)` |
 
 ### 5.5 Biz Layer Rules
-
 1. **Business orchestration center** — Composes calls to dao, security, middleware, and other Services
 2. **Public methods only orchestrate** — Public method bodies should contain only private method calls and simple variable passing; no if/try/for procedural logic
 3. **Private methods are atomic business units** — Each private method does exactly one thing; the method name describes that thing
@@ -621,37 +635,45 @@ BizServiceA.doAction()                    ← Public method, reads like a busine
 5. **Use AOP for pre-validation** — Use `@ValueCheckers` or `@BasicCheck` for parameter/business validation; validation logic is extracted into a dedicated ValidationBizService
 6. **Only throw BizException** — `throw new BizException(ErrorCodeEnum.XXX)`; never throw raw exceptions
 7. **Comment conventions** (three layers, each serving a different purpose):
-    - **Class JavaDoc**: describe the class responsibility and core flow overview. Must include `@author` and `@since`
-    - **Public method JavaDoc**: business flow overview (`<p>Flow:` tag), `@param` for each parameter, `@return`, `@throws` for possible exceptions
-    - **Private method JavaDoc**: explain business intent, params, return value, exceptions. Focus on information the method name cannot convey (e.g., why BCrypt instead of SHA, why this default value)
-    - **Inline numbered comments**: public method body uses `// 1.` `// 2.` to label each step with a brief business description, forming a readable flow checklist
-    - **No noise comments**: `// find user` next to `findUser()` is noise; `// find active users (excluding DELETED/DISABLED status)` adds value
+  - **Class JavaDoc**: describe the class responsibility and core flow overview. Must include `@author` and `@since`
+  - **Public method JavaDoc**: business flow overview (`<p>Flow:` tag), `@param` for each parameter, `@return`, `@throws` for possible exceptions
+  - **Private method JavaDoc**: explain business intent, params, return value, exceptions. Focus on information the method name cannot convey (e.g., why BCrypt instead of SHA, why this default value)
+  - **Inline numbered comments**: public method body uses `// 1.` `// 2.` to label each step with a brief business description, forming a readable flow checklist
+  - **No noise comments**: `// find user` next to `findUser()` is noise; `// find active users (excluding DELETED/DISABLED status)` adds value
 8. **Logging conventions**:
-    - `log.info` — public method entry (key input params) and exit (result summary); key milestones in private methods (data persisted, event sent)
-    - `log.warn` — expected failures (wrong password, validation failure, expired code)
-    - `log.error` — unexpected failures (database error, service unavailable) with stack trace
-    - `log.debug` — intermediate variables, detailed steps
-    - **Never log sensitive data**: no passwords, full tokens, verification codes in plaintext. OK to log email, userId, status
-    - **Goal**: by reading logs alone, you can reconstruct the full business flow without looking at code
+  - `log.info` — public method entry (key input params) and exit (result summary); key milestones in private methods (data persisted, event sent)
+  - `log.warn` — expected failures (wrong password, validation failure, expired code)
+  - `log.error` — unexpected failures (database error, service unavailable) with stack trace
+  - `log.debug` — intermediate variables, detailed steps
+  - **Never log sensitive data**: no passwords, full tokens, verification codes in plaintext. OK to log email, userId, status
+  - **Goal**: by reading logs alone, you can reconstruct the full business flow without looking at code
 9. **Proactive common code extraction** — if the same logic appears in 2+ Biz services, immediately extract it:
-    - **Where**: `{domain}-common` module for domain-internal shared logic; root `common` module for cross-domain utilities
-    - **What qualifies**: data format conversion, validation patterns, string/date manipulation, common business calculations, retry wrappers
-    - **How**: extract as static utility methods or shared Service interfaces; callers depend on the interface, not the implementation
-    - **Do NOT over-abstract**: only extract when there is actual duplication or near-certain reuse
-
----
+  - **Where**: `{domain}-common` module for domain-internal shared logic; root `common` module for cross-domain utilities
+  - **What qualifies**: data format conversion, validation patterns, string/date manipulation, common business calculations, retry wrappers
+  - **How**: extract as static utility methods or shared Service interfaces; callers depend on the interface, not the implementation
+  - **Do NOT over-abstract**: only extract when there is actual duplication or near-certain reuse
 
 ## 6. DAO Layer Coding Standard
 
+```mermaid
+flowchart LR
+    A[XxxRequest\napi module] --> B[Controller converts]
+    B --> C[XxxDTO\ndao module]
+    C --> D[DAO Service\nconverts]
+    D --> E[Entity\ndao module internal]
+    E --> F[(Database)]
+```
+**Figure 6.1 — Three-tier object transformation flow**
+
 ### 6.1 Three-Tier Object Model
 
-```
+```text
 Entity (DB mapping)  ←→  DTO (Business transfer)  ←→  Request/Response (API transfer)
    dao module internal        Cross-layer passing           api module definition
 ```
 
 | Object | Module | Responsibility |
-|--------|--------|---------------|
+|:---|:---|:---|
 | **Entity** | dao | Strict database table mapping, generated by MyBatis Generator |
 | **DTO** | dao | Data carrier between layers, contains `toEntity()` / static `fromEntity()` conversion methods |
 | **Request/Response** | api | HTTP interface input/output, carries validation annotations |
@@ -692,15 +714,21 @@ public class XxxServiceImpl implements IXxxService {
 ```
 
 ### 6.3 DAO Layer Rules
-
 1. **Entities never leave the dao module** — Only DTOs are exposed externally
 2. **DTOs own the conversion** — `toEntity()` and `fromEntity()` methods live in the DTO class
 3. **Primary keys generated by UidGenerator** — No reliance on database auto-increment
 4. **MyBatis Dynamic SQL** — Queries built with DSL, no XML mappers
 
----
-
 ## 7. API Module (DTO) Coding Standard
+
+```mermaid
+flowchart LR
+    A[XxxRequest] --> B[@Data @Builder\n@AllArgsConstructor\n@NoArgsConstructor]
+    A --> C[@NotBlank @NotNull\nValidation annotations]
+    D[XxxResponse] --> B
+    D --> E[No validation\nannotations]
+```
+**Figure 7.1 — API module DTO standard annotations**
 
 ### 7.1 Request Pattern
 
@@ -738,30 +766,38 @@ public class XxxResponse {
 ```
 
 ### 7.3 API Module Rules
-
 1. **Pure POJOs** — Only fields, Lombok annotations, and Validation annotations; no business methods
 2. **Four-annotation standard** — `@Data` + `@AllArgsConstructor` + `@NoArgsConstructor` + `@Builder`
 3. **Request and Response are strictly separate** — Even with highly overlapping fields, never reuse
 4. **Cross-domain contract** — Other business domains depend only on this domain's api module
 
----
-
 ## 8. Exception Handling Standard
+
+```mermaid
+flowchart TD
+    A[Exception thrown] --> B[Biz layer\ncatch + wrap as BizException]
+    B --> C[Propagate up]
+    C --> D[@RestControllerAdvice\nGlobal handler]
+    D --> E[BizException → ApiResult.failed]
+    D --> F[Validation → 400 BAD_REQUEST]
+    D --> G[Exception → 500 UNKNOWN_ERROR]
+```
+**Figure 8.1 — Exception handling chain**
 
 ### 8.1 Exception Handling by Layer
 
-```
+```text
 Controller layer  →  Never catches exceptions; all propagate upward
-                            ↓
+                          ↓
 Biz layer         →  Catches low-level exceptions, wraps as BizException(ErrorCodeEnum.XXX)
-                            ↓
+                          ↓
 Global handler    →  @RestControllerAdvice catches all, converts to ApiResult
 ```
 
 ### 8.2 Global Exception Handler Coverage
 
 | Exception Type | HTTP Status | Handling |
-|----------------|-------------|----------|
+|:---|:---|:---|
 | `BizException` | 200 | Returns `ApiResult.failed(errorCode)` |
 | `MethodArgumentNotValidException` | 400 | Extracts field validation error messages |
 | `ConstraintViolationException` | 400 | Extracts parameter validation error messages |
@@ -773,13 +809,21 @@ Global handler    →  @RestControllerAdvice catches all, converts to ApiResult
 | `RejectedExecutionException` | 200 | Thread pool rejection |
 | `Exception` (fallback) | 500 | Unknown error |
 
----
-
 ## 9. Naming Conventions
+
+```mermaid
+flowchart LR
+    A[Business domain] --> B[{domain}-api\nRequest/Response DTOs]
+    A --> C[{domain}-common\nInternal constants/enums]
+    A --> D[{domain}-dao\nEntity + Mapper + DTO]
+    A --> E[{domain}-biz\nBusiness orchestration]
+    A --> F[{domain}-controller\nREST endpoints]
+```
+**Figure 9.1 — Domain sub-module naming pattern**
 
 ### 9.1 Module Naming
 
-```
+```text
 {domain}                    → Business domain aggregator POM
 {domain}-api                → External DTOs
 {domain}-common             → Domain-internal shared
@@ -791,7 +835,7 @@ Global handler    →  @RestControllerAdvice catches all, converts to ApiResult
 
 ### 9.2 Package Naming
 
-```
+```text
 com.company.project.{domain}.controller        → Controller classes
 com.company.project.{domain}.biz.service       → Biz interfaces
 com.company.project.{domain}.biz.service.impl  → Biz implementations
@@ -807,7 +851,7 @@ com.company.project.{domain}.api.response      → Response DTOs
 ### 9.3 Class Naming
 
 | Type | Pattern | Example |
-|------|---------|---------|
+|:---|:---|:---|
 | Controller | `XxxController` | `UserLoginController` |
 | Biz Interface | `IXxxBizService` | `IUserLoginBizService` |
 | Biz Implementation | `XxxBizServiceImpl` | `UserLoginBizServiceImpl` |
@@ -822,69 +866,38 @@ com.company.project.{domain}.api.response      → Response DTOs
 | Error Code | `ErrorCodeEnum` (global singleton) | — |
 
 ### 9.4 Interface Prefix `I`
-
 - All Service interfaces are prefixed with `I`: `IUserService`, `IUserLoginBizService`
 - All implementations are suffixed with `Impl`: `UserServiceImpl`, `UserLoginBizServiceImpl`
 
----
-
 ## 10. Request Lifecycle (End-to-End Call Chain)
 
-```
-HTTP Request
-  │
-  ▼
-┌──────────────────────────────────────────────────────────┐
-│ Gateway (Spring Cloud Gateway)                           │
-│  • Route forwarding                                      │
-│  • JWT validation filter                                 │
-│  • Injects X-USER-ID and other headers                   │
-└──────────────────────┬───────────────────────────────────┘
-                       ▼
-┌──────────────────────────────────────────────────────────┐
-│ Controller Layer                                         │
-│  1. @Valid parameter validation (framework-automatic)    │
-│  2. Request → DTO conversion                             │
-│  3. CompletableFuture.supplyAsync(bizThreadPool)         │
-│  4. Call BizService method (pass DTO, receive DTO)       │
-│  5. DTO → Response conversion                            │
-│  6. Wrap with ApiResult.success(response)                │
-└──────────────────────┬───────────────────────────────────┘
-                       ▼
-┌──────────────────────────────────────────────────────────┐
-│ Biz Layer (only knows DTOs; unaware of Request/Response) │
-│  1. @ValueCheckers AOP pre-validation (DB check → TL)   │
-│  2. @Transactional transaction control                   │
-│  3. Orchestrates multiple underlying Services:           │
-│     • DAO Service → data read/write                      │
-│     • Security Service → crypto/JWT                      │
-│     • Middleware Client → Redis/Kafka                    │
-│  4. Failure → throw BizException(ErrorCodeEnum)          │
-│  5. Success → return DTO.builder()...build()             │
-└──────────────────────┬───────────────────────────────────┘
-                       ▼
-┌──────────────────────────────────────────────────────────┐
-│ DAO Layer                                                │
-│  1. DTO → Entity (toEntity)                              │
-│  2. MyBatis Mapper operates on database                  │
-│  3. Entity → DTO (fromEntity)                            │
-│  4. Returns DTO to Biz layer                             │
-└──────────────────────────────────────────────────────────┘
-                       ▼
-┌──────────────────────────────────────────────────────────┐
-│ Global Exception Handler (@RestControllerAdvice)         │
-│  • BizException → ApiResult.failed(errorCode)            │
-│  • ValidationException → ApiResult.failed(BAD_REQUEST)   │
-│  • Exception → ApiResult.failed(UNKNOWN_ERROR)           │
-└──────────────────────────────────────────────────────────┘
-```
+```mermaid
+flowchart TD
+    REQ[HTTP Request]
+    GW[Gateway\nRoute forwarding + JWT validation\nInjects X-USER-ID header]
+    CTRL[Controller Layer\n1 Valid param validation\n2 Request to DTO\n3 CompletableFuture supplyAsync\n4 Call BizService\n5 DTO to Response\n6 Wrap ApiResult]
+    BIZ[Biz Layer\n1 AOP pre-validation\n2 Transactional control\n3 Orchestrate DAO / Security / Middleware\n4 Throw BizException on failure\n5 Return DTO on success]
+    DAO[DAO Layer\n1 DTO to Entity\n2 MyBatis Mapper\n3 Entity to DTO\n4 Return DTO]
+    EX[Global Exception Handler\nBizException to ApiResult failed\nValidationException to BAD_REQUEST\nException to UNKNOWN_ERROR]
 
----
+    REQ --> GW --> CTRL --> BIZ --> DAO
+    BIZ --> EX
+    CTRL --> EX
+```
+**Figure 10.1 — End-to-end request lifecycle through all layers**
 
 ## 11. Lombok Usage Standard
 
+```mermaid
+flowchart LR
+    A[POJO DTO/Request/Response] --> B[@Data + @Builder\n@AllArgsConstructor\n@NoArgsConstructor]
+    C[Service class] --> D[@RequiredArgsConstructor\n@Slf4j]
+    E[Exception class] --> F[@Getter + @Setter]
+```
+**Figure 11.1 — Lombok annotation usage by class type**
+
 | Annotation | Usage |
-|------------|-------|
+|:---|:---|
 | `@Data` | All POJOs (DTO, Request, Response) |
 | `@Builder` | All objects that need to be constructed |
 | `@AllArgsConstructor` + `@NoArgsConstructor` | Used with `@Builder` (Builder needs all-args constructor; framework deserialization needs no-args) |
@@ -892,30 +905,45 @@ HTTP Request
 | `@Slf4j` | All Service classes that need logging |
 | `@Getter` + `@Setter` | Rare cases where `@Data` is not appropriate (e.g., Exception classes) |
 
----
-
 ## 12. Dependency Injection Standard
 
+```mermaid
+flowchart LR
+    A[Inject dependency] --> B{Type?}
+    B -- Standard service --> C[@RequiredArgsConstructor\nprivate final field\nPreferred]
+    B -- Non-final e.g. Lazy --> D[@Autowired\nnon-final field]
+    B -- Explicit constructor --> E[Not used\ndelegated to Lombok]
+```
+**Figure 12.1 — Dependency injection decision**
+
 | Method | When to Use |
-|--------|-------------|
+|:---|:---|
 | `@RequiredArgsConstructor` + `private final` | **Preferred** — for Service class dependency injection |
 | `@Autowired` | Only for non-final fields (e.g., `@Lazy` thread pool) |
 | Explicit constructor injection | Not used — delegated to Lombok |
 
----
-
 ## 13. New Business Domain Checklist
 
-When adding a new business domain `{domain}`, follow these steps:
+```mermaid
+flowchart TD
+    A[New domain {domain}] --> B[Create {domain}/pom.xml\naggregator POM]
+    B --> C[Add to root POM modules]
+    C --> D[Create sub-modules\napi common dao biz controller]
+    D --> E[Allocate error code segment\nin ErrorCodeEnum]
+    E --> F[Add spring-boot-maven-plugin\nto controller POM]
+    F --> G[Create ControllerApplication.java]
+```
+**Figure 13.1 — New business domain setup checklist**
 
+When adding a new business domain `{domain}`, follow these steps:
 1. Create `{domain}/pom.xml` (aggregator POM, `packaging=pom`), parent points to root POM
 2. Add `<module>{domain}</module>` to the root POM's `<modules>`
 3. Create sub-modules:
-    - `{domain}-api` — Request/Response DTOs
-    - `{domain}-common` — Domain-internal enums, constants
-    - `{domain}-dao` — Entity + Mapper + DAO Service + DTO
-    - `{domain}-biz` — Business orchestration Services
-    - `{domain}-controller` — REST endpoints + Spring Boot application class
+  - `{domain}-api` — Request/Response DTOs
+  - `{domain}-common` — Domain-internal enums, constants
+  - `{domain}-dao` — Entity + Mapper + DAO Service + DTO
+  - `{domain}-biz` — Business orchestration Services
+  - `{domain}-controller` — REST endpoints + Spring Boot application class
 4. Allocate an error code segment in `ErrorCodeEnum` (e.g., 30000-30999)
 5. Add `spring-boot-maven-plugin` to `{domain}-controller`'s POM
 6. Create `ControllerApplication.java` startup class
