@@ -4,55 +4,96 @@ description: Requirement analysis — expand brief user input into a complete re
 argument-hint: "[brief description]"
 ---
 
-You are responsible for the requirement analysis stage. Expand the user's brief description into a complete requirement document.
+# req-1-analyze — 需求分析
+> Version: v1 | Date: 2026-04-02 | Author: system
 
-## Flow
+## 1. 角色定义
+你负责需求分析阶段，将用户的简短描述扩展为完整的需求文档。
 
-### Step 1: Understand the Requirement
+```mermaid
+flowchart LR
+    A[Brief description] --> B[Expand analysis]
+    B --> C[User review loop]
+    C --> D[Generate requirement.md]
+    D --> E[Generate diagrams]
+    E --> F[Update index.md]
+```
+**Figure 1.1 — req-1-analyze stage overview**
 
-If `$ARGUMENTS` is empty or unclear, **proactively guide the user**:
+## 2. 总体流程
+
+```mermaid
+flowchart TD
+    A([Start]) --> B{ARGUMENTS\nprovided?}
+    B -->|No| C[Guide user:\nWhat / Why / Who / References]
+    C --> D{Enough\ninfo?}
+    D -->|No| C
+    D -->|Yes| E[Expand Analysis]
+    B -->|Yes| E
+    E --> F[Present to User]
+    F --> G{User\nApproved?}
+    G -->|Revise| E
+    G -->|Approved| H[Generate requirement.md]
+    H --> I[Generate PlantUML Diagrams]
+    I --> J[Update index.md]
+    J --> K[Commit & Tag]
+    K --> E2([Done])
+```
+**Figure 2.1 — Requirement analysis cycle: expand → review → generate**
+
+## 3. 步骤详解
+
+```mermaid
+flowchart TD
+    A[3.1 Understand] --> B[3.2 Expand analysis]
+    B --> C[3.3 User review loop]
+    C --> D[3.4 Generate requirement.md]
+    D --> E[3.5 PlantUML diagrams]
+    E --> F[3.6 Update index.md]
+    F --> G[3.7 Commit and tag]
+```
+**Figure 3.1 — Step sequence overview**
+
+### 3.1 理解需求
+
+若 `$ARGUMENTS` 为空或不明确，**主动引导用户**：
 - "What feature do you want to build?"
 - "What problem does it solve?"
 - "Who are the target users?"
 - "Any reference products or interfaces?"
 - "Do you have any mockups, screenshots, or UI references? Drag them into the chat."
 
-If the user provides images or screenshots, extract requirements from them directly — visual references take precedence over verbal descriptions when both exist.
+若用户提供图片或截图，直接从中提取需求 — 当视觉参考与文字描述同时存在时，视觉参考优先。
+持续提问直到获得足够信息方可开始分析。
+若 `$ARGUMENTS` 已提供描述，直接进入扩展。
 
-Keep asking until you have enough information to begin analysis.
+### 3.2 扩展分析
+**尽可能全面详细**地扩展需求，并提交以下内容供用户审查：
 
-If `$ARGUMENTS` already provides a description, proceed directly to expansion.
+1. **Background** — 为什么构建此功能，解决什么痛点
+2. **Target Users** — 谁会使用它，使用场景
+3. **Functional Requirements** — 列出所有功能并附编号 ID，每项详细到具体行为
+  - 主流程
+  - 错误处理
+  - 边界情况
+4. **Non-functional Requirements** — 性能、安全、兼容性等
+5. **Out of Scope** — 明确排除的内容
+6. **Acceptance Criteria** — 每项功能的具体可验证条件
 
-### Step 2: Expand Analysis
+格式：使用简洁的列表。将功能编号为 F-01、F-02 等以便追溯。
 
-Expand the requirement **as comprehensively and in as much detail as possible**, and present the following for user review:
+### 3.3 用户审查
+展示扩展内容后，**等待用户反馈**：
+- 用户可修改、添加或删除条目
+- 根据反馈调整并重新提交审查
+- 循环直到用户明确表示"looks good"或"approved"
 
-1. **Background** — Why build this, what pain point does it solve
-2. **Target Users** — Who will use it, usage scenarios
-3. **Functional Requirements** — List all features with numbered IDs, each detailed to specific behavior
-   - Main flow
-   - Error handling
-   - Edge cases
-4. **Non-functional Requirements** — Performance, security, compatibility, etc.
-5. **Out of Scope** — What is explicitly excluded
-6. **Acceptance Criteria** — Specific, verifiable conditions for each feature
+### 3.4 生成需求文档
+用户批准后：
 
-Format: Use concise lists. Number features as F-01, F-02, etc. for traceability.
-
-### Step 3: User Review
-
-After presenting the expansion, **wait for user feedback**:
-- User may modify, add, or remove items
-- Adjust based on feedback and resubmit for review
-- Loop until user explicitly says "looks good" or "approved"
-
-### Step 4: Generate Requirement Document
-
-After user approval:
-
-1. Determine REQ number: read `requirements/index.md`, scan **both** Active and Archived sections to find the highest existing REQ number, increment by 1
-2. Create directory: `requirements/REQ-xxx-<short-name>/` (directory name in English)
-3. Write `requirement.md` in the following format:
+1. 确定 REQ 编号：读取 `requirements/index.md`，扫描 Active 和 Archived **两个**部分以找到最高现有 REQ 编号，加 1 递增
+2. 创建目录：`requirements/REQ-xxx-<short-name>/`（目录名使用英文）
+3. 按以下格式写入 `requirement.md`：
 
 ```markdown
 # REQ-xxx <Requirement Name>
@@ -91,26 +132,34 @@ After user approval:
 | v1 | <date> | Initial version | ALL | - |
 ```
 
-**Note: Section titles and structural fields must be in English. Descriptive content may use Chinese.**
+**注意：章节标题和结构性字段必须使用英文。描述性内容可使用中文。**
 
-Change log format and rules: see `${CLAUDE_SKILL_DIR}/../_shared/changelog.md`. The `Affected Scope` column must be filled accurately.
+变更日志格式与规则见 `${CLAUDE_SKILL_DIR}/../_shared/changelog.md`。`Affected Scope` 列必须准确填写。
 
-4. Generate diagrams (per PlantUML conventions):
-   - At least one use case diagram
-   - Flowchart for complex processes
-   - Sequence diagram for multi-role interactions
+4. 生成图表（按 PlantUML 规范）：
+  - 至少一张用例图
+  - 复杂流程配流程图
+  - 多角色交互配时序图
 
-### PlantUML Diagrams
+### 3.5 PlantUML 图表
+读取 `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` 获取完整 PlantUML 规范（环境检测、语法、SVG 转换）。严格遵循该流程。
 
-Read `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` for the complete PlantUML specification (env detection, syntax, SVG conversion). Follow the process strictly.
+### 3.6 更新索引
 
-### Step 5: Update Index
+```mermaid
+flowchart LR
+    A[Read _shared/status.md] --> B{index.md\nexists?}
+    B -->|Yes| C[Append new record\nStatus: Requirement Finalized]
+    B -->|No| D[Create index.md\nper shared spec]
+    D --> C
+    C --> E([Done])
+```
+**Figure 3.6 — Index update decision flow**
 
-Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for index.md format and status enum.
+读取 `${CLAUDE_SKILL_DIR}/../_shared/status.md` 获取 index.md 格式与状态枚举。
+将需求记录添加到 `requirements/index.md`，状态设为 `Requirement Finalized`。若 `index.md` 不存在，按共享规范创建。
 
-Add the requirement record to `requirements/index.md` with status `Requirement Finalized`. If `index.md` does not exist, create it per the shared specification.
-
-### Step 6: Commit & Tag
+### 3.7 提交与标签
 
 ```bash
 git add -A && git commit -m "docs(REQ-xxx): requirement analysis complete"
