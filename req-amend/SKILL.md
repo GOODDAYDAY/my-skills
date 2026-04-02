@@ -4,29 +4,78 @@ description: Formal change process — safely amend finalized requirement or tec
 argument-hint: "[REQ-xxx]"
 ---
 
-You are responsible for the formal change process. When finalized requirement or technical documents need modification, **changes must go through this skill** — direct manual edits to documents are prohibited.
+# req-amend
+> Version: v1 | Date: 2026-04-02 | Author: system
 
-## Why This Process Exists
+## 1. 概述
+你负责正式变更流程。当已定稿的需求文档或技术文档需要修改时，**必须通过本 skill 进行变更**——禁止直接手动编辑文档。
 
-Direct document edits easily lead to:
-- Changing A and accidentally modifying B (mismod)
-- Incomplete change log, making future reviews untrackable
-- Missing `Affected Scope`, breaking mismod detection
+```mermaid
+flowchart LR
+    A[Change needed] --> B[Define Affected Scope\nbefore editing]
+    B --> C[User approves scope]
+    C --> D[Execute within\ndeclared scope only]
+    D --> E[Auto-diff: out-of-scope?]
+    E -- Yes --> F[Revert + report]
+    E -- No --> G[Update change log]
+```
+**Figure 1.1 — req-amend formal change flow**
 
-## Flow
+## 2. 存在本流程的原因
 
-### Step 1: Confirm Change Target
+```mermaid
+flowchart LR
+    A[Direct edit] --> B[Risk: accidental mismod\nwhen editing A, B changes too]
+    A --> C[Risk: incomplete changelog\ncannot trace later]
+    A --> D[Risk: missing Affected Scope\nbreaks mismod detection]
+    E[req-amend] --> F[All risks mitigated\nby declaring scope first]
+```
+**Figure 2.1 — Why direct editing is prohibited**
 
-1. Read the REQ number from `$ARGUMENTS`
-2. Read current `requirement.md` and `technical.md`
-3. Ask the user what they want to change:
-   - "Which features do you want to modify? (e.g., F-01, F-03)"
-   - "What is the reason for the change?"
-   - "Is this a requirement change or technical design change?"
+直接编辑文档容易导致：
+- 修改 A 时意外改动 B（mismod）
+- 变更日志不完整，导致后续评审无法追溯
+- 缺少 `Affected Scope`，破坏 mismod 检测机制
 
-### Step 2: Define Affected Scope
+## 3. 流程总览
 
-Based on user description, **before making any modifications**, list the affected scope:
+```mermaid
+flowchart TD
+    A[Confirm Change Target] --> B[Define Affected Scope]
+    B --> C[Wait for User Approval]
+    C --> D[Execute Changes in Declared Scope Only]
+    D --> E[Auto-diff: any out-of-scope changes?]
+    E -- Yes --> F[Revert out-of-scope changes]
+    F --> E
+    E -- No --> G[Update Change Log]
+    G --> H[Cascade Updates]
+    H --> I[Update Index Status]
+    I --> J[Output Change Summary]
+```
+**Figure 3.1 — req-amend change request to execution flow**
+
+## 4. 详细步骤
+
+```mermaid
+flowchart TD
+    A[4.1 Confirm target\nREQ + change content] --> B[4.2 Define Affected Scope\nwait user approval]
+    B --> C[4.3 Execute within\ndeclared scope only]
+    C --> D[4.4 Cascade updates\ntech or code if needed]
+    D --> E[4.5 Update index status\npossible rollback]
+    E --> F[4.6 Output change summary]
+```
+**Figure 4.1 — Amendment step sequence**
+
+### 4.1 确认变更目标
+1. 从 `$ARGUMENTS` 读取 REQ 编号
+2. 读取当前 `requirement.md` 和 `technical.md`
+3. 询问用户希望变更的内容：
+  - "您想修改哪些功能？（例如 F-01、F-03）"
+  - "变更原因是什么？"
+  - "这是需求变更还是技术设计变更？"
+
+### 4.2 定义受影响范围
+根据用户描述，**在进行任何修改之前**，列出受影响范围：
 
 ```markdown
 ## Proposed Change
@@ -42,41 +91,50 @@ Based on user description, **before making any modifications**, list the affecte
 - Other features: NO CHANGE
 ```
 
-**Wait for user to confirm the affected scope before making any edits.**
+**等待用户确认受影响范围后，方可进行任何编辑。**
 
-### Step 3: Execute Changes
-
-After user confirmation:
-
-1. **Only modify content within the declared affected scope**
-2. After modification, automatically diff the document changes:
-   - Check if any content outside the affected scope was changed
-   - If so, **revert that change** and report it
-3. Update the change log with a new row:
+### 4.3 执行变更
+用户确认后：
+1. **仅修改声明的受影响范围内的内容**
+2. 修改后自动对比文档变更：
+  - 检查受影响范围之外是否有任何内容被修改
+  - 若有，**撤销该变更**并报告
+3. 在变更日志中新增一行：
 
 ```markdown
 | v<N+1> | <date> | <change description> | <F-xx, F-xx> | <reason> |
 ```
 
-### Step 4: Cascade Updates
+### 4.4 级联更新
 
-If `requirement.md` was modified:
-1. Check if `technical.md` needs a corresponding update
-2. If yes, apply the change process to the technical document as well
-3. Check if code needs adjustment, prompt user whether to re-enter coding stage
+```mermaid
+flowchart TD
+    A{Which document changed?} --> B[requirement.md]
+    A --> C[technical.md]
+    B --> D[Check if technical.md needs update]
+    D -- Yes --> E[Apply change process to technical.md]
+    E --> F[Check if code needs adjustment]
+    C --> F
+    F --> G[Prompt user: re-enter coding stage?]
+```
+**Figure 4.4 — Cascade update decision flow**
 
-If `technical.md` was modified:
-1. Check if code needs adjustment
-2. Prompt user whether to re-enter coding stage
+若修改了 `requirement.md`：
+1. 检查 `technical.md` 是否需要相应更新
+2. 若需要，对技术文档也执行变更流程
+3. 检查代码是否需要调整，提示用户是否重新进入编码阶段
 
-### Step 5: Update Index Status
+若修改了 `technical.md`：
+1. 检查代码是否需要调整
+2. 提示用户是否重新进入编码阶段
 
-Based on the change impact, the status in `index.md` may need to be reverted:
-- Requirement document change → revert to `Requirement Finalized` (needs re-run of technical design)
-- Technical document change → revert to `Technical Finalized` (needs re-run of coding)
-- If user believes the change is minor and does not affect subsequent stages, require explicit confirmation before keeping the current status
+### 4.5 更新索引状态
+根据变更影响，`index.md` 中的状态可能需要回退：
+- 需求文档变更 → 回退到 `Requirement Finalized`（需重新执行技术设计）
+- 技术文档变更 → 回退到 `Technical Finalized`（需重新执行编码）
+- 若用户认为变更较小，不影响后续阶段，需明确确认后方可保留当前状态
 
-### Step 6: Output Change Summary
+### 4.6 输出变更摘要
 
 ```markdown
 ## Change Summary
