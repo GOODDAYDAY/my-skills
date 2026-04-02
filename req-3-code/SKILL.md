@@ -64,9 +64,18 @@ Develop module by module following the technical document's module breakdown.
 3. Implement features in module order
 4. Briefly inform user of progress after completing each module
 5. Key logic in code must correspond to requirement/technical documents
-6. After completing each module: do a quick inline review (extract shared logic, rename vague identifiers, remove dead branches), then commit immediately:
+6. After completing each module, run the following two checks **in order** before committing:
+
+   **6a. Requirement alignment check** — open `requirement.md` and ask:
+   - Which F-xx items and AC-xx criteria does this module cover?
+   - For each covered item: does the implementation fully satisfy it? (main flow, error handling, edge cases)
+   - If any gap is found → fix it now, do not move to the next module
+
+   **6b. Inline code review** — extract shared logic, rename vague identifiers, remove dead branches
+
+   Then commit:
    ```bash
-   git add -A && git commit -m "feat(REQ-xxx): implement <ModuleName> module"
+   git add -A && git commit -m "feat(REQ-xxx): implement <ModuleName> module (covers F-xx, F-xx)"
    ```
 
 ### Code Quality Requirements
