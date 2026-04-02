@@ -7,8 +7,8 @@ argument-hint: "[REQ-xxx | all]"
 # req-status
 > Version: v1 | Date: 2026-04-02 | Author: system
 
-## 1. 概述
-快速查看需求状态，无需手动阅读 `index.md`。
+## 1. Overview
+Quickly view requirement statuses without having to read `index.md` manually.
 
 ```mermaid
 flowchart LR
@@ -19,7 +19,7 @@ flowchart LR
 ```
 **Figure 1.1 — req-status usage modes**
 
-## 2. 用法
+## 2. Usage
 
 ```mermaid
 flowchart LR
@@ -29,11 +29,11 @@ flowchart LR
 ```
 **Figure 2.1 — Usage command flow**
 
-- `/req-status` 或 `/req-status all` — 查看所有需求状态
-- `/req-status REQ-001` — 查看某个需求的详细状态
-- `/req-status archived` — 查看已归档需求列表
+- `/req-status` or `/req-status all` — view all requirement statuses
+- `/req-status REQ-001` — view the detailed status of a specific requirement
+- `/req-status archived` — view the list of archived requirements
 
-## 3. 状态转换图
+## 3. State Transition Diagram
 
 ```mermaid
 stateDiagram-v2
@@ -49,7 +49,7 @@ stateDiagram-v2
 ```
 **Figure 3.1 — Requirement lifecycle state transitions**
 
-## 4. 流程
+## 4. Flow
 
 ```mermaid
 flowchart LR
@@ -61,10 +61,10 @@ flowchart LR
 ```
 **Figure 4.1 — Flow by argument type**
 
-### 4.1 查看所有需求
-1. 读取 `requirements/index.md`
-2. 默认仅输出 **Active** 区块——不列出 Archived 行
-3. 包含统计信息：
+### 4.1 View All Requirements
+1. Read `requirements/index.md`
+2. By default, output only the **Active** section — do not list Archived rows
+3. Include statistics:
 
 ```markdown
 ## Requirement Status Overview
@@ -80,21 +80,21 @@ flowchart LR
 - archive-threshold: 5 (current Completed in Active: 0)
 ```
 
-若用户传入 `archived` 参数，则改为显示 Archived 区块。
+If the user passes `archived`, show the Archived section instead.
 
-### 4.2 查看单个需求
+### 4.2 View a Single Requirement
 
 ```mermaid
 flowchart TD
     A[Read requirement.md and technical.md] --> B[Check code and script existence]
     B --> C[Build phase checklist]
     C --> D[Output detailed status report]
-**Figure 4.2 — Single requirement status check flow**
 ```
+**Figure 4.2 — Single requirement status check flow**
 
-1. 读取 `requirements/REQ-xxx-*/requirement.md` 和 `technical.md`
-2. 检查代码和脚本是否存在
-3. 输出详细状态：
+1. Read `requirements/REQ-xxx-*/requirement.md` and `technical.md`
+2. Check whether code and scripts exist
+3. Output detailed status:
 
 ```markdown
 ## REQ-xxx <Name>

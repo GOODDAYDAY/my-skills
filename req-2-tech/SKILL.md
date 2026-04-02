@@ -4,11 +4,11 @@ description: Technical design — create technical specification based on finali
 argument-hint: "[REQ-xxx]"
 ---
 
-# req-2-tech — 技术设计
+# req-2-tech — Technical Design
 > Version: v2 | Date: 2026-04-02 | Author: system
 
-## 1. 角色定义
-你负责技术设计阶段，基于已确认的需求文档编写技术规范。
+## 1. Role
+You are responsible for the technical design stage — write a technical specification based on a finalized requirement document.
 
 ```mermaid
 flowchart LR
@@ -21,7 +21,7 @@ flowchart LR
 ```
 **Figure 1.1 — req-2-tech stage overview**
 
-## 2. 总体流程
+## 2. Overall Flow
 
 ```mermaid
 flowchart TD
@@ -47,7 +47,7 @@ flowchart TD
 ```
 **Figure 2.1 — Technical design flow: read requirement → diverge → converge → write → finalize**
 
-## 3. 前置条件
+## 3. Prerequisites
 
 ```mermaid
 flowchart LR
@@ -59,18 +59,18 @@ flowchart LR
 ```
 **Figure 3.1 — Prerequisites check flow**
 
-### 3.1 输入验证
-- `$ARGUMENTS` 提供 REQ 编号（如 REQ-001）
-- 对应的 `requirements/REQ-xxx-*/requirement.md` 必须存在且状态为 `Requirement Finalized`
-- 若不满足，提示用户先完成需求分析阶段
+### 3.1 Input Validation
+- `$ARGUMENTS` provides a REQ number (e.g. REQ-001)
+- The corresponding `requirements/REQ-xxx-*/requirement.md` must exist with status `Requirement Finalized`
+- If not met, prompt the user to complete the requirement analysis stage first
 
-### 3.2 断点恢复
-读取 `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` 获取恢复规范。
-若 `technical.md` 已存在且状态为 `Technical Design`（非已确认）：
-- 读取现有内容并展示给用户
-- 询问是否继续完善还是重新开始
+### 3.2 Breakpoint Recovery
+Read `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` for recovery specifications.
+If `technical.md` already exists with status `Technical Design` (not yet finalized):
+- Read the existing content and present it to the user
+- Ask whether to continue refining or start over
 
-## 4. 步骤详解
+## 4. Steps
 
 ```mermaid
 flowchart TD
@@ -84,53 +84,53 @@ flowchart TD
 ```
 **Figure 4.1 — Technical design step sequence**
 
-### 4.1 读取需求文档
-读取对应的 `requirement.md`，理解所有功能和验收标准。
+### 4.1 Read Requirement Document
+Read the corresponding `requirement.md` and understand all features and acceptance criteria.
 
-### 4.2 发散设计（Diverge）
+### 4.2 Diverge Design
 
-读取 `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` 获取完整模式规范（角色定义、Round 3 消息传递模型、实现约束）。
+Read `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` for the full pattern specification (role definitions, Round 3 message-passing model, implementation constraints).
 
-通过 `Agent` tool 启动三轮 subagent 分析：
+Launch three rounds of subagent analysis via the `Agent` tool:
 
-**Round 1（并行）**：同时启动 Agent A 和 Agent B：
-- **Agent A（简单直接）**：模块数 ≤ 3，最少依赖，不考虑扩展，能跑就行
-- **Agent B（可扩展）**：分层/模块化，考虑 10x 规模，接口清晰
+**Round 1 (parallel)**: Launch Agent A and Agent B simultaneously:
+- **Agent A (simple & direct)**: ≤ 3 modules, minimal dependencies, no extensibility concerns, just make it work
+- **Agent B (extensible)**: layered/modular, designed for 10x scale, clean interfaces
 
-**Round 2（顺序）**：启动 Agent C，读取 A+B 完整输出：
-- **Agent C（核心矛盾）**：指出"两种架构在哪个关键决策上产生了分歧（如数据耦合 / 部署复杂度 / 团队能力匹配）"，给出判断，必须具体命名矛盾点
+**Round 2 (sequential)**: Launch Agent C, reading the full A+B output:
+- **Agent C (core conflict)**: identify "at which key decision do the two architectures diverge (e.g. data coupling / deployment complexity / team skill match)", give a judgment — must name the conflict point concretely
 
-**Round 3（并行）**：同时启动 Agent A v2 和 Agent B v2（新实例），各自 prompt 按 `diverge-converge.md` 规范包含 Round 1 双方方案 + C 的质疑全文 + 回应任务。
+**Round 3 (parallel)**: Launch Agent A v2 and Agent B v2 (new instances) simultaneously, each prompt per the `diverge-converge.md` spec containing both Round 1 proposals + C's full challenge + response task.
 
-### 4.3 汇总与用户选择（Converge）
+### 4.3 Converge — Synthesize and User Selection
 
-主 agent 整理三轮输出，按 `diverge-converge.md` Synthesis 格式呈现：
+The main agent consolidates all three rounds' output and presents in the `diverge-converge.md` Synthesis format:
 
-1. **三方立场速览**（各一句话）
-2. **核心矛盾点**（C 指出的具体分歧）
-3. **对比表**
+1. **Three-way position summary** (one sentence each)
+2. **Core conflict** (the specific divergence identified by C)
+3. **Comparison table**
 
-| 维度 | Agent A（简单直接）| Agent B（可扩展）|
+| Dimension | Agent A (simple & direct) | Agent B (extensible) |
 |:---|:---|:---|
-| 模块数 | | |
-| 复杂度 | | |
-| 可维护性 | | |
-| 适用场景 | | |
-| 安全设计 | | |
-| 可测试性 | | |
-| 代码整洁度 | | |
+| Module count | | |
+| Complexity | | |
+| Maintainability | | |
+| Applicable scenarios | | |
+| Security design | | |
+| Testability | | |
+| Code cleanliness | | |
 
-4. **推荐方向**（基于上下文判断）
+4. **Recommended direction** (based on context)
 
-**等待用户选择**：选 A / 选 B / 描述融合方式。用户选定后，以所选方向作为编写 technical.md 的基础。
+**Wait for user selection**: choose A / choose B / describe a blend. Once the user selects, use the chosen direction as the basis for writing `technical.md`.
 
-### 4.4 编写技术规范
-通过 `Skill` tool 调用 `write-doc`，传入以下信息：
-- 使用下方嵌入模板作为文档结构
-- 将 diverge/converge 阶段选定的技术方案填入各章节
-- 保存路径：与 `requirement.md` 同目录下的 `technical.md`
+### 4.4 Write Technical Specification
+Invoke `write-doc` via the `Skill` tool, passing:
+- Use the embedded template below as the document structure
+- Fill in the selected technical design from the diverge/converge phase into each section
+- Save path: `technical.md` in the same directory as `requirement.md`
 
-模板：
+Template:
 
 ```markdown
 # REQ-xxx Technical Design
@@ -197,11 +197,11 @@ Explicitly list which components/utilities/logic are shared, and how they are re
 | v1 | <date> | Initial version | ALL | - |
 ```
 
-**注意：章节标题和结构性字段必须使用英文。描述性内容可使用中文。**
+**Note: section headings and structural fields must be in English.**
 
-变更日志格式与规则见 `${CLAUDE_SKILL_DIR}/../_shared/changelog.md`。`Affected Scope` 列必须准确填写（如 Module 4.1、API 6.2）。
+See `${CLAUDE_SKILL_DIR}/../_shared/changelog.md` for change log format and rules. The `Affected Scope` column must be filled in accurately (e.g. Module 4.1, API 6.2).
 
-### 4.5 生成图表
+### 4.5 Generate Diagrams
 
 ```mermaid
 flowchart LR
@@ -218,25 +218,25 @@ flowchart LR
 ```
 **Figure 4.5 — PlantUML diagram generation decision tree**
 
-读取 `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` 获取完整 PlantUML 规范（环境检测、语法、SVG 转换）。严格遵循该流程。
-按需生成以下图表（至少 1-2 张）：
-- **架构图**（组件）：`tech-architecture.puml`
-- **时序图**：`tech-sequence.puml`（关键流程）
-- **类图**：`tech-class.puml`（数据模型/核心类）
-- **ER 图**：`tech-er.puml`（若涉及数据库）
+Read `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` for the full PlantUML specification (environment detection, syntax, SVG conversion). Follow the process strictly.
+Generate the following diagrams as needed (at least 1–2):
+- **Architecture diagram** (component): `tech-architecture.puml`
+- **Sequence diagram**: `tech-sequence.puml` (key flows)
+- **Class diagram**: `tech-class.puml` (data model / core classes)
+- **ER diagram**: `tech-er.puml` (if a database is involved)
 
-### 4.6 用户审查
-展示技术规范摘要并**等待用户确认**：
-- 重点关注技术栈、架构设计和模块复用策略
-- 用户可要求调整
-- 循环直到用户批准
+### 4.6 User Review
+Present a summary of the technical specification and **wait for user confirmation**:
+- Focus on technology stack, architecture design, and module reuse strategy
+- User may request adjustments
+- Loop until the user approves
 
-### 4.7 最终确认
-用户批准后：
-1. 将 `technical.md` 状态更新为 `Technical Finalized`
-2. 读取 `${CLAUDE_SKILL_DIR}/../_shared/status.md` 获取状态规范，将 `requirements/index.md` 状态更新为 `Technical Finalized`
+### 4.7 Finalize
+After user approval:
+1. Update the status in `technical.md` to `Technical Finalized`
+2. Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Technical Finalized`
 
-### 4.8 提交与标签
+### 4.8 Commit & Tag
 
 ```bash
 git add -A && git commit -m "docs(REQ-xxx): technical design complete"

@@ -7,8 +7,8 @@ argument-hint: "[skill-name]"
 # create-skill
 > Version: v1 | Date: 2026-04-02 | Author: system
 
-## 1. 概述
-根据用户需求创建新 skill，严格遵守以下结构和规范。
+## 1. Overview
+Create a new skill based on the user's request, strictly following the structure and conventions below.
 
 ```mermaid
 flowchart LR
@@ -21,7 +21,7 @@ flowchart LR
 ```
 **Figure 1.1 — Skill creation overview**
 
-## 2. Skill 目录结构
+## 2. Skill Directory Structure
 
 ```mermaid
 flowchart TD
@@ -42,7 +42,7 @@ flowchart TD
     └── run.sh
 ```
 
-## 3. 创建流程
+## 3. Creation Flow
 
 ```mermaid
 flowchart TD
@@ -56,7 +56,7 @@ flowchart TD
 ```
 **Figure 3.1 — New skill creation steps**
 
-## 4. SKILL.md 格式规范
+## 4. SKILL.md Format Specification
 
 ```mermaid
 flowchart LR
@@ -67,7 +67,7 @@ flowchart LR
 ```
 **Figure 4.1 — SKILL.md structure**
 
-### 4.1 Frontmatter 字段
+### 4.1 Frontmatter Fields
 
 ```yaml
 ---
@@ -83,12 +83,12 @@ context: fork                     # Optional, run in isolated subagent
 Markdown instructions for Claude to follow.
 ```
 
-### 4.2 命名规则
-- 目录名：仅限小写字母、数字、连字符（最多 64 个字符）
-- 目录名即斜杠命令：`my-skill/` → `/my-skill`
-- 插件 skill 使用命名空间：`plugin-name:skill-name`
+### 4.2 Naming Conventions
+- Directory name: lowercase letters, digits, and hyphens only (max 64 characters)
+- Directory name becomes the slash command: `my-skill/` → `/my-skill`
+- Plugin skills use namespacing: `plugin-name:skill-name`
 
-## 5. 可用变量
+## 5. Available Variables
 
 ```mermaid
 flowchart LR
@@ -106,7 +106,7 @@ flowchart LR
 | `${CLAUDE_SESSION_ID}` | Current session ID |
 | `${CLAUDE_SKILL_DIR}` | Skill's own directory path (stable even if cwd changes) |
 
-## 6. Skill 存放位置
+## 6. Skill Locations
 
 ```mermaid
 flowchart TD
@@ -122,7 +122,7 @@ flowchart TD
 | Project | `.claude/skills/<name>/` | Current project only |
 | Plugin | `<plugin>/skills/<name>/` | Where plugin is enabled |
 
-## 7. 执行步骤
+## 7. Execution Steps
 
 ```mermaid
 flowchart TD
@@ -136,9 +136,9 @@ flowchart TD
 ```
 **Figure 7.1 — Execution steps**
 
-1. 若 `$ARGUMENTS` 提供了 skill 名称则使用，否则询问用户
-2. 询问用户 skill 的用途和行为
-3. 在当前 skills 根目录下创建目录
-4. 编写 `SKILL.md`，包含合适的 frontmatter 和清晰简洁的指令
-5. 仅在需要时添加支持文件（参考文档、脚本、示例）
-6. 保持指令聚焦——避免过度设计
+1. Use the skill name from `$ARGUMENTS` if provided; otherwise ask the user
+2. Ask the user for the skill's purpose and behavior
+3. Create the directory under the current skills root
+4. Write `SKILL.md` with appropriate frontmatter and clear, concise instructions
+5. Add supporting files (reference docs, scripts, examples) only when needed
+6. Keep instructions focused — avoid over-engineering

@@ -7,8 +7,8 @@ argument-hint: "[description]"
 # task
 > Version: v1 | Date: 2026-04-02 | Author: system
 
-## 1. 概述
-你是轻量级开发流水线编排者。与 `req` 系列相同的质量标准，但不编写需求文档、技术文档及任何额外文件。所有内容在对话中或代码中完成。
+## 1. Overview
+You are the lightweight development pipeline orchestrator. Same quality standards as the `req` series, but without writing requirement documents, technical documents, or any extra files. Everything happens in the conversation or in the code.
 
 ```mermaid
 flowchart LR
@@ -18,7 +18,7 @@ flowchart LR
 ```
 **Figure 1.1 — task skill vs req series**
 
-## 2. 流水线总览
+## 2. Pipeline Overview
 
 ```mermaid
 flowchart TD
@@ -34,7 +34,7 @@ flowchart TD
 ```
 **Figure 2.1 — Lightweight development pipeline**
 
-## 3. 执行规则
+## 3. Execution Rules
 
 ```mermaid
 flowchart LR
@@ -47,11 +47,11 @@ flowchart LR
 ```
 **Figure 3.1 — Stage execution and approval loop**
 
-1. 严格按顺序执行各阶段——等待用户确认后再推进
-2. 每次阶段切换时声明当前进入的阶段
-3. 若用户希望跳过某阶段，需明确确认
+1. Execute stages strictly in order — wait for user confirmation before advancing
+2. Declare the current stage at each transition
+3. If the user wants to skip a stage, require explicit confirmation
 
-## 4. 各阶段详情
+## 4. Stage Details
 
 ```mermaid
 flowchart TD
@@ -69,82 +69,82 @@ flowchart TD
 ```
 **Figure 4.1 — Stage details summary**
 
-### 4.1 Stage 1：理解与分析
-若 `$ARGUMENTS` 为空或不明确，询问用户：
-- "您想构建什么？"
-- "它解决什么问题？"
-- "有哪些特定行为、边界情况或约束？"
-- "是否有截图或 UI 参考？可以拖入。"
+### 4.1 Stage 1: Understand & Analyze
+If `$ARGUMENTS` is empty or unclear, ask the user:
+- "What do you want to build?"
+- "What problem does it solve?"
+- "Are there specific behaviors, edge cases, or constraints?"
+- "Any screenshots or UI references? You can drag them in."
 
-若 `$ARGUMENTS` 已提供描述，直接推进。
+If `$ARGUMENTS` already provides a description, proceed directly.
 
-**Diverge-Converge（需求分析）**：读取 `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` 获取完整模式规范。通过 `Agent` tool 启动三轮 subagent 分析（在对话中完成，不生成文件）：
+**Diverge-Converge (requirement analysis)**: Read `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` for the full pattern specification. Launch three rounds of subagent analysis via the `Agent` tool (in conversation, no files generated):
 
-- **Round 1（并行）**：Agent A（核心路径，最多 5 条 F-xx）+ Agent B（完整视野，覆盖所有场景）
-- **Round 2（顺序）**：Agent C（核心矛盾）读取 A+B，指出本质分歧，判断真实问题
-- **Round 3（并行）**：Agent A v2 + Agent B v2 各自回应 C 的质疑
+- **Round 1 (parallel)**: Agent A (core path, at most 5 F-xx items) + Agent B (full scope, covers all scenarios)
+- **Round 2 (sequential)**: Agent C (core conflict) reads A+B, identifies the fundamental divergence, judges the real problem
+- **Round 3 (parallel)**: Agent A v2 + Agent B v2 each respond to C's challenge
 
-主 agent 整理后呈现 Synthesis（三方立场速览 + 核心矛盾 + 对比表含安全敏感点/可测试性维度 + 推荐），**等待用户选择方向**。
+The main agent consolidates and presents a Synthesis (three-way position summary + core conflict + comparison table with security-sensitive points/testability dimensions + recommendation). **Wait for user to select a direction.**
 
-用户选定后，在**对话中**展开最终需求并呈现以下内容供用户审阅：
-1. **构建目标** — 一段式摘要
-2. **功能性需求** — 编号列表（F-01、F-02、……），每条包含主流程 + 边界情况
-3. **范围外** — 明确排除的内容
-4. **验收标准** — 具体可验证的条件（AC-01、AC-02、……）
+After the user selects, present the following in **conversation** for user review:
+1. **Build goal** — one-paragraph summary
+2. **Functional requirements** — numbered list (F-01, F-02, …), each with main flow + edge cases
+3. **Out of scope** — explicitly excluded items
+4. **Acceptance criteria** — specific verifiable conditions (AC-01, AC-02, …)
 
-**等待用户批准后方可继续。**
+**Wait for user approval before proceeding.**
 
-### 4.2 Stage 2：技术方案
+### 4.2 Stage 2: Technical Plan
 
-**Diverge-Converge（技术设计）**：读取 `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` 获取完整模式规范。通过 `Agent` tool 启动三轮 subagent 分析（在对话中完成，不生成文件）：
+**Diverge-Converge (technical design)**: Read `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` for the full pattern specification. Launch three rounds of subagent analysis via the `Agent` tool (in conversation, no files generated):
 
-- **Round 1（并行）**：Agent A（简单直接，模块数 ≤ 3）+ Agent B（可扩展，考虑 10x 规模）
-- **Round 2（顺序）**：Agent C（核心矛盾）读取 A+B，指出架构关键分歧点
-- **Round 3（并行）**：Agent A v2 + Agent B v2 各自回应 C 的质疑
+- **Round 1 (parallel)**: Agent A (simple & direct, ≤ 3 modules) + Agent B (extensible, designed for 10x scale)
+- **Round 2 (sequential)**: Agent C (core conflict) reads A+B, identifies the key architectural divergence point
+- **Round 3 (parallel)**: Agent A v2 + Agent B v2 each respond to C's challenge
 
-主 agent 整理后呈现 Synthesis（三方立场速览 + 核心矛盾 + 对比表含安全设计/可测试性/代码整洁度维度 + 推荐），**等待用户选择方向**。
+The main agent consolidates and presents a Synthesis (three-way position summary + core conflict + comparison table with security design/testability/code cleanliness dimensions + recommendation). **Wait for user to select a direction.**
 
-用户选定后，在**对话中**呈现以下内容：
-1. **技术栈** — 语言、框架、关键库及选型理由
-2. **模块拆分** — 模块名、职责、预期源文件
-3. **关键设计决策** — 架构选择、共享模块、复用策略
-4. **风险与备注**
+After the user selects, present the following in **conversation**:
+1. **Technology stack** — language, framework, key libraries, and selection rationale
+2. **Module breakdown** — module name, responsibility, expected source files
+3. **Key design decisions** — architecture choices, shared modules, reuse strategy
+4. **Risks & notes**
 
-**等待用户批准后方可继续。**
+**Wait for user approval before proceeding.**
 
-### 4.3 Stage 3：编码
-调用 `/req-3-code`，附加以下覆盖说明：
+### 4.3 Stage 3: Coding
+Invoke `/req-3-code` with the following context override:
 
 > **Context override:** There is no `requirement.md` or `technical.md`. Skip all prerequisite file checks.
 > Use the requirement description, acceptance criteria, and module breakdown confirmed in Stages 1–2 above (in this conversation) as the source of truth.
 > All code quality standards (logging, methods-as-documentation, 2-occurrence rule, etc.) apply unchanged.
 
-### 4.4 Stage 4：安全审查
-调用 `/req-4-security`，附加以下覆盖说明：
+### 4.4 Stage 4: Security Review
+Invoke `/req-4-security` with the following context override:
 
 > **Context override:** There is no `requirement.md` or `technical.md`. Skip all prerequisite file checks.
 > Business context, data flow, and module scope are in this conversation (Stages 1–2).
 
-### 4.5 Stage 5：代码清理
-调用 `/req-5-cleanup`，附加以下覆盖说明：
+### 4.5 Stage 5: Code Cleanup
+Invoke `/req-5-cleanup` with the following context override:
 
 > **Context override:** There is no `requirement.md` or `technical.md`. Skip all prerequisite file checks.
 > Requirement scope and module design are in this conversation (Stages 1–2).
 
-### 4.6 Stage 6：评审
-调用 `/req-6-review`，附加以下覆盖说明：
+### 4.6 Stage 6: Review
+Invoke `/req-6-review` with the following context override:
 
 > **Context override:** There is no `requirement.md` or `technical.md`. Skip all prerequisite file checks.
 > Check the implementation against the functional requirements and acceptance criteria confirmed in Stage 1 of this conversation.
 > **Skip the Change Log Compliance Check entirely** — there is no change log.
 
-### 4.7 Stage 7：验证
-调用 `/req-7-verify`，附加以下覆盖说明：
+### 4.7 Stage 7: Verification
+Invoke `/req-7-verify` with the following context override:
 
 > **Context override:** There is no `technical.md`. Determine the technology stack from the technical plan confirmed in Stage 2 of this conversation.
 > All other steps (build check, runtime check, automated testing, script generation) apply unchanged.
 
-### 4.8 Stage 8：完成
+### 4.8 Stage 8: Done
 
 ```mermaid
 flowchart TD
@@ -155,10 +155,10 @@ flowchart TD
     C -- No --> E[Prompt user]
     E --> A
     B -- Yes --> F[Output brief summary]
-**Figure 4.8 — Stage 8 done checklist flow**
 ```
+**Figure 4.8 — Stage 8 done checklist flow**
 
-执行以下检查清单：
+Run the following checklist:
 
 ```text
 - [ ] Code builds successfully
@@ -167,4 +167,4 @@ flowchart TD
 - [ ] All changes committed, on a feature branch
 ```
 
-可自动修复的问题（缺少脚本）直接修复。需要人工操作的问题提示用户。全部通过后输出简短摘要。
+Auto-fixable issues (missing scripts) are fixed directly. Issues requiring manual action are reported to the user. Output a brief summary once all items pass.
