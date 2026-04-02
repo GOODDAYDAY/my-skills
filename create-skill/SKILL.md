@@ -4,11 +4,35 @@ description: Guide for creating new Claude Code skills following current convent
 argument-hint: "[skill-name]"
 ---
 
-Create a new skill based on user requirements. Follow the structure and conventions below strictly.
+# create-skill
+> Version: v1 | Date: 2026-04-02 | Author: system
 
-## Skill Directory Structure
+## 1. 概述
+根据用户需求创建新 skill，严格遵守以下结构和规范。
 
+```mermaid
+flowchart LR
+    A[User request] --> B[Create skill directory]
+    B --> C[Write SKILL.md\nwith frontmatter]
+    C --> D{Extra files\nneeded?}
+    D -- Yes --> E[Add reference.md\nscripts/ examples/]
+    D -- No --> F[Done]
+    E --> F
 ```
+**Figure 1.1 — Skill creation overview**
+
+## 2. Skill 目录结构
+
+```mermaid
+flowchart TD
+    A[skill-name/] --> B[SKILL.md\nRequired: entry point]
+    A --> C[reference.md\nOptional: docs]
+    A --> D[examples/\nOptional: sample outputs]
+    A --> E[scripts/\nOptional: run.sh etc.]
+```
+**Figure 2.1 — Skill directory layout**
+
+```text
 <skill-name>/
 ├── SKILL.md           # Required - entry point with frontmatter + instructions
 ├── reference.md       # Optional - supporting documentation
@@ -18,7 +42,32 @@ Create a new skill based on user requirements. Follow the structure and conventi
     └── run.sh
 ```
 
-## SKILL.md Format
+## 3. 创建流程
+
+```mermaid
+flowchart TD
+    A[Get skill name from ARGUMENTS or ask user] --> B[Ask for purpose and behavior]
+    B --> C[Create directory under skills root]
+    C --> D[Write SKILL.md with frontmatter and instructions]
+    D --> E{Supporting files needed?}
+    E -- Yes --> F[Add reference.md / scripts / examples]
+    E -- No --> G[Done]
+    F --> G
+```
+**Figure 3.1 — New skill creation steps**
+
+## 4. SKILL.md 格式规范
+
+```mermaid
+flowchart LR
+    A[SKILL.md] --> B[frontmatter\n--- name description ---]
+    B --> C[Markdown body\nClaude instructions]
+    C --> D{Optional frontmatter\nfields?}
+    D --> E[allowed-tools\ncontext: fork\nuser-invocable]
+```
+**Figure 4.1 — SKILL.md structure**
+
+### 4.1 Frontmatter 字段
 
 ```yaml
 ---
@@ -34,13 +83,21 @@ context: fork                     # Optional, run in isolated subagent
 Markdown instructions for Claude to follow.
 ```
 
-## Naming Rules
+### 4.2 命名规则
+- 目录名：仅限小写字母、数字、连字符（最多 64 个字符）
+- 目录名即斜杠命令：`my-skill/` → `/my-skill`
+- 插件 skill 使用命名空间：`plugin-name:skill-name`
 
-- Directory name: lowercase letters, numbers, hyphens only (max 64 chars)
-- Directory name becomes the slash command: `my-skill/` → `/my-skill`
-- Plugin skills use namespace: `plugin-name:skill-name`
+## 5. 可用变量
 
-## Available Variables
+```mermaid
+flowchart LR
+    A[Skill invoked] --> B[$ARGUMENTS\nAll passed arguments]
+    A --> C[$ARGUMENTS[0] / $0\nFirst argument]
+    A --> D[${CLAUDE_SKILL_DIR}\nSkill directory path]
+    A --> E[${CLAUDE_SESSION_ID}\nCurrent session ID]
+```
+**Figure 5.1 — Available runtime variables**
 
 | Variable | Description |
 |:---|:---|
@@ -49,7 +106,15 @@ Markdown instructions for Claude to follow.
 | `${CLAUDE_SESSION_ID}` | Current session ID |
 | `${CLAUDE_SKILL_DIR}` | Skill's own directory path (stable even if cwd changes) |
 
-## Skill Placement
+## 6. Skill 存放位置
+
+```mermaid
+flowchart TD
+    A[Skill location] --> B[Personal\n~/.claude/skills/name/\nAll your projects]
+    A --> C[Project\n.claude/skills/name/\nCurrent project only]
+    A --> D[Plugin\nplugin/skills/name/\nWhere plugin is enabled]
+```
+**Figure 6.1 — Skill location scopes**
 
 | Location | Path | Scope |
 |:---|:---|:---|
@@ -57,11 +122,23 @@ Markdown instructions for Claude to follow.
 | Project | `.claude/skills/<name>/` | Current project only |
 | Plugin | `<plugin>/skills/<name>/` | Where plugin is enabled |
 
-## Steps
+## 7. 执行步骤
 
-1. If `$ARGUMENTS` provides a skill name, use it; otherwise ask the user.
-2. Ask the user for the skill's purpose and behavior.
-3. Create the directory under the current skills root.
-4. Write `SKILL.md` with appropriate frontmatter and clear, concise instructions.
-5. Add supporting files only if needed (reference docs, scripts, examples).
-6. Keep instructions focused — avoid over-engineering.
+```mermaid
+flowchart TD
+    A[Get skill name] --> B[Ask purpose\nand behavior]
+    B --> C[Create directory\nunder skills root]
+    C --> D[Write SKILL.md\nwith frontmatter]
+    D --> E{Supporting files?}
+    E -- Yes --> F[Add reference.md\nscripts/ examples/]
+    E -- No --> G[Done — focused instructions]
+    F --> G
+```
+**Figure 7.1 — Execution steps**
+
+1. 若 `$ARGUMENTS` 提供了 skill 名称则使用，否则询问用户
+2. 询问用户 skill 的用途和行为
+3. 在当前 skills 根目录下创建目录
+4. 编写 `SKILL.md`，包含合适的 frontmatter 和清晰简洁的指令
+5. 仅在需要时添加支持文件（参考文档、脚本、示例）
+6. 保持指令聚焦——避免过度设计
