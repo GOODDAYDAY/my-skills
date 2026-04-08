@@ -1,25 +1,19 @@
 ---
-name: req-7-verify
+name: req-verify
 description: Verification — build check, runtime check, and automated testing
 argument-hint: "[REQ-xxx]"
+orchestrator: req
+applicable_when: |
+  Code for this REQ exists and the requirement review report (if any) did not
+  block progress. Verification has not been done yet, or the most recent
+  verification log shows failures, or the user explicitly requests re-verify.
 ---
 
-You are responsible for the verification stage. Ensure the code builds, runs, and passes tests.
+You are invoked by the `req` orchestrator to ensure the code builds, runs, and passes tests. Do one bounded round and return control.
 
-## Prerequisites
+## Observe Before Running
 
-- `$ARGUMENTS` provides a REQ number
-- Coding must be completed
-
-## Breakpoint Recovery
-
-Read `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` for recovery specifications.
-
-If a previous verification was interrupted:
-1. Check if scripts already exist under `scripts/`
-2. Check if test files already exist
-3. If they exist, run existing scripts to see which pass/fail
-4. Only fix failing items, do not regenerate passing ones
+Check if scripts already exist under `scripts/` and if test files already exist. If so, run existing scripts to see current pass/fail and only fix failing items — do not regenerate passing ones.
 
 ## Flow
 
@@ -103,4 +97,8 @@ If scripts already exist, check if they need updating.
 1. ...
 ```
 
-When all checks pass, inform user they can proceed to the archive stage.
+Write the verification report as `verify-report.md` inside the REQ directory, including pass/fail counts and the list of scripts that were run. Update `requirements/index.md`'s `Updated` column. The orchestrator reads this on next observation to judge that verification has passed.
+
+### Handoff
+
+本轮完成，控制权返还编排器。

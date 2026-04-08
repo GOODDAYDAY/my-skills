@@ -2,9 +2,14 @@
 name: req-amend
 description: Formal change process — safely amend finalized requirement or technical documents
 argument-hint: "[REQ-xxx]"
+orchestrator: req
+applicable_when: |
+  The user wants to modify an already-approved requirement.md or technical.md,
+  or the requirement review report flagged mismods that must go through a
+  formal change process.
 ---
 
-You are responsible for the formal change process. When finalized requirement or technical documents need modification, **changes must go through this skill** — direct manual edits to documents are prohibited.
+You are invoked by the `req` orchestrator to run the formal change process. When approved requirement or technical documents need modification, **changes must go through this skill** — direct manual edits to documents are prohibited. Do one bounded round and return control.
 
 ## Why This Process Exists
 
@@ -69,12 +74,9 @@ If `technical.md` was modified:
 1. Check if code needs adjustment
 2. Prompt user whether to re-enter coding stage
 
-### Step 5: Update Index Status
+### Step 5: Update Index
 
-Based on the change impact, the status in `index.md` may need to be reverted:
-- Requirement document change → revert to `Requirement Finalized` (needs re-run of technical design)
-- Technical document change → revert to `Technical Finalized` (needs re-run of coding)
-- If user believes the change is minor and does not affect subsequent stages, require explicit confirmation before keeping the current status
+Update the `Updated` column in `requirements/index.md` for this REQ. Do not encode any workflow position. The next orchestrator observation will naturally notice that the downstream artifacts (technical.md, code, tests) are now stale relative to the new change log entry and will dispatch the appropriate sub-skill next round.
 
 ### Step 6: Output Change Summary
 
@@ -86,6 +88,8 @@ Based on the change impact, the status in `index.md` may need to be reverted:
 - Version: v1 → v2
 - Affected Scope: F-01, F-03
 - Undeclared changes: None ✓
-- Index status: reverted to Requirement Finalized
-- Next step: /req-2-tech REQ-xxx
 ```
+
+### Handoff
+
+本轮完成，控制权返还编排器。

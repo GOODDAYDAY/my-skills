@@ -1,10 +1,15 @@
 ---
-name: req-5-cleanup
+name: req-cleanup
 description: Code cleanup — detect unused code, merge duplicate logic, optimize cohesion/coupling (never alter business logic)
 argument-hint: "[REQ-xxx]"
+orchestrator: req
+applicable_when: |
+  Code for this REQ exists and security review has passed (or the user
+  explicitly requests cleanup), and no cleanup report is present yet or the
+  code clearly still contains unused imports / duplicate blocks / dead branches.
 ---
 
-You are responsible for the code cleanup stage. Optimize all code produced by this requirement to be clean, non-redundant, and well-structured — **without modifying any business logic**.
+You are invoked by the `req` orchestrator to optimize code produced by this requirement to be clean, non-redundant, and well-structured — **without modifying any business logic**. Do one bounded round and return control.
 
 ## Core Principle — Do NOT Alter Business Behavior
 
@@ -15,12 +20,6 @@ This stage is strictly about **structural optimization**. The following rules ar
 3. **No interface changes** — public APIs, function signatures, return types, and error codes must remain unchanged
 4. **No feature additions or removals** — do not add "missing" features or remove "unnecessary" ones
 5. **When in doubt, don't touch it** — if you are not 100% certain a change is purely structural, skip it and report it as a suggestion instead
-
-## Prerequisites
-
-- `$ARGUMENTS` provides a REQ number
-- Requirement review stage has been completed (`Development Done` or later)
-- The corresponding `requirement.md`, `technical.md`, and source code must be ready
 
 ## Flow
 
@@ -143,6 +142,10 @@ After cleanup, verify that nothing is broken:
 3. **Interface check** — confirm no public API signatures were altered
 4. If any test fails, **revert the change that caused it** and report to user
 
-### Step 7: Update Status
+### Step 7: Persist the Report
 
-Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Update `requirements/index.md` status to `Code Cleaned`.
+Write the cleanup report as `cleanup-report.md` in the REQ directory. The orchestrator reads this on next observation to judge that cleanup has been done. Update `requirements/index.md`'s `Updated` column.
+
+### Handoff
+
+本轮完成，控制权返还编排器。

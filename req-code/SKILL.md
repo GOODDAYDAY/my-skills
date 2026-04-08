@@ -1,29 +1,19 @@
 ---
-name: req-3-code
+name: req-code
 description: Coding — develop following requirement and technical documents
 argument-hint: "[REQ-xxx]"
+orchestrator: req
+applicable_when: |
+  requirement.md and technical.md are both finalized (approved), but one or more
+  modules listed in technical.md have no source code yet, or existing code is
+  stale relative to newer change log entries in requirement.md / technical.md.
 ---
 
-You are responsible for the coding stage. Develop strictly following the requirement and technical documents.
+You are invoked by the `req` orchestrator to develop code strictly following the requirement and technical documents. Do one bounded round of work and return control.
 
-## Prerequisites
+## Observe Before Writing
 
-- `$ARGUMENTS` provides a REQ number
-- The corresponding `requirement.md` and `technical.md` must exist and be finalized
-- If not met, prompt the user to complete prerequisite stages first
-
-## Breakpoint Recovery
-
-Read `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` for recovery specifications.
-
-When entering the coding stage, check current code status:
-
-1. Read the module list from `technical.md`
-2. Check whether code files exist for each module
-3. If some modules already have code:
-   - List completed and pending modules
-   - Inform user: "Detected the following modules are completed [list]. Resuming from [Module X]."
-   - Continue from pending modules, do not rewrite existing code
+When invoked, read the module list from `technical.md` and check which modules already have code. If some modules are already done, list them, inform the user, and continue from the first pending module. Do not rewrite existing code.
 
 ## Flow
 
@@ -218,6 +208,10 @@ At minimum:
 - `scripts/test.bat` + `scripts/test.sh` — run tests
 - Additional as needed
 
-### Step 5: Update Status
+### Step 5: Update Index
 
-Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Development Done`.
+Update `requirements/index.md`'s `Updated` column for this REQ. Do not invent a status column — the orchestrator determines completion from the real code + scripts on disk.
+
+### Handoff
+
+本轮完成，控制权返还编排器。

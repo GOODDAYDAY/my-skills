@@ -1,57 +1,64 @@
 ---
 name: req-status
-description: Quick status check — view one or all requirement statuses
+description: Observe and present the current state of one or all requirements (derived from filesystem, not from any status enum)
 argument-hint: "[REQ-xxx | all]"
+orchestrator: req
+applicable_when: |
+  The user explicitly asks to see the current state of one or all requirements,
+  without triggering any changes.
 ---
 
-Quickly check requirement status without manually reading `index.md`.
+You are invoked by the `req` orchestrator to present the observed state of one or all requirements to the user. You do not write to any status store — you read the filesystem and render a friendly summary. Do one bounded round and return control.
 
 ## Usage
 
-- `/req-status` or `/req-status all` — view all requirement statuses
-- `/req-status REQ-001` — view detailed status of a specific requirement
+- `/req status` or `/req status all` — present all requirements
+- `/req status REQ-001` — present detailed observation of one requirement
 
 ## Flow
 
 ### View All Requirements
 
-1. Read `requirements/index.md`
-2. Output formatted status table
-3. Include statistics:
+1. Read `requirements/index.md` for the catalog (ID / Name / Updated / Description)
+2. For each row, briefly observe the corresponding `REQ-xxx/` directory to describe what is done and what is not
+3. Output a table:
 
 ```markdown
-## Requirement Status Overview
+## Requirement Overview
 
-| ID | Name | Status | Updated |
+| ID | Name | Observed State | Updated |
 |:---|:---|:---|:---|
-| REQ-001 | User Login | Completed | 2024-01-15 |
-| REQ-002 | Data Export | In Development | 2024-01-20 |
-| REQ-003 | Dashboard | Technical Design | 2024-01-22 |
+| REQ-001 | User Login | Archived | 2024-01-15 |
+| REQ-002 | Data Export | Coding in progress (3/5 modules) | 2024-01-20 |
+| REQ-003 | Dashboard | Technical design under review | 2024-01-22 |
 
 ### Summary
 - Total: 3
-- Completed: 1
-- In Progress: 2
+- Archived: 1
+- In progress: 2
 ```
+
+The "Observed State" column is generated freshly from actual files each time this skill runs. It is not read from any status field.
 
 ### View Single Requirement
 
 1. Read `requirements/REQ-xxx-*/requirement.md` and `technical.md`
-2. Check code and script existence
-3. Output detailed status:
+2. Walk the Observation Guide in `req/SKILL.md` against the directory
+3. Output a detailed observation:
 
 ```markdown
 ## REQ-xxx <Name>
 
-### Current Status: <status>
+### Observed State
+<one-line summary derived from filesystem>
 
-### Phase Checklist
-- [x] Requirement analysis — requirement.md (finalized)
-- [x] Technical design — technical.md (finalized)
+### Observation Checklist
+- [x] Requirement analysis — requirement.md approved
+- [x] Technical design — technical.md approved
 - [ ] Coding — 3/5 modules completed
-- [ ] Requirement review — not started
-- [ ] Verification — not started
-- [ ] Archive — not started
+- [ ] Requirement review — no report present
+- [ ] Verification — no report present
+- [ ] Archive — not yet marked completed
 
 ### Files
 - requirement.md ✓
@@ -65,3 +72,7 @@ Quickly check requirement status without manually reading `index.md`.
 |:---|:---|:---|:---|
 | v2 | 2024-01-20 | Added pagination | F-05 |
 ```
+
+### Handoff
+
+本轮完成，控制权返还编排器。

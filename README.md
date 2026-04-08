@@ -1,6 +1,6 @@
 # my-skills
 
-Personal Claude Code skills repository. A complete requirement-driven development workflow — from requirement analysis to final delivery.
+Personal Claude Code skills repository. An **orchestrator-driven**, **stateless** requirement workflow — the orchestrator observes the real filesystem every round, reasons about what is still missing, and dispatches exactly one sub-skill at a time. There is no fixed pipeline.
 
 [中文版](./README_CN.md)
 
@@ -26,50 +26,62 @@ git submodule update --remote .claude/skills
 
 ## How It Works
 
-Once installed, all skills are auto-discovered by Claude Code as slash commands.
+Once installed, every skill is auto-discovered by Claude Code as a slash command. The key architectural idea is:
 
-The core workflow is `/req`, which orchestrates a full development cycle in 8 stages:
+> **Two orchestrators (`req`, `task`). Everything else is an orchestratable sub-skill. The orchestrator never follows a fixed order — it observes, reasons, dispatches.**
+
+### The observe-reason-dispatch loop
 
 ```
 /req "feature description"
-  │
-  ├─ Stage 1: Requirement Analysis ──→ requirement.md + diagrams
-  │    ↓ (user approval required)
-  ├─ Stage 2: Technical Design ──────→ technical.md + diagrams
-  │    ↓ (user approval required)
-  ├─ Stage 3: Coding ────────────────→ source code + scripts/
-  │    ↓
-  ├─ Stage 4: Security Review ──────→ vulnerability scan + fix
-  │    ↓
-  ├─ Stage 5: Code Cleanup ─────────→ structural optimization (no behavior changes)
-  │    ↓
-  ├─ Stage 6: Requirement Review ────→ compliance check report
-  │    ↓
-  ├─ Stage 7: Verification ─────────→ build / run / test
-  │    ↓
-  └─ Stage 8: Archive ──────────────→ consistency check + mark completed
+   │
+   ▼
+┌──────────────────────────────────────────────────┐
+│ req orchestrator                                 │
+│                                                  │
+│   1. Observe:  ls + read requirements/REQ-xxx/   │
+│   2. Reason:   what's missing / stale / next?    │
+│   3. Dispatch: invoke exactly ONE sub-skill      │
+│   4. Sub-skill does its job and returns          │
+│   5. Loop back to step 1 (re-observe fresh)      │
+└──────────────────────────────────────────────────┘
 ```
 
-Each stage waits for user confirmation before proceeding. You can also run any stage independently.
+Every round, the orchestrator re-reads the REQ directory from scratch. No cached status, no "Next Stage" table, no persisted state file. The filesystem is the single source of truth. Sub-skills are forbidden from naming the next step — they just do one bounded job and hand control back.
 
-Supports **checkpoint recovery** — if interrupted mid-stage, `/req REQ-xxx` detects where you left off and resumes from there.
+This naturally supports resuming interrupted work, jumping between steps, skipping steps, amending finalized documents (with downstream artifacts automatically reconsidered), and running multiple requirements in parallel.
 
 ## Skills
 
+### Orchestrators
+
 | Command | Description |
 |:---|:---|
-| `/req [description]` | Full workflow orchestrator — guides through all 8 stages |
-| `/req-1-analyze [description]` | Requirement analysis — expand brief input into detailed requirement doc |
-| `/req-2-tech [REQ-xxx]` | Technical design — architecture, modules, API, diagrams |
-| `/req-3-code [REQ-xxx]` | Coding — develop with language-specific conventions |
-| `/req-4-security [REQ-xxx]` | Security review — vulnerability scan, fix critical/high issues |
-| `/req-5-cleanup [REQ-xxx]` | Code cleanup — remove unused code, merge duplicates (no behavior changes) |
-| `/req-6-review [REQ-xxx]` | Requirement review — compare implementation against requirements |
-| `/req-7-verify [REQ-xxx]` | Verification — build, run, and test (including Playwright e2e for web) |
-| `/req-8-done [REQ-xxx]` | Archive — consistency check + mark as completed |
-| `/req-status [REQ-xxx\|all]` | Quick status check — view one or all requirements |
-| `/req-amend [REQ-xxx]` | Formal change process — safely amend finalized documents |
+| `/req [description \| REQ-xxx]` | Requirement-driven development orchestrator. Dispatches all requirement sub-skills below. |
+| `/task [description]` | Generic task orchestrator. Extension point for non-requirement workflows. |
+
+### Requirement sub-skills (orchestrated by `/req`)
+
+| Command | Description |
+|:---|:---|
+| `/req-analyze [description]` | Expand brief input into a full requirement document |
+| `/req-tech [REQ-xxx]` | Write technical design from a finalized requirement |
+| `/req-code [REQ-xxx]` | Implement source code + automation scripts + logging |
+| `/req-security [REQ-xxx]` | Security review — fix critical/high, report medium/low |
+| `/req-cleanup [REQ-xxx]` | Remove unused / duplicate / dead code (no behavior change) |
+| `/req-review [REQ-xxx]` | Compare implementation against the requirement item by item |
+| `/req-verify [REQ-xxx]` | Build, run, test (including Playwright e2e for web projects) |
+| `/req-archive [REQ-xxx]` | Final consistency check + mark requirement completed |
+| `/req-amend [REQ-xxx]` | Formal change process for approved requirement / technical docs |
+| `/req-status [REQ-xxx \| all]` | Present the observed state of one or all requirements |
+
+### Other
+
+| Command | Description |
+|:---|:---|
 | `/create-skill [name]` | Guide for creating new skills |
+
+Although each sub-skill has its own slash command for direct invocation, the intended usage is to call `/req` and let the orchestrator decide. Sub-skills never chain to each other.
 
 ## Document Structure
 
@@ -77,34 +89,51 @@ All requirement documents are managed under `requirements/` in your project root
 
 ```
 requirements/
-├── index.md                        # Requirement index & status tracking (English)
+├── index.md                        # Pure catalog: ID | Name | Updated | Description (no Status column)
 ├── REQ-001-user-login/
-│   ├── requirement.md              # Requirement document
-│   ├── technical.md                # Technical design document
+│   ├── requirement.md              # Requirement document (contains its own approval marker)
+│   ├── technical.md                # Technical design document (contains its own approval marker)
 │   ├── *.puml / *.svg              # PlantUML diagrams
+│   ├── security-review.md          # Produced by /req-security
+│   ├── cleanup-report.md           # Produced by /req-cleanup
+│   ├── review-report.md            # Produced by /req-review
+│   ├── verify-report.md            # Produced by /req-verify
 │   └── ...
 └── REQ-002-data-export/
     └── ...
 ```
 
+All workflow understanding comes from **what is actually in this directory**. No external state store.
+
 ## Repository Structure
 
 ```
 my-skills/
-├── _shared/plantuml.md              # Shared PlantUML conventions + env detection
-├── create-skill/SKILL.md
-├── req/SKILL.md                     # Workflow orchestrator
-├── req-1-analyze/SKILL.md           # Requirement analysis
-├── req-2-tech/SKILL.md              # Technical design
-├── req-3-code/                      # Coding
+├── _shared/
+│   ├── plantuml.md                  # PlantUML conventions + env detection
+│   ├── scripts.md                   # Automation script standards (.bat + .sh)
+│   └── changelog.md                 # Change log format + Affected Scope rules
+├── req/SKILL.md                     # Requirement orchestrator (stateless, observe-dispatch loop)
+├── task/SKILL.md                    # Generic task orchestrator skeleton
+├── req-analyze/SKILL.md             # Requirement analysis sub-skill
+├── req-tech/SKILL.md                # Technical design sub-skill
+├── req-code/                        # Coding sub-skill
 │   ├── SKILL.md
 │   ├── python.md                    # Python conventions
 │   └── java.md                      # Java conventions
-├── req-4-security/SKILL.md           # Security review
-├── req-5-cleanup/SKILL.md           # Code cleanup (no behavior changes)
-├── req-6-review/SKILL.md            # Requirement review
-├── req-7-verify/SKILL.md            # Verification & testing
-├── req-8-done/SKILL.md              # Archive + consistency check
-├── req-status/SKILL.md              # Status query
-└── req-amend/SKILL.md               # Formal change process
+├── req-security/SKILL.md            # Security review sub-skill
+├── req-cleanup/SKILL.md             # Cleanup sub-skill (no behavior changes)
+├── req-review/SKILL.md              # Requirement review sub-skill
+├── req-verify/SKILL.md              # Verification sub-skill
+├── req-archive/SKILL.md             # Archive sub-skill (final consistency check)
+├── req-status/SKILL.md              # Observed-state presenter
+├── req-amend/SKILL.md               # Formal change process
+└── create-skill/SKILL.md
 ```
+
+## Design Notes
+
+- **No status enum, no Status column.** Finalization is recorded as a marker *inside* the document itself (e.g., "Approved by user on <date>"). The orchestrator reads the documents directly.
+- **No "next step" in sub-skills.** Sub-skills may not reference sibling skill names or suggest what should happen next. They just do their job and end with a handoff line.
+- **No predicate cache file.** Predicates are a shorthand for reasoning, not a persisted data structure.
+- **Amend is just another dispatch.** When a requirement is amended, the orchestrator re-observes next round and naturally decides that technical / code / tests are stale — no invalidation logic is needed.

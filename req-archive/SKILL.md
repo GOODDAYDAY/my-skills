@@ -1,15 +1,16 @@
 ---
-name: req-8-done
-description: Archive — final consistency check, update document status, mark requirement as completed
+name: req-archive
+description: Archive — final consistency check, mark requirement as completed
 argument-hint: "[REQ-xxx]"
+orchestrator: req
+applicable_when: |
+  All artifacts look complete per observation: requirement and technical
+  documents approved, code implemented, security and cleanup reports present,
+  review report has no blockers, verification report shows all checks passing.
+  No archival marker is present yet.
 ---
 
-You are responsible for the archive stage. Run the final consistency check, then mark the requirement as completed.
-
-## Prerequisites
-
-- `$ARGUMENTS` provides a REQ number
-- Verification stage must have passed
+You are invoked by the `req` orchestrator to run the final consistency check and mark the requirement as completed. Do one bounded round and return control.
 
 ## Flow
 
@@ -21,8 +22,8 @@ Before archiving, execute the following checklist. **All items must pass.**
 ## Final Consistency Checklist
 
 ### Documents
-- [ ] requirement.md exists and status is finalized
-- [ ] technical.md exists and status is finalized
+- [ ] requirement.md exists and has a user approval marker
+- [ ] technical.md exists and has a user approval marker
 - [ ] All .puml files have corresponding .svg files
 - [ ] All .svg files are valid (size > 0, no Syntax Error)
 
@@ -46,25 +47,15 @@ If any check fails:
 3. For issues requiring human intervention (uncommitted code, test failures), prompt the user
 4. **All items must pass before proceeding to archive**
 
-### Step 2: Update Requirement Document Status
+### Step 2: Mark Documents as Completed
 
-Modify `requirements/REQ-xxx-*/requirement.md`:
-- Set Status to `Completed`
-- Update the Updated date
+Add an explicit "Completed on <date>" header marker to both `requirement.md` and `technical.md`. This is the archival marker the orchestrator observes on next invocation to know the REQ is done.
 
-### Step 3: Update Technical Document Status
+### Step 3: Update Index
 
-Modify `requirements/REQ-xxx-*/technical.md`:
-- Set Status to `Completed`
-- Update the Updated date
+Update the `Updated` column in `requirements/index.md` for this REQ. The index is still a pure catalog — do not add a Status column.
 
-### Step 4: Update Index
-
-Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Modify `requirements/index.md`:
-- Set the requirement's status to `Completed`
-- Update the date
-
-### Step 5: Output Summary
+### Step 4: Output Summary
 
 ```markdown
 ## REQ-xxx <Name> — Completed
@@ -81,3 +72,7 @@ Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Modif
 - Code: implemented and verified
 - Completed: <date>
 ```
+
+### Handoff
+
+本轮完成，控制权返还编排器。

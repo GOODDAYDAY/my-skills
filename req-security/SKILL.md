@@ -1,16 +1,15 @@
 ---
-name: req-4-security
+name: req-security
 description: Security review — detect data security issues and code vulnerabilities (fix critical/high, report medium/low)
 argument-hint: "[REQ-xxx]"
+orchestrator: req
+applicable_when: |
+  Source code for this REQ exists and is reasonably complete, and no security
+  review report has been produced yet (or the previous report is stale because
+  code changed significantly since).
 ---
 
-You are responsible for the security review stage. Review all code produced by this requirement for security vulnerabilities.
-
-## Prerequisites
-
-- `$ARGUMENTS` provides a REQ number
-- Coding stage must be completed (`Development Done`)
-- The corresponding `requirement.md`, `technical.md`, and source code must be ready
+You are invoked by the `req` orchestrator to review all code produced by this requirement for security vulnerabilities. Do one bounded round and return control.
 
 ## Flow
 
@@ -102,6 +101,10 @@ For **Medium and Low** severity issues:
 - Present to user, ask whether to fix
 - Fix after user confirms
 
-### Step 5: Update Status
+### Step 5: Persist the Report
 
-Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Update `requirements/index.md` status to `Security Reviewed`.
+Write the security review report as `security-review.md` inside the REQ directory (or append to an existing security log). The orchestrator reads this on next observation to judge that the review was done. Update `requirements/index.md`'s `Updated` column.
+
+### Handoff
+
+本轮完成，控制权返还编排器。

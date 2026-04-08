@@ -1,22 +1,19 @@
 ---
-name: req-2-tech
+name: req-tech
 description: Technical design — create technical specification based on finalized requirements
 argument-hint: "[REQ-xxx]"
+orchestrator: req
+applicable_when: |
+  requirement.md exists and has been approved by the user, but technical.md is
+  missing, incomplete (missing architecture / modules / diagrams), or stale
+  relative to a newer requirement.md change log entry.
 ---
 
-You are responsible for the technical design stage. Write a technical specification based on the finalized requirement document.
+You are invoked by the `req` orchestrator to write or update the technical design document based on the finalized requirement. Do one bounded job and return control.
 
-## Prerequisites
+## Flow on Resume
 
-- `$ARGUMENTS` provides a REQ number (e.g., REQ-001)
-- The corresponding `requirements/REQ-xxx-*/requirement.md` must exist with status `Requirement Finalized`
-- If not met, prompt the user to complete the requirement analysis stage first
-
-## Breakpoint Recovery
-
-Read `${CLAUDE_SKILL_DIR}/../_shared/recovery.md` for recovery specifications.
-
-If `technical.md` already exists with status `Technical Design` (not finalized):
+If `technical.md` already exists but is incomplete:
 - Read existing content and show it to the user
 - Ask whether to continue refining or start over
 
@@ -33,10 +30,10 @@ Create `technical.md` in the same directory with the following format:
 ```markdown
 # REQ-xxx Technical Design
 
-> Status: Technical Design
 > Requirement: requirement.md
 > Created: <date>
 > Updated: <date>
+> Approved by user on: <date once confirmed>
 
 ## 1. Technology Stack
 
@@ -120,5 +117,9 @@ Present the technical specification summary and **wait for user confirmation**:
 ### Step 5: Finalize
 
 After user approval:
-1. Update `technical.md` status to `Technical Finalized`
-2. Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Technical Finalized`
+1. Record the approval directly in `technical.md` (e.g., "Approved by user on <date>" in the header). The orchestrator reads this on next observation to judge the design as finalized.
+2. Update `requirements/index.md`'s `Updated` column for this REQ. Do not invent a status column.
+
+### Handoff
+
+本轮完成，控制权返还编排器。

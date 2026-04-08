@@ -1,10 +1,16 @@
 ---
-name: req-1-analyze
+name: req-analyze
 description: Requirement analysis — expand brief user input into a complete requirement document
 argument-hint: "[brief description]"
+orchestrator: req
+applicable_when: |
+  The user wants to start a new requirement, or an existing REQ directory has no
+  requirement.md, or requirement.md is missing core sections (Background, Target
+  Users, Functional Requirements, Acceptance Criteria) and the user wants to
+  continue drafting it.
 ---
 
-You are responsible for the requirement analysis stage. Expand the user's brief description into a complete requirement document.
+You are invoked by the `req` orchestrator to perform requirement analysis. Expand the user's brief description into a complete requirement document. Do one bounded job and return control.
 
 ## Flow
 
@@ -54,9 +60,9 @@ After user approval:
 ```markdown
 # REQ-xxx <Requirement Name>
 
-> Status: Requirement Finalized
 > Created: <date>
 > Updated: <date>
+> Approved by user on: <date once confirmed>
 
 ## 1. Background
 
@@ -90,6 +96,8 @@ After user approval:
 
 **Note: Section titles and structural fields must be in English. Descriptive content may use Chinese.**
 
+Record the user's approval directly in the document (e.g., as an explicit "Approved by user on <date>" marker in the header, or as the Change Log row's note). The orchestrator reads this to judge that the requirement is finalized — there is no external status file.
+
 Change log format and rules: see `${CLAUDE_SKILL_DIR}/../_shared/changelog.md`. The `Affected Scope` column must be filled accurately.
 
 4. Generate diagrams (per PlantUML conventions):
@@ -103,6 +111,8 @@ Read `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` for the complete PlantUML spec
 
 ### Step 5: Update Index
 
-Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for index.md format and status enum.
+Add the requirement record to `requirements/index.md` (ID, Name, Updated, Description). See `req/SKILL.md` for the index format. The index is a pure catalog — do not record workflow state there.
 
-Add the requirement record to `requirements/index.md` with status `Requirement Finalized`. If `index.md` does not exist, create it per the shared specification.
+### Handoff
+
+本轮完成，控制权返还编排器。
