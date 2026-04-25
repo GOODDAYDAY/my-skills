@@ -4,7 +4,7 @@ description: Requirement analysis — expand brief user input into a complete re
 argument-hint: "[brief description]"
 ---
 
-# req-1-analyze — Requirement Analysis
+# req-analyze — Requirement Analysis
 > Version: v3 | Date: 2026-04-16 | Author: system
 
 ## 1. Role
@@ -21,7 +21,7 @@ flowchart LR
     F --> G[Generate diagrams]
     G --> H[Update index.md]
 ```
-**Figure 1.1 — req-1-analyze stage overview**
+**Figure 1.1 — req-analyze stage overview**
 
 ## 2. Overall Flow
 
@@ -240,4 +240,3 @@ Add the requirement record to `requirements/index.md` with status `Requirement F
 git add -A && git commit -m "docs(REQ-xxx): requirement analysis complete"
 ```
 
-Stage complete. Invoke `/req REQ-xxx` to continue.

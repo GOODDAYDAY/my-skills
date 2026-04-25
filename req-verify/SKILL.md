@@ -4,7 +4,7 @@ description: Verification — build check, runtime check, and automated testing
 argument-hint: "[REQ-xxx]"
 ---
 
-# req-7-verify
+# req-verify
 > Version: v1 | Date: 2026-04-02 | Author: system
 
 ## 1. Overview
@@ -18,14 +18,14 @@ flowchart LR
     D --> E[Generate scripts]
     E --> F[Status: Completed]
 ```
-**Figure 1.1 — req-7-verify three-layer pipeline**
+**Figure 1.1 — req-verify three-layer pipeline**
 
 ## 2. Prerequisites
 
 ```mermaid
 flowchart LR
     A[$ARGUMENTS REQ-xxx] --> B{Coding\ncomplete?}
-    B -- No --> C[Prompt user:\ncomplete req-3-code first]
+    B -- No --> C[Prompt user:\ncomplete req-code first]
     B -- Yes --> D[Proceed to verification]
 ```
 **Figure 2.1 — Prerequisites check**
@@ -46,7 +46,7 @@ flowchart TD
     E --> F[Output Report]
     F --> G[Commit]
 ```
-**Figure 3.1 — req-7-verify three-layer verification pipeline**
+**Figure 3.1 — req-verify three-layer verification pipeline**
 
 ## 4. Breakpoint Recovery
 
@@ -196,4 +196,3 @@ After all checks pass, output the verification report.
 git add -A && git commit -m "test(REQ-xxx): verification tests and scripts"
 ```
 
-Stage complete. Invoke `/req REQ-xxx` to continue.

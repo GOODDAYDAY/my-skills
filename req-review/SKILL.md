@@ -4,7 +4,7 @@ description: Requirement review — compare implementation against requirement d
 argument-hint: "[REQ-xxx]"
 ---
 
-# req-6-review
+# req-review
 > Version: v2 | Date: 2026-04-10 | Author: system
 
 ## 1. Overview
@@ -18,7 +18,7 @@ flowchart LR
     D -- Yes --> E[Status: Reviewed]
     D -- No --> F[Resolve then re-check]
 ```
-**Figure 1.1 — req-6-review stage overview**
+**Figure 1.1 — req-review stage overview**
 
 ## 2. Prerequisites
 
@@ -46,7 +46,7 @@ flowchart TD
     F -- No --> G[List Missing Items / Wait for User]
     F -- Yes --> H[Update Index → Reviewed]
 ```
-**Figure 3.1 — req-6-review overall flow**
+**Figure 3.1 — req-review overall flow**
 
 ## 4. Steps
 
@@ -156,4 +156,3 @@ When a mismod is found:
 - Items not implemented or partially implemented → list pending items and wait for user decision
 - Mismod found → the mismod issue must be resolved and confirmed by the user before proceeding
 
-Stage complete. Invoke `/req REQ-xxx` to continue.

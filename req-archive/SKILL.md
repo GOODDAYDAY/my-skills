@@ -23,14 +23,14 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[Trigger] --> B[/req-8-done\narcive-threshold reached]
+    A[Trigger] --> B[/req-done\narcive-threshold reached]
     A --> C[User runs\n/req-archive manually]
     B --> D[Execute archive flow]
     C --> D
 ```
 **Figure 2.1 — Archive trigger conditions**
 
-Triggered by `/req-8-done` when the archive threshold is reached, or run manually by the user at any time.
+Triggered by `/req-done` when the archive threshold is reached, or run manually by the user at any time.
 
 ## 3. Overall Flow
 
@@ -115,4 +115,4 @@ Notify the user:
 - Milestone summary location: `requirements/archive/milestone-<date>.md`
 - Number of remaining active requirements
 
-Archive complete. Invoke `/req REQ-xxx` to continue if needed.
+Archive complete.

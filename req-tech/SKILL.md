@@ -4,7 +4,7 @@ description: Technical design — create technical specification based on finali
 argument-hint: "[REQ-xxx]"
 ---
 
-# req-2-tech — Technical Design
+# req-tech — Technical Design
 > Version: v4 | Date: 2026-04-16 | Author: system
 
 ## 1. Role
@@ -21,7 +21,7 @@ flowchart LR
     F --> G[User review loop]
     G --> H[Status: Technical Finalized]
 ```
-**Figure 1.1 — req-2-tech stage overview**
+**Figure 1.1 — req-tech stage overview**
 
 ## 2. Overall Flow
 
@@ -57,7 +57,7 @@ flowchart TD
 ```mermaid
 flowchart LR
     A[$ARGUMENTS\nREQ-xxx] --> B{requirement.md\nexists and Finalized?}
-    B -- No --> C[Prompt user:\ncomplete req-1-analyze first]
+    B -- No --> C[Prompt user:\ncomplete req-analyze first]
     B -- Yes --> D{technical.md\nalready exists?}
     D -- Yes incomplete --> E[Show content\nask continue or restart]
     D -- No --> F[Proceed to triage]
@@ -281,4 +281,3 @@ After user approval:
 git add -A && git commit -m "docs(REQ-xxx): technical design complete"
 ```
 
-Stage complete. Invoke `/req REQ-xxx` to continue.

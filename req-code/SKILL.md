@@ -4,7 +4,7 @@ description: Coding — develop following requirement and technical documents
 argument-hint: "[REQ-xxx]"
 ---
 
-# req-3-code: Coding Stage
+# req-code: Coding Stage
 > Version: v2 | Date: 2026-04-10 | Author: system
 
 ## 1. Role & Scope
@@ -17,7 +17,7 @@ flowchart LR
     C --> D[Automation scripts]
     D --> E[Status: Development Done]
 ```
-**Figure 1.1 — req-3-code stage overview**
+**Figure 1.1 — req-code stage overview**
 
 ## 2. Prerequisites
 
@@ -341,4 +341,3 @@ def do_action(self, data):
     return self._build_result(record_id, enriched)
 ```
 
-Stage complete. Invoke `/req REQ-xxx` to continue.

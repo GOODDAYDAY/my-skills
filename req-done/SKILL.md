@@ -4,7 +4,7 @@ description: Archive — final consistency check, update document status, mark r
 argument-hint: "[REQ-xxx]"
 ---
 
-# req-8-done
+# req-done
 > Version: v1 | Date: 2026-04-02 | Author: system
 
 ## 1. Overview
@@ -19,14 +19,14 @@ flowchart LR
     D --> E[Archive threshold\ncheck]
     E --> F[Output summary]
 ```
-**Figure 1.1 — req-8-done archive flow**
+**Figure 1.1 — req-done archive flow**
 
 ## 2. Prerequisites
 
 ```mermaid
 flowchart LR
     A[$ARGUMENTS REQ-xxx] --> B{Verification\ncomplete?}
-    B -- No --> C[Prompt user:\ncomplete req-7-verify first]
+    B -- No --> C[Prompt user:\ncomplete req-verify first]
     B -- Yes --> D[Proceed to archive]
 ```
 **Figure 2.1 — Prerequisites check**
@@ -50,7 +50,7 @@ flowchart TD
     H --> I[Archive Threshold Check]
     I --> J[Output Summary]
 ```
-**Figure 3.1 — req-8-done archive checklist flow**
+**Figure 3.1 — req-done archive checklist flow**
 
 ## 4. Steps
 
@@ -145,4 +145,3 @@ flowchart LR
 - Completed: <date>
 ```
 
-Stage complete. Invoke `/req REQ-xxx` to continue.

@@ -47,7 +47,7 @@ flowchart LR
 
 ### 3.1 Affected Scope Column
 
-**This column is mandatory and must be filled accurately.** It is the basis for automated mismod detection in the review stage (`req-6-review`).
+**This column is mandatory and must be filled accurately.** It is the basis for automated mismod detection in the review stage (`req-review`).
 - For `requirement.md`: fill in affected feature IDs, e.g. `F-01, F-03`
 - For `technical.md`: fill in affected section/module IDs, e.g. `Module 4.1, API 6.2`
 - Use `ALL` only for initial version or full rewrites

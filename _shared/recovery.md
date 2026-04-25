@@ -37,19 +37,19 @@ flowchart TD
 
 ## 3. Per-Stage Artifact Checks
 
-### 3.1 req-2-tech (Technical Design)
+### 3.1 req-tech (Technical Design)
 
 - Check if `technical.md` exists
 - If exists and status is `Technical Design` (not finalized): show existing content, ask user to continue or restart
 
-### 3.2 req-3-code (Coding)
+### 3.2 req-code (Coding)
 
 - Read module list from `technical.md`
 - Check which modules have corresponding code files
 - List completed vs pending modules
 - Resume from the first pending module
 
-### 3.3 req-7-verify (Verification)
+### 3.3 req-verify (Verification)
 
 - Check if `scripts/` directory and scripts exist
 - Check if test files exist
@@ -58,13 +58,13 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    A[req-2-tech] --> B{technical.md exists?}
+    A[req-tech] --> B{technical.md exists?}
     B -- No --> C[Create from scratch]
     B -- Yes --> D[Show content, ask user]
-    E[req-3-code] --> F{Code files exist?}
+    E[req-code] --> F{Code files exist?}
     F -- No --> G[Start from first module]
     F -- Yes --> H[Resume from first pending module]
-    I[req-7-verify] --> J{Scripts exist?}
+    I[req-verify] --> J{Scripts exist?}
     J -- No --> K[Generate all scripts]
     J -- Yes --> L[Run scripts, fix failures only]
 ```

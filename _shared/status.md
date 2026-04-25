@@ -8,32 +8,32 @@ All statuses used in `requirements/index.md`, `requirement.md`, and `technical.m
 ```mermaid
 stateDiagram-v2
     [*] --> RequirementDraft
-    RequirementDraft --> RequirementFinalized: req-1-analyze complete
-    RequirementFinalized --> TechnicalDesign: req-2-tech starts
-    TechnicalDesign --> TechnicalFinalized: req-2-tech complete
-    TechnicalFinalized --> InDevelopment: req-3-code starts
-    InDevelopment --> DevelopmentDone: req-3-code complete
-    DevelopmentDone --> SecurityReviewed: req-4-security complete
-    SecurityReviewed --> CodeCleaned: req-5-cleanup complete
-    CodeCleaned --> Reviewed: req-6-review complete
-    Reviewed --> InVerification: req-7-verify starts
-    InVerification --> Completed: req-7-verify complete
+    RequirementDraft --> RequirementFinalized: req-analyze complete
+    RequirementFinalized --> TechnicalDesign: req-tech starts
+    TechnicalDesign --> TechnicalFinalized: req-tech complete
+    TechnicalFinalized --> InDevelopment: req-code starts
+    InDevelopment --> DevelopmentDone: req-code complete
+    DevelopmentDone --> SecurityReviewed: req-security complete
+    SecurityReviewed --> CodeCleaned: req-cleanup complete
+    CodeCleaned --> Reviewed: req-review complete
+    Reviewed --> InVerification: req-verify starts
+    InVerification --> Completed: req-verify complete
     Completed --> [*]
 ```
 **Figure 1.1 — Requirement lifecycle state machine**
 
 | Status | Meaning | Next Stage |
 |:---|:---|:---|
-| `Requirement Draft` | Requirement analysis in progress | → req-1-analyze |
-| `Requirement Finalized` | Requirement approved | → req-2-tech |
-| `Technical Design` | Technical design in progress | → req-2-tech |
-| `Technical Finalized` | Technical design approved | → req-3-code |
-| `In Development` | Coding in progress | → req-3-code |
-| `Development Done` | Coding completed | → req-4-security |
-| `Security Reviewed` | Security review passed | → req-5-cleanup |
-| `Code Cleaned` | Code cleanup completed | → req-6-review |
-| `Reviewed` | Requirement review passed | → req-7-verify |
-| `In Verification` | Verification in progress | → req-7-verify |
+| `Requirement Draft` | Requirement analysis in progress | → req-analyze |
+| `Requirement Finalized` | Requirement approved | → req-tech |
+| `Technical Design` | Technical design in progress | → req-tech |
+| `Technical Finalized` | Technical design approved | → req-code |
+| `In Development` | Coding in progress | → req-code |
+| `Development Done` | Coding completed | → req-security |
+| `Security Reviewed` | Security review passed | → req-cleanup |
+| `Code Cleaned` | Code cleanup completed | → req-review |
+| `Reviewed` | Requirement review passed | → req-verify |
+| `In Verification` | Verification in progress | → req-verify |
 | `Completed` | All done | - |
 
 ## 2. index.md Format

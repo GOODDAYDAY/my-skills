@@ -38,14 +38,14 @@ flowchart LR
 ```mermaid
 stateDiagram-v2
     [*] --> RequirementDraft
-    RequirementDraft --> RequirementFinalized: /req-1-analyze
-    RequirementFinalized --> TechnicalFinalized: /req-2-tech
-    TechnicalFinalized --> DevelopmentDone: /req-3-code
-    DevelopmentDone --> SecurityReviewed: /req-4-security
-    SecurityReviewed --> CodeCleaned: /req-5-cleanup
-    CodeCleaned --> Reviewed: /req-6-review
-    Reviewed --> Completed: /req-7-verify
-    Completed --> [*]: /req-8-done
+    RequirementDraft --> RequirementFinalized: /req-analyze
+    RequirementFinalized --> TechnicalFinalized: /req-tech
+    TechnicalFinalized --> DevelopmentDone: /req-code
+    DevelopmentDone --> SecurityReviewed: /req-security
+    SecurityReviewed --> CodeCleaned: /req-cleanup
+    CodeCleaned --> Reviewed: /req-review
+    Reviewed --> Completed: /req-verify
+    Completed --> [*]: /req-done
 ```
 **Figure 3.1 — Requirement lifecycle state transitions**
 
@@ -122,4 +122,4 @@ flowchart TD
 | v2 | 2024-01-20 | Added pagination | F-05 |
 ```
 
-Done. Invoke `/req REQ-xxx` to resume the workflow.
+Done.

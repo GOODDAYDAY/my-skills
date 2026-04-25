@@ -4,7 +4,7 @@ description: Code cleanup — detect unused code, merge duplicate logic, optimiz
 argument-hint: "[REQ-xxx]"
 ---
 
-# req-5-cleanup: Code Cleanup Stage
+# req-cleanup: Code Cleanup Stage
 > Version: v2 | Date: 2026-04-10 | Author: system
 
 ## 1. Role & Scope
@@ -19,7 +19,7 @@ flowchart LR
     E --> F[Verify: build + tests pass]
     F --> G[Status: Code Cleaned]
 ```
-**Figure 1.1 — req-5-cleanup stage overview**
+**Figure 1.1 — req-cleanup stage overview**
 
 ## 2. Core Principle — Do NOT Alter Business Behavior
 
@@ -85,7 +85,7 @@ flowchart TD
 
 ### 4.2 Step 2: Analyze (Read-Only)
 Scan all code produced by this requirement. **Do not make any changes yet** — only collect findings.
-> Note: `req-3-code` already enforces real-time extraction during coding (2-occurrence rule and per-module inline review). Focus this scan on **cross-module duplication** that only became apparent after all modules were written, not on intra-module issues already handled during coding.
+> Note: `req-code` already enforces real-time extraction during coding (2-occurrence rule and per-module inline review). Focus this scan on **cross-module duplication** that only became apparent after all modules were written, not on intra-module issues already handled during coding.
 
 #### 4.2.1 Unused Code Elements
 - **Unused imports**: imported but never referenced modules, packages, classes
@@ -204,4 +204,3 @@ If any changes were applied in this stage:
 git add -A && git commit -m "refactor(REQ-xxx): code cleanup complete"
 ```
 
-Stage complete. Invoke `/req REQ-xxx` to continue.

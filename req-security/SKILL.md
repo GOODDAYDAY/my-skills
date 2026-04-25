@@ -4,7 +4,7 @@ description: Security review — detect data security issues and code vulnerabil
 argument-hint: "[REQ-xxx]"
 ---
 
-# req-4-security: Security Review Stage
+# req-security: Security Review Stage
 > Version: v1 | Date: 2026-04-02 | Author: system
 
 ## 1. Role & Scope
@@ -18,14 +18,14 @@ flowchart LR
     C --> E[Status: Security Reviewed]
     D --> E
 ```
-**Figure 1.1 — req-4-security stage overview**
+**Figure 1.1 — req-security stage overview**
 
 ## 2. Prerequisites
 
 ```mermaid
 flowchart LR
     A[$ARGUMENTS REQ-xxx] --> B{Status ≥\nDevelopment Done?}
-    B -- No --> C[Prompt user:\ncomplete req-3-code first]
+    B -- No --> C[Prompt user:\ncomplete req-code first]
     B -- Yes --> D[Load context\nand scan]
 ```
 **Figure 2.1 — Prerequisites check**
@@ -159,4 +159,3 @@ If any security fixes were applied in this stage:
 git add -A && git commit -m "fix(REQ-xxx): security review fixes"
 ```
 
-Stage complete. Invoke `/req REQ-xxx` to continue.
