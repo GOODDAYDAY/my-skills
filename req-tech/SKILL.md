@@ -1,23 +1,25 @@
 ---
-name: req-2-tech
+name: req-tech
 description: Technical design — create technical specification based on finalized requirements
 argument-hint: "[REQ-xxx]"
 ---
 
 # req-2-tech — Technical Design
-> Version: v2 | Date: 2026-04-02 | Author: system
+> Version: v4 | Date: 2026-04-16 | Author: system
 
 ## 1. Role
 You are responsible for the technical design stage — write a technical specification based on a finalized requirement document.
 
 ```mermaid
 flowchart LR
-    A[requirement.md\nFinalized] --> B[Diverge: multi-agent design]
-    B --> C[Converge: user selects direction]
-    C --> D[Write technical.md]
-    D --> E[Generate diagrams]
-    E --> F[User review loop]
-    F --> G[Status: Technical Finalized]
+    A[requirement.md\nFinalized] --> B{Triage}
+    B -->|Fast| C[Direct design]
+    B -->|Deep| D[Diverge-Converge]
+    C --> E[Write technical.md]
+    D --> E
+    E --> F[Generate diagrams]
+    F --> G[User review loop]
+    G --> H[Status: Technical Finalized]
 ```
 **Figure 1.1 — req-2-tech stage overview**
 
@@ -31,21 +33,24 @@ flowchart TD
     D -->|Yes, incomplete| E[Show existing content\nAsk: continue or restart?]
     D -->|No| F[Read requirement.md]
     E --> F
-    F --> G[Diverge: A+B+C design]
+    F --> T{Triage:\nfast or deep?}
+    T -->|Fast| FA[Direct design:\nmain agent drafts technical spec]
+    T -->|Deep| G[Diverge: A+B+C design]
     G --> H[Converge: present synthesis]
     H --> I{User\nselects direction?}
     I -->|Revise| G
     I -->|Selected| J[Write technical.md]
+    FA --> J
     J --> K[Generate PlantUML Diagrams]
     K --> L[Present to User]
     L --> M{User\nApproved?}
     M -->|Revise| J
     M -->|Approved| N[Finalize technical.md]
     N --> O[Update index.md]
-    O --> P[Commit & Tag]
+    O --> P[Commit]
     P --> E2([Done])
 ```
-**Figure 2.1 — Technical design flow: read requirement → diverge → converge → write → finalize**
+**Figure 2.1 — Technical design flow: read requirement → triage → design → finalize**
 
 ## 3. Prerequisites
 
@@ -55,7 +60,7 @@ flowchart LR
     B -- No --> C[Prompt user:\ncomplete req-1-analyze first]
     B -- Yes --> D{technical.md\nalready exists?}
     D -- Yes incomplete --> E[Show content\nask continue or restart]
-    D -- No --> F[Proceed to diverge analysis]
+    D -- No --> F[Proceed to triage]
 ```
 **Figure 3.1 — Prerequisites check flow**
 
@@ -74,24 +79,55 @@ If `technical.md` already exists with status `Technical Design` (not yet finaliz
 
 ```mermaid
 flowchart TD
-    A[4.1 Read requirement.md] --> B[4.2 Diverge: A+B+C design]
-    B --> C[4.3 Converge: user selects direction]
-    C --> D[4.4 Write technical.md]
-    D --> E[4.5 Generate diagrams]
-    E --> F[4.6 User review loop]
-    F --> G[4.7 Finalize: status Technical Finalized]
-    G --> H[4.8 Commit and tag]
+    A[4.1 Read requirement.md] --> T[4.2 Triage]
+    T -->|Fast| FA[4.3 Direct Design]
+    T -->|Deep| B[4.4 Diverge Design]
+    B --> C[4.5 Converge]
+    FA --> D[4.6 Write technical.md]
+    C --> D
+    D --> E[4.7 Generate diagrams]
+    E --> F[4.8 User review loop]
+    F --> G[4.9 Finalize: status Technical Finalized]
+    G --> H[4.10 Commit]
 ```
 **Figure 4.1 — Technical design step sequence**
 
 ### 4.1 Read Requirement Document
 Read the corresponding `requirement.md` and understand all features and acceptance criteria.
 
-### 4.2 Diverge Design
+### 4.2 Triage — Fast or Deep?
 
-Read `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` for the full pattern specification (role definitions, Round 3 message-passing model, implementation constraints).
+Before launching any subagent, the main agent evaluates the requirement document and chooses a path. Announce the decision to the user (e.g. "需求方向明确，直接出技术方案" or "架构有多种选择，展开分析").
 
-Launch three rounds of subagent analysis via the `Agent` tool:
+**Fast path — any of these conditions**:
+- Requirement document already specifies the architectural direction (e.g. "delete class X, callers use Y directly")
+- Changes are mechanical: interface adjustment, parameter changes, file deletion, wiring changes
+- Module boundaries are clear, no new architecture decisions needed
+
+**Deep path — any of these conditions**:
+- New module design or technology stack selection required
+- Requirement document leaves architectural openness (e.g. "choose approach A or B")
+- Multiple fundamentally different technical implementations exist
+- Cross-cutting design affecting multiple subsystems
+
+**User override**: If the user requests deeper analysis (e.g. "展开分析", "我想看看不同技术方案"), switch to deep path regardless of triage result.
+
+### 4.3 Direct Design (fast path)
+
+The main agent directly drafts the technical specification:
+1. Define technology stack and design principles
+2. List module changes with specific file paths and line references
+3. Define data model / API changes if applicable
+4. List superseded components
+5. Note risks
+
+Present the draft and proceed to §4.6 Write technical.md.
+
+### 4.4 Diverge Design (deep path)
+
+Read `${CLAUDE_SKILL_DIR}/../_shared/diverge-converge.md` for the full pattern specification (role definitions, implementation constraints).
+
+Launch two rounds of subagent analysis via the `Agent` tool:
 
 **Round 1 (parallel)**: Launch Agent A and Agent B simultaneously:
 - **Agent A (simple & direct)**: ≤ 3 modules, minimal dependencies, no extensibility concerns, just make it work
@@ -100,34 +136,22 @@ Launch three rounds of subagent analysis via the `Agent` tool:
 **Round 2 (sequential)**: Launch Agent C, reading the full A+B output:
 - **Agent C (core conflict)**: identify "at which key decision do the two architectures diverge (e.g. data coupling / deployment complexity / team skill match)", give a judgment — must name the conflict point concretely
 
-**Round 3 (parallel)**: Launch Agent A v2 and Agent B v2 (new instances) simultaneously, each prompt per the `diverge-converge.md` spec containing both Round 1 proposals + C's full challenge + response task.
+### 4.5 Converge — Synthesize and User Selection (deep path)
 
-### 4.3 Converge — Synthesize and User Selection
+The main agent consolidates the output and presents in the `diverge-converge.md` Synthesis format:
 
-The main agent consolidates all three rounds' output and presents in the `diverge-converge.md` Synthesis format:
-
-1. **Three-way position summary** (one sentence each)
+1. **Recommended direction** (conclusion first — A / B / blend, with reasoning)
 2. **Core conflict** (the specific divergence identified by C)
-3. **Comparison table**
-
-| Dimension | Agent A (simple & direct) | Agent B (extensible) |
-|:---|:---|:---|
-| Module count | | |
-| Complexity | | |
-| Maintainability | | |
-| Applicable scenarios | | |
-| Security design | | |
-| Testability | | |
-| Code cleanliness | | |
-
-4. **Recommended direction** (based on context)
+3. **Comparison table** (optional — only when the two approaches differ significantly)
 
 **Wait for user selection**: choose A / choose B / describe a blend. Once the user selects, use the chosen direction as the basis for writing `technical.md`.
 
-### 4.4 Write Technical Specification
+Before writing, also ask: **"Does this design replace or supersede any existing implementation?"** If yes, capture those components in `§ 9. Superseded Components`. If the user is unsure, scan the codebase for similar functionality and present candidates.
+
+### 4.6 Write Technical Specification
 Invoke `write-doc` via the `Skill` tool, passing:
 - Use the embedded template below as the document structure
-- Fill in the selected technical design from the diverge/converge phase into each section
+- Fill in the selected technical design from the analysis/converge phase into each section
 - Save path: `technical.md` in the same directory as `requirement.md`
 
 Template:
@@ -188,9 +212,24 @@ Note: source code must NOT be placed directly under project root `src/`. Must be
 
 Explicitly list which components/utilities/logic are shared, and how they are referenced by each module.
 
-## 9. Risks & Notes
+## 9. Superseded Components
 
-## 10. Change Log
+Components from prior REQs that this design replaces. Must be cleaned up as part
+of this REQ's implementation — either removed or marked with a `# LEGACY(REQ-xxx):` comment.
+
+| Component | File Path | Superseded By | Cleanup Action |
+|:---|:---|:---|:---|
+| <component name> | <path/to/file.py> | <new module or class> | Remove / Mark |
+
+If nothing is superseded, write **None** in this section.
+
+`Cleanup Action` values:
+- **Remove** — delete the code outright during req-code (safe when the superseding path covers 100% of cases)
+- **Mark** — add `# LEGACY(REQ-xxx): superseded by <new component>` comment now; schedule removal in a follow-up REQ
+
+## 10. Risks & Notes
+
+## 11. Change Log
 
 | Version | Date | Changes | Affected Scope | Reason |
 |:---|:---|:---|:---|:---|
@@ -201,7 +240,7 @@ Explicitly list which components/utilities/logic are shared, and how they are re
 
 See `${CLAUDE_SKILL_DIR}/../_shared/changelog.md` for change log format and rules. The `Affected Scope` column must be filled in accurately (e.g. Module 4.1, API 6.2).
 
-### 4.5 Generate Diagrams
+### 4.7 Generate Diagrams
 
 ```mermaid
 flowchart LR
@@ -216,7 +255,7 @@ flowchart LR
     G --> H
     H --> I([Done])
 ```
-**Figure 4.5 — PlantUML diagram generation decision tree**
+**Figure 4.7 — PlantUML diagram generation decision tree**
 
 Read `${CLAUDE_SKILL_DIR}/../_shared/plantuml.md` for the full PlantUML specification (environment detection, syntax, SVG conversion). Follow the process strictly.
 Generate the following diagrams as needed (at least 1–2):
@@ -225,20 +264,21 @@ Generate the following diagrams as needed (at least 1–2):
 - **Class diagram**: `tech-class.puml` (data model / core classes)
 - **ER diagram**: `tech-er.puml` (if a database is involved)
 
-### 4.6 User Review
+### 4.8 User Review
 Present a summary of the technical specification and **wait for user confirmation**:
 - Focus on technology stack, architecture design, and module reuse strategy
 - User may request adjustments
 - Loop until the user approves
 
-### 4.7 Finalize
+### 4.9 Finalize
 After user approval:
 1. Update the status in `technical.md` to `Technical Finalized`
 2. Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Technical Finalized`
 
-### 4.8 Commit & Tag
+### 4.10 Commit
 
 ```bash
 git add -A && git commit -m "docs(REQ-xxx): technical design complete"
-git tag REQ-xxx-designed
 ```
+
+Stage complete. Invoke `/req REQ-xxx` to continue.

@@ -121,3 +121,5 @@ flowchart TD
 |:---|:---|:---|:---|
 | v2 | 2024-01-20 | Added pagination | F-05 |
 ```
+
+Done. Invoke `/req REQ-xxx` to resume the workflow.

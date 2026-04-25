@@ -1,1 +1,24 @@
 /.claude/
+
+# Ignore all top-level directories by default (local-only skills)
+# Manually `git add -f <skill>/` for any new skill you want to track
+/*/
+
+# Whitelist: existing tracked skills
+!/_shared/
+!/create-skill/
+!/req/
+!/req-analyze/
+!/req-tech/
+!/req-code/
+!/req-security/
+!/req-cleanup/
+!/req-review/
+!/req-verify/
+!/req-done/
+!/req-amend/
+!/req-archive/
+!/req-status/
+!/puml2svg/
+!/task/
+!/write-doc/

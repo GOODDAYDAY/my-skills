@@ -35,19 +35,19 @@ git submodule update --remote .claude/skills
 ```
 /req "功能描述"
   │
-  ├─ 阶段 1：需求分析 ──────→ requirement.md + 配图        [tag: REQ-xxx-analyzed]
+  ├─ 阶段 1：需求分析 ──────→ requirement.md + 配图
   │    ↓（需要用户确认）
-  ├─ 阶段 2：技术设计 ──────→ technical.md + 配图          [tag: REQ-xxx-designed]
+  ├─ 阶段 2：技术设计 ──────→ technical.md + 配图
   │    ↓（需要用户确认）
-  ├─ 阶段 3：编码开发 ──────→ 源代码 + scripts/            [tag: REQ-xxx-coded]
+  ├─ 阶段 3：编码开发 ──────→ 源代码 + scripts/
   │    ↓                        （测试前置，按模块提交）
-  ├─ 阶段 4：安全审查 ──────→ 漏洞扫描 + 修复              [tag: REQ-xxx-security]
+  ├─ 阶段 4：安全审查 ──────→ 漏洞扫描 + 修复
   │    ↓
-  ├─ 阶段 5：代码精简 ──────→ 结构优化（不改业务逻辑）     [tag: REQ-xxx-cleaned]
+  ├─ 阶段 5：代码精简 ──────→ 结构优化（不改业务逻辑）
   │    ↓
   ├─ 阶段 6：需求对比 ──────→ 合规检查报告
   │    ↓
-  ├─ 阶段 7：校验测试 ──────→ 编译 / 运行 / 测试           [tag: REQ-xxx-verified]
+  ├─ 阶段 7：校验测试 ──────→ 编译 / 运行 / 测试
   │    ↓
   └─ 阶段 8：归档完成 ──────→ 一致性检查 + 标记完成
 ```

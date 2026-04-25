@@ -1,5 +1,5 @@
 ---
-name: req-8-done
+name: req-done
 description: Archive — final consistency check, update document status, mark requirement as completed
 argument-hint: "[REQ-xxx]"
 ---
@@ -88,7 +88,6 @@ Run the following checklist before archiving — **all items must pass**.
 
 ### Git
 - [ ] All changes are committed (no uncommitted modifications)
-- [ ] On a feature branch (feat/REQ-xxx-*), not directly on main
 ```
 
 If any item fails:
@@ -145,3 +144,5 @@ flowchart LR
 - Code: implemented and verified
 - Completed: <date>
 ```
+
+Stage complete. Invoke `/req REQ-xxx` to continue.

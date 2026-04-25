@@ -145,5 +145,5 @@ Depending on the impact of the change, the status in `index.md` may need to roll
 - Affected Scope: F-01, F-03
 - Undeclared changes: None ✓
 - Index status: reverted to Requirement Finalized
-- Next step: /req-2-tech REQ-xxx
+- Stage complete. Invoke `/req REQ-xxx` to continue.
 ```

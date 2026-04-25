@@ -1,5 +1,5 @@
 ---
-name: req-4-security
+name: req-security
 description: Security review — detect data security issues and code vulnerabilities (fix critical/high, report medium/low)
 argument-hint: "[REQ-xxx]"
 ---
@@ -48,7 +48,7 @@ flowchart TD
     G -- Yes --> H[Present to user, fix after confirmation]
     G -- No --> I[Step 5: Update status to Security Reviewed]
     H --> I
-    I --> J[Step 6: Commit fixes + tag REQ-xxx-security]
+    I --> J[Step 6: Commit fixes]
 ```
 **Figure 3.1 — Security review stage flow**
 
@@ -153,12 +153,10 @@ For **Medium and Low** severity issues:
 ### 3.5 Step 5: Update Status
 Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Update `requirements/index.md` status to `Security Reviewed`.
 
-### 3.6 Step 6: Commit & Tag
+### 3.6 Step 6: Commit
 If any security fixes were applied in this stage:
 ```bash
 git add -A && git commit -m "fix(REQ-xxx): security review fixes"
 ```
-Tag the stage completion regardless:
-```bash
-git tag REQ-xxx-security
-```
+
+Stage complete. Invoke `/req REQ-xxx` to continue.

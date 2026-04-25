@@ -1,5 +1,5 @@
 ---
-name: req-7-verify
+name: req-verify
 description: Verification — build check, runtime check, and automated testing
 argument-hint: "[REQ-xxx]"
 ---
@@ -44,7 +44,7 @@ flowchart TD
     C --> D[Automated Testing]
     D --> E[Generate / Update Scripts]
     E --> F[Output Report]
-    F --> G[Commit and Tag]
+    F --> G[Commit]
 ```
 **Figure 3.1 — req-7-verify three-layer verification pipeline**
 
@@ -78,7 +78,7 @@ flowchart TD
     C --> D[5.4 Automated testing\nunit + E2E]
     D --> E[5.5 Generate/update\nautomation scripts]
     E --> F[5.6 Output report]
-    F --> G[5.7 Commit and tag]
+    F --> G[5.7 Commit]
 ```
 **Figure 5.1 — Verification step sequence**
 
@@ -188,11 +188,12 @@ If scripts already exist, check whether they need updating.
 1. ...
 ```
 
-After all checks pass, notify the user they can proceed to the archive stage.
+After all checks pass, output the verification report.
 
-### 5.7 Commit & Tag
+### 5.7 Commit
 
 ```bash
 git add -A && git commit -m "test(REQ-xxx): verification tests and scripts"
-git tag REQ-xxx-verified
 ```
+
+Stage complete. Invoke `/req REQ-xxx` to continue.

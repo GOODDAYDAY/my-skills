@@ -1,11 +1,11 @@
 ---
-name: req-6-review
+name: req-review
 description: Requirement review — compare implementation against requirement document item by item
 argument-hint: "[REQ-xxx]"
 ---
 
 # req-6-review
-> Version: v1 | Date: 2026-04-02 | Author: system
+> Version: v2 | Date: 2026-04-10 | Author: system
 
 ## 1. Overview
 You are responsible for the requirement review stage — verify item by item that the code implementation satisfies the requirement document.
@@ -78,6 +78,21 @@ For **every functional requirement** and **every acceptance criterion** in the r
 | F-03 Feature 3 | Not implemented | - | Needs development |
 ```
 
+### 4.2b Superseded Components Check
+Read `technical.md § Superseded Components`. For each entry, verify the declared `Cleanup Action` was applied:
+- `Remove`: grep for the component — it must no longer exist in the codebase
+- `Mark`: the `# LEGACY(REQ-xxx):` comment must be present on the superseded block
+
+Add results as additional rows to the comparison table:
+
+```markdown
+| Superseded: <component> | Removed ✓ / Marked ✓ / Missing ✗ | <file>:<line> | <notes> |
+```
+
+If any entry is `Missing ✗`, treat it the same as a partially-implemented functional requirement — list it as a pending item and block progression to `Reviewed` until resolved.
+
+If `§ Superseded Components` is absent from `technical.md` (older REQs predating this convention), skip this check and note "Superseded Components section not present — check not applicable."
+
 ### 4.3 Change Log Compliance Check
 This is the **core rule** of this stage — it must be enforced strictly.
 
@@ -137,6 +152,8 @@ When a mismod is found:
 ```
 
 ### 4.4 Output Conclusion
-- All items satisfied and no mismod → update `requirements/index.md` status to `Reviewed` (see `${CLAUDE_SKILL_DIR}/../_shared/status.md`), notify user they can proceed to the verification stage
+- All items satisfied and no mismod → update `requirements/index.md` status to `Reviewed` (see `${CLAUDE_SKILL_DIR}/../_shared/status.md`), output conclusion report
 - Items not implemented or partially implemented → list pending items and wait for user decision
 - Mismod found → the mismod issue must be resolved and confirmed by the user before proceeding
+
+Stage complete. Invoke `/req REQ-xxx` to continue.

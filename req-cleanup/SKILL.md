@@ -1,11 +1,11 @@
 ---
-name: req-5-cleanup
+name: req-cleanup
 description: Code cleanup — detect unused code, merge duplicate logic, optimize cohesion/coupling (never alter business logic)
 argument-hint: "[REQ-xxx]"
 ---
 
 # req-5-cleanup: Code Cleanup Stage
-> Version: v1 | Date: 2026-04-02 | Author: system
+> Version: v2 | Date: 2026-04-10 | Author: system
 
 ## 1. Role & Scope
 You are responsible for the code cleanup stage. Optimize all code produced by this requirement to be clean, non-redundant, and well-structured — **without modifying any business logic**.
@@ -73,7 +73,7 @@ flowchart TD
     M --> N{All tests pass?}
     N -- No --> O[Revert failing change, report to user]
     N -- Yes --> P[Step 7: Update status to Code Cleaned]
-    P --> Q[Step 8: Commit + tag REQ-xxx-cleaned]
+    P --> Q[Step 8: Commit]
 ```
 **Figure 4.1 — Cleanup stage: detect, approve, execute, verify flow**
 
@@ -81,6 +81,7 @@ flowchart TD
 1. Read `requirements/REQ-xxx-*/requirement.md` — understand requirement scope
 2. Read `requirements/REQ-xxx-*/technical.md` — understand module design and reuse strategy
 3. Locate all source code files produced by this requirement
+4. Read `technical.md § Superseded Components` — add every file listed there to the scan scope, even if this REQ did not directly modify those files. These are the most likely locations for surviving dead code from prior REQs.
 
 ### 4.2 Step 2: Analyze (Read-Only)
 Scan all code produced by this requirement. **Do not make any changes yet** — only collect findings.
@@ -91,7 +92,10 @@ Scan all code produced by this requirement. **Do not make any changes yet** — 
 - **Unused variables**: declared but never read
 - **Unused functions/methods**: defined but never called (within the requirement scope)
 - **Unused parameters**: declared in function signature but never used in the function body
-- **Dead code**: branches that can never execute (e.g., code after `return`, `if False`)
+- **Dead code** — branches that can never execute. Three subtypes:
+  - *Literal*: code after `return`, `if False`, `if None` — always C-class
+  - *Tagged legacy*: blocks marked with `# LEGACY(REQ-xxx):` comment — always C-class removal candidate; confirm with user then remove
+  - *Semantic*: conditional guard on a flag or object that is always initialized — trace `__init__` and setup methods; if the only path to `None`/`False` is an exception handler for a **required** config field, report as S-class with an explicit question: *"Can you confirm [X] is always non-None in production? If yes, this becomes a C-class removal."*
 
 #### 4.2.2 Redundant Code
 - **Duplicate code blocks**: identical or near-identical code appearing in 2+ places
@@ -194,12 +198,10 @@ After cleanup, verify that nothing is broken:
 ### 4.7 Step 7: Update Status
 Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications. Update `requirements/index.md` status to `Code Cleaned`.
 
-### 4.8 Step 8: Commit & Tag
+### 4.8 Step 8: Commit
 If any changes were applied in this stage:
 ```bash
 git add -A && git commit -m "refactor(REQ-xxx): code cleanup complete"
 ```
-Tag the stage completion regardless:
-```bash
-git tag REQ-xxx-cleaned
-```
+
+Stage complete. Invoke `/req REQ-xxx` to continue.

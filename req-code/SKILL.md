@@ -1,11 +1,11 @@
 ---
-name: req-3-code
+name: req-code
 description: Coding — develop following requirement and technical documents
 argument-hint: "[REQ-xxx]"
 ---
 
 # req-3-code: Coding Stage
-> Version: v1 | Date: 2026-04-02 | Author: system
+> Version: v2 | Date: 2026-04-10 | Author: system
 
 ## 1. Role & Scope
 You are responsible for the coding stage. Develop strictly following the requirement and technical documents.
@@ -69,7 +69,7 @@ flowchart TD
     J --> H
     H -- No --> K[Step 4: Generate automation scripts]
     K --> L[Step 5: Update status to Development Done]
-    L --> M[Step 6: Commit and tag REQ-xxx-coded]
+    L --> M[Step 6: Commit]
 ```
 **Figure 4.1 — Coding stage decision flow**
 
@@ -113,6 +113,14 @@ Develop module by module following the technical document's module breakdown.
 
   **6b. Inline code review** — extract shared logic, rename vague identifiers, remove dead branches
 
+  **6c. Superseded component cleanup** — check `technical.md § Superseded Components` for any entry whose `Superseded By` points to the module just implemented:
+  - `Cleanup Action = Remove`: delete the superseded code outright (function, branch, import, or file). Verify no other callers remain before deleting.
+  - `Cleanup Action = Mark`: add a comment on the first line of the superseded block:
+    ```python
+    # LEGACY(REQ-xxx): superseded by <new component>, scheduled for removal
+    ```
+  - Include this cleanup in the **same commit** as the module — do not defer to a separate PR.
+
   Then commit:
   ```bash
   git add -A && git commit -m "feat(REQ-xxx): implement <ModuleName> module (covers F-xx, F-xx)"
@@ -130,11 +138,10 @@ At minimum:
 ### 4.6 Step 5: Update Status
 Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for status specifications, update `requirements/index.md` status to `Development Done`.
 
-### 4.7 Step 6: Commit & Tag
+### 4.7 Step 6: Commit
 Commit any remaining uncommitted files (may be empty if all modules were committed individually):
 ```bash
 git add -A && git commit -m "feat(REQ-xxx): implementation complete" --allow-empty
-git tag REQ-xxx-coded
 ```
 
 ## 5. Code Quality Requirements
@@ -333,3 +340,5 @@ def do_action(self, data):
     # 6. Build and return result
     return self._build_result(record_id, enriched)
 ```
+
+Stage complete. Invoke `/req REQ-xxx` to continue.

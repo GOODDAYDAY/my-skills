@@ -15,7 +15,7 @@ flowchart LR
     A[Active Completed REQs] --> B[Extract info\nfrom each REQ]
     B --> C[Write milestone summary\narchive/milestone-date.md]
     C --> D[Move rows to\nArchived section]
-    D --> E[Commit and tag\nmilestone-date]
+    D --> E[Commit]
 ```
 **Figure 1.1 — req-archive batch archive overview**
 
@@ -41,7 +41,7 @@ flowchart TD
     B -- Yes --> D[Extract info from each REQ]
     D --> E[Write milestone summary to archive/]
     E --> F[Move Completed rows to Archived section]
-    F --> G[Commit and Tag]
+    F --> G[Commit]
     G --> H[Output Result]
 ```
 **Figure 3.1 — req-archive batch archive flow**
@@ -52,7 +52,7 @@ flowchart TD
 flowchart TD
     A[4.1 Load Active Completed] --> B[4.2 Generate milestone summary]
     B --> C[4.3 Update index.md\nmove to Archived section]
-    C --> D[4.4 Commit and tag\nmilestone-date]
+    C --> D[4.4 Commit]
     D --> E[4.5 Output result\nto user]
 ```
 **Figure 4.1 — Detailed step sequence**
@@ -103,11 +103,10 @@ Move all Completed rows from the **Active** section to the **Archived** section:
 - Leave all other row content unchanged
 - Do not touch rows with non-Completed status
 
-### 4.4 Commit & Tag
+### 4.4 Commit
 
 ```bash
 git add -A && git commit -m "chore: archive milestone <YYYY-MM-DD>"
-git tag milestone-<YYYY-MM-DD>
 ```
 
 ### 4.5 Output Result
@@ -115,4 +114,5 @@ Notify the user:
 - How many requirements were archived
 - Milestone summary location: `requirements/archive/milestone-<date>.md`
 - Number of remaining active requirements
-- Git tag created: `milestone-<date>`
+
+Archive complete. Invoke `/req REQ-xxx` to continue if needed.
