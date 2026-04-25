@@ -5,6 +5,7 @@
 /*/
 
 # Whitelist: existing tracked skills
+!/docs/
 !/_shared/
 !/create-skill/
 !/req/

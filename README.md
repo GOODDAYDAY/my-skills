@@ -1,8 +1,8 @@
 # my-skills
 
-Personal Claude Code skills repository. A complete requirement-driven development workflow — from requirement analysis to final delivery.
+Personal Claude Code skills repository. An **orchestrator-driven**, **stateless** requirement workflow — the orchestrator observes the real filesystem every round, reasons about what is still missing, and dispatches exactly one sub-skill at a time. There is no fixed pipeline.
 
-[中文版](./README_CN.md)
+[中文版](./README_CN.md) · [Evolution History](./docs/evolution.md)
 
 ## Installation
 
@@ -28,50 +28,51 @@ git submodule update --remote .claude/skills
 
 Once installed, all skills are auto-discovered by Claude Code as slash commands.
 
-The core workflow is `/req`, which orchestrates a full development cycle in 8 stages:
+The core workflow is `/req`, which orchestrates a complete development cycle:
 
-```
-/req "feature description"
-  │
-  ├─ Stage 1: Requirement Analysis ──→ requirement.md + diagrams
-  │    ↓ (user approval required)
-  ├─ Stage 2: Technical Design ──────→ technical.md + diagrams
-  │    ↓ (user approval required)
-  ├─ Stage 3: Coding ────────────────→ source code + scripts/
-  │    ↓                                (acceptance tests first, commit per module)
-  ├─ Stage 4: Security Review ──────→ vulnerability scan + fix
-  │    ↓
-  ├─ Stage 5: Code Cleanup ─────────→ structural optimization
-  │    ↓
-  ├─ Stage 6: Requirement Review ────→ compliance check report
-  │    ↓
-  ├─ Stage 7: Verification ─────────→ build / run / test
-  │    ↓
-  └─ Stage 8: Archive ──────────────→ consistency check + mark completed
+```mermaid
+flowchart LR
+    O[Observe filesystem] --> R[Reason about state]
+    R --> D[Dispatch one sub-skill]
+    D --> O
 ```
 
-Each stage waits for user confirmation before proceeding. You can also run any stage independently.
+**The orchestrator loop:** observe → reason → dispatch → observe
 
-Supports **checkpoint recovery** — if interrupted mid-stage, `/req REQ-xxx` detects where you left off and resumes from there.
+Instead of a hardcoded stage sequence, the orchestrator reads `requirements/`, checks what's missing, and calls exactly the right sub-skill to fill the gap. Each sub-skill declares its own `applicable_when` conditions — the orchestrator just follows the contract.
 
-When completed requirements accumulate, `/req-archive` batch-archives them and generates a milestone summary.
+The sub-skills available for dispatch:
+
+| Sub-skill | Trigger Condition |
+|:---|:---|
+| `req-analyze` | No `requirement.md` exists yet |
+| `req-tech` | `requirement.md` exists but no `technical.md` |
+| `req-code` | Design approved but code not written |
+| `req-security` | Code exists but no security review done |
+| `req-cleanup` | Security issues fixed, code needs structural cleanup |
+| `req-review` | Implementation done, needs requirement compliance check |
+| `req-verify` | All previous stages complete, needs build/test verification |
+| `req-done` | Everything verified, ready for archival |
+
+This design makes the workflow **resilient to interruption** — if you stop mid-stage and come back, `/req REQ-xxx` resumes exactly where you left off.
 
 ## Skills
 
 | Command | Description |
 |:---|:---|
-| `/req [description]` | Full workflow orchestrator — guides through all 8 stages |
-| `/req-1-analyze [description]` | Requirement analysis — expand brief input into detailed requirement doc |
-| `/req-2-tech [REQ-xxx]` | Technical design — architecture, modules, API, diagrams |
-| `/req-3-code [REQ-xxx]` | Coding — acceptance tests first, parallel modules, per-module commits |
-| `/req-4-security [REQ-xxx]` | Security review — vulnerability scan, fix critical/high issues |
-| `/req-5-cleanup [REQ-xxx]` | Code cleanup — remove unused code, merge duplicates (no behavior changes) |
-| `/req-6-review [REQ-xxx]` | Requirement review — compare implementation against requirements |
-| `/req-7-verify [REQ-xxx]` | Verification — build, run, and test (Playwright e2e in project language) |
-| `/req-8-done [REQ-xxx]` | Archive — consistency check + mark as completed, prompts archive if threshold reached |
+| `/req [description]` | Full-cycle orchestrator — observes state and dispatches sub-skills |
+| `/req-analyze [description]` | Requirement analysis — expand brief input into detailed requirement doc |
+| `/req-tech [REQ-xxx]` | Technical design — architecture, modules, API, diagrams |
+| `/req-code [REQ-xxx]` | Coding — acceptance tests first, parallel modules, per-module commits |
+| `/req-security [REQ-xxx]` | Security review — vulnerability scan, fix critical/high issues |
+| `/req-cleanup [REQ-xxx]` | Code cleanup — remove unused code, merge duplicates (no behavior changes) |
+| `/req-review [REQ-xxx]` | Requirement review — compare implementation against requirements |
+| `/req-verify [REQ-xxx]` | Verification — build, run, and test |
+| `/req-done [REQ-xxx]` | Archive — consistency check + mark as completed |
 | `/req-archive` | Batch archive completed requirements + generate milestone summary |
 | `/req-status [REQ-xxx\|archived]` | Status check — active requirements by default, pass `archived` for history |
 | `/req-amend [REQ-xxx]` | Formal change process — safely amend finalized documents |
+| `/puml2svg <file.puml>` | Convert PlantUML diagrams to SVG |
 | `/create-skill [name]` | Guide for creating new skills |
 
 ## Document Structure
@@ -91,32 +92,41 @@ requirements/
     └── REQ-001-user-login/         # Archived requirement folders (moved by /req-archive)
 ```
 
-`index.md` is split into **Active** and **Archived** sections. An `archive-threshold` comment (default: 5) controls when `/req-8-done` prompts you to run `/req-archive`.
+`index.md` is split into **Active** and **Archived** sections. An `archive-threshold` comment (default: 5) controls when `/req-done` prompts you to run `/req-archive`.
 
 ## Repository Structure
 
 ```
 my-skills/
 ├── _shared/
-│   ├── plantuml.md                  # Shared PlantUML conventions + env detection
-│   ├── status.md                    # Status enum, index.md format (Active/Archived sections)
-│   ├── changelog.md                 # Change log format and mismod detection rules
-│   ├── recovery.md                  # Breakpoint recovery pattern
-│   └── scripts.md                   # Automation script standards
+│   ├── changelog.md                # Change log format and mismod detection rules
+│   ├── diverge-converge.md         # Multi-agent analysis pattern
+│   ├── git-commit.md               # Commit message conventions
+│   ├── markdown.md                 # Markdown format specification
+│   ├── plantuml.md                 # PlantUML conventions + env detection
+│   ├── recovery.md                 # Breakpoint recovery pattern
+│   ├── scripts.md                  # Automation script standards
+│   ├── scripts/
+│   │   ├── install-puml2svg.bat    # PlantUML SVG converter installer (Windows)
+│   │   └── install-puml2svg.sh     # PlantUML SVG converter installer (Unix)
+│   └── status.md                   # Status enum and index.md format
 ├── create-skill/SKILL.md
-├── req/SKILL.md                     # Workflow orchestrator
-├── req-1-analyze/SKILL.md           # Requirement analysis
-├── req-2-tech/SKILL.md              # Technical design
-├── req-3-code/                      # Coding
+├── puml2svg/SKILL.md               # PlantUML → SVG conversion
+├── req/SKILL.md                    # Orchestrator (observe-reason-dispatch)
+├── req-analyze/SKILL.md            # Requirement analysis
+├── req-tech/SKILL.md               # Technical design
+├── req-code/                       # Coding
 │   ├── SKILL.md
-│   ├── python.md                    # Python conventions
-│   └── java.md                      # Java conventions
-├── req-4-security/SKILL.md          # Security review
-├── req-5-cleanup/SKILL.md           # Code cleanup (no behavior changes)
-├── req-6-review/SKILL.md            # Requirement review
-├── req-7-verify/SKILL.md            # Verification & testing
-├── req-8-done/SKILL.md              # Archive + consistency check + threshold prompt
-├── req-archive/SKILL.md             # Batch archive + milestone summary
-├── req-status/SKILL.md              # Status query (active by default)
-└── req-amend/SKILL.md               # Formal change process
+│   ├── python.md                   # Python conventions
+│   └── java.md                     # Java conventions
+├── req-security/SKILL.md           # Security review
+├── req-cleanup/SKILL.md            # Code cleanup (no behavior changes)
+├── req-review/SKILL.md             # Requirement review
+├── req-verify/SKILL.md             # Verification & testing
+├── req-done/SKILL.md               # Archive + consistency check
+├── req-archive/SKILL.md            # Batch archive + milestone summary
+├── req-status/SKILL.md             # Status query (active by default)
+├── req-amend/SKILL.md              # Formal change process
+├── task/SKILL.md                   # Generic orchestrator
+└── write-doc/SKILL.md              # Document generation skill
 ```
