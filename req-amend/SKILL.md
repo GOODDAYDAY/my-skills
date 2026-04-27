@@ -59,12 +59,7 @@ If only **Implementation Approach** changed:
 1. Check if existing code needs adjustment
 2. Ask user: "Technical approach changed. Should we re-enter coding?"
 
-### 2.5 Update WIP Status
-If the change requires re-running pipeline stages:
-- Update the WIP row's Stage to the appropriate re-entry point
-- If no WIP row exists (scenario was already Implemented), add one
-
-### 2.6 Commit
+### 2.5 Commit
 ```bash
 git add -A && git commit -m "docs({domain}): amend {scenario} — {brief description}"
 ```
@@ -76,7 +71,6 @@ git add -A && git commit -m "docs({domain}): amend {scenario} — {brief descrip
 
 - Domain/Scenario: {domain}/{scenario}
 - Affected scope: US-01, US-03
-- WIP status: {updated stage or "no re-run needed"}
 - Next step: {what happens next}
 ```
 

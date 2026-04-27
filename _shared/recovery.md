@@ -1,5 +1,5 @@
 # Breakpoint Recovery Pattern
-> Version: v2 | Date: 2026-04-27 | Author: system
+> Version: v3 | Date: 2026-04-27 | Author: system
 
 ## 1. Purpose
 
@@ -7,13 +7,15 @@ When resuming previously interrupted work, follow this pattern to avoid redoing 
 
 ## 2. General Flow
 
-1. Read `requirements/index.md` Work In Progress section
-2. If a WIP entry exists: identify domain, scenario, and current stage
-3. Enter that stage and **check existing artifacts before starting work**
+1. Read `requirements/index.md` Domains table to know which domains exist
+2. If the user's request relates to an existing domain/scenario, read the scenario docs
+3. Check what artifacts already exist to infer progress:
+   - Scenario document exists → analysis was done
+   - Implementation Approach section populated → tech design was done
+   - Code files exist for modules → coding was done (partially or fully)
+   - Test files exist → verification was done (partially or fully)
 4. Resume from the first incomplete artifact, not from scratch
-5. Inform user: "Detected interrupted work on {domain}/{scenario} at [{Stage}]. Resuming from there."
-
-If no WIP entry exists: this is fresh work — proceed normally.
+5. Inform user: "Detected prior work on {domain}/{scenario}. Resuming from {stage}."
 
 ## 3. Per-Stage Artifact Checks
 

@@ -1,5 +1,5 @@
 # Domain Snapshot Status Reference
-> Version: v3 | Date: 2026-04-27 | Author: system
+> Version: v4 | Date: 2026-04-27 | Author: system
 
 ## 1. Scenario Statuses
 
@@ -10,36 +10,16 @@ Each scenario in a domain has one of these statuses:
 | `Planned` | Documented but not yet coded |
 | `Implemented` | Coded and verified |
 
-## 2. Pipeline Stage Statuses
+## 2. index.md Format
 
-Used in `index.md` Work In Progress section to track ongoing work:
-
-| Stage | Entry Status | Completion Status |
-|:---|:---|:---|
-| analyze | (new) | Requirement Drafted |
-| tech | Requirement Drafted | Design Decided |
-| code | Design Decided | Development Done |
-| security | Development Done | Security Reviewed |
-| cleanup | Security Reviewed | Code Cleaned |
-| review | Code Cleaned | Reviewed |
-| verify | Reviewed | Verified |
-| done | Verified | (removed from WIP) |
-
-## 3. index.md Format
-
-### 3.1 Language Requirement
+### 2.1 Language Requirement
 
 `index.md` **must be written entirely in English**, including domain names and descriptions.
 
-### 3.2 Template
+### 2.2 Template
 
 ```markdown
 # Requirements Index
-
-## Work In Progress
-
-| Domain | Scenario | Stage | Updated |
-|:---|:---|:---|:---|
 
 ## Domains
 
@@ -47,18 +27,14 @@ Used in `index.md` Work In Progress section to track ongoing work:
 |:---|:---|:---|
 ```
 
-- **Work In Progress** tracks active pipeline work. Each row is one scenario being worked on.
-- **Domains** lists all requirement domain directories. Add when a new domain is created; remove when archived.
-- When a scenario completes the pipeline (`done` stage), remove its WIP row and update the scenario status to `Implemented` in the domain README.
+- **Domains** lists all requirement domain directories. Add when a new domain is created.
 
-### 3.3 Updating index.md
+### 2.3 Updating index.md
 
-- **Adding WIP**: Insert a row with domain, scenario name, current stage, and today's date.
-- **Advancing stage**: Update Stage and Updated columns for the target WIP row. Do not touch other rows.
-- **Completing work**: Remove the WIP row. Update the scenario status in the domain README.
 - **Adding a domain**: Insert a row in the Domains table.
+- **Removing a domain**: Remove the row when the domain is no longer relevant.
 
-## 4. Writing Principles
+## 3. Writing Principles
 
 Requirements are written as **user stories** from the perspective of system actors. Each story describes **who** needs something, **what** they need, and **why** it matters.
 
@@ -95,7 +71,7 @@ Requirements are written as **user stories** from the perspective of system acto
 
 **Test:** If a user story becomes false when you rename a function without changing behavior, it's a technical spec, not a user story. Rewrite it.
 
-## 5. Domain README Format
+## 4. Domain README Format
 
 ```markdown
 # {Domain Name}
@@ -124,7 +100,7 @@ Requirements are written as **user stories** from the perspective of system acto
 ...
 ```
 
-## 6. Standalone Scenario File Format
+## 5. Standalone Scenario File Format
 
 ```markdown
 # {Scenario Name}

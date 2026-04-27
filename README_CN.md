@@ -1,6 +1,6 @@
 # my-skills
 
-个人 Claude Code Skills 仓库。一套完整的需求驱动开发工作流——从需求分析到最终交付。
+个人 Claude Code Skills 仓库。一套完整的需求驱动开发工作流——从需求分析到验证交付。
 
 > **注意：** 所有 SKILL.md 文件现已改为英文编写。本 README 保留中文版本供参考。
 
@@ -30,50 +30,43 @@ git submodule update --remote .claude/skills
 
 安装后，所有 skill 会被 Claude Code 自动发现为斜杠命令。
 
-核心工作流是 `/req`，编排完整的开发周期，共 8 个阶段：
+核心工作流是 `/req`，编排完整的开发周期：
 
 ```
 /req "功能描述"
   │
-  ├─ 阶段 1：需求分析 ──────→ requirement.md + 配图
+  ├─ analyze    — 需求分析 ──────→ 领域场景文档 + 配图
   │    ↓（需要用户确认）
-  ├─ 阶段 2：技术设计 ──────→ technical.md + 配图
-  │    ↓（需要用户确认）
-  ├─ 阶段 3：编码开发 ──────→ 源代码 + scripts/
-  │    ↓                        （测试前置，按模块提交）
-  ├─ 阶段 4：安全审查 ──────→ 漏洞扫描 + 修复
+  ├─ tech       — 技术设计 ──────→ 实现方案 + architecture.md
   │    ↓
-  ├─ 阶段 5：代码精简 ──────→ 结构优化（不改业务逻辑）
+  ├─ code       — 编码开发 ──────→ 源代码 + scripts/
+  │    ↓                            （测试前置，按模块提交）
+  ├─ security   — 安全审查 ──────→ 漏洞扫描 + 修复
   │    ↓
-  ├─ 阶段 6：需求对比 ──────→ 合规检查报告
+  ├─ cleanup    — 代码精简 ──────→ 结构优化（不改业务逻辑）
   │    ↓
-  ├─ 阶段 7：校验测试 ──────→ 编译 / 运行 / 测试
+  ├─ review     — 需求对比 ──────→ 合规检查报告
   │    ↓
-  └─ 阶段 8：归档完成 ──────→ 一致性检查 + 标记完成
+  └─ verify     — 校验测试 ──────→ 编译 / 运行 / 测试
 ```
 
-每个阶段等待用户确认后才进入下一阶段。也可以单独运行任意阶段。
+编排器会对每个任务做分流，决定跳过哪些阶段。也可以单独运行任意阶段。
 
-支持**断点恢复** — 如果中途中断，`/req REQ-xxx` 会自动检测上次停在哪里，从断点继续。
-
-已完成需求积累到一定数量后，`/req-archive` 会批量归档并生成里程碑摘要。
+支持**基于工件的断点恢复** — 如果中途中断，`/req` 会检查已有的文档、代码、测试来推断上次停在哪里，从断点继续。
 
 ## 命令列表
 
 | 命令 | 说明 |
 |:---|:---|
-| `/req [描述]` | 全流程编排入口，引导走完 8 个阶段 |
-| `/req-1-analyze [描述]` | 需求分析——将简单描述扩展为完整需求文档 |
-| `/req-2-tech [REQ-xxx]` | 技术设计——架构、模块、接口、配图 |
-| `/req-3-code [REQ-xxx]` | 编码开发——测试前置、模块并行、按模块提交 |
-| `/req-4-security [REQ-xxx]` | 安全审查——漏洞扫描，严重/高风险直接修复 |
-| `/req-5-cleanup [REQ-xxx]` | 代码精简——删除无用代码、合并重复逻辑（不改业务逻辑） |
-| `/req-6-review [REQ-xxx]` | 需求对比——逐项检查实现是否满足需求 |
-| `/req-7-verify [REQ-xxx]` | 校验测试——编译、运行、测试（Playwright 端到端测试跟随项目语言） |
-| `/req-8-done [REQ-xxx]` | 归档——一致性检查 + 标记完成，达到阈值时提示批量归档 |
-| `/req-archive` | 批量归档已完成需求，生成里程碑摘要文档 |
-| `/req-status [REQ-xxx\|archived]` | 状态查询——默认显示进行中需求，传 `archived` 查看历史 |
-| `/req-amend [REQ-xxx]` | 需求变更——正式变更流程，避免误改 |
+| `/req [描述]` | 全流程编排入口，分流并运行合适的阶段 |
+| `/req-analyze [描述]` | 需求分析——将简单描述扩展为领域场景文档 |
+| `/req-tech [domain/scenario]` | 技术设计——架构、模块、实现方案 |
+| `/req-code [domain/scenario]` | 编码开发——测试前置、模块并行、按模块提交 |
+| `/req-security [domain/scenario]` | 安全审查——漏洞扫描，严重/高风险直接修复 |
+| `/req-cleanup [domain/scenario]` | 代码精简——删除无用代码、合并重复逻辑（不改业务逻辑） |
+| `/req-review [domain/scenario]` | 需求对比——逐项检查实现是否满足需求 |
+| `/req-verify [domain/scenario]` | 校验测试——编译、运行、测试 |
+| `/req-amend [domain/scenario]` | 需求变更——变更领域文档，确认范围并级联检查 |
 | `/create-skill [name]` | 创建新 skill 的标准指南 |
 
 ## 文档结构
@@ -82,18 +75,12 @@ git submodule update --remote .claude/skills
 
 ```
 requirements/
-├── index.md                        # 进行中需求（全英文）；含归档阈值配置
-├── REQ-001-user-login/             # 进行中需求目录
-│   ├── requirement.md              # 需求文档
-│   ├── technical.md                # 技术设计文档
-│   ├── *.puml / *.svg              # PlantUML 配图
-│   └── ...
-└── archive/
-    ├── milestone-2026-03-31.md     # 里程碑摘要（交付内容、共用模块、技术决策）
-    └── REQ-001-user-login/         # 已归档需求目录（由 /req-archive 迁移）
+├── index.md                        # 领域目录（全英文）
+├── architecture.md                 # 技术哲学、原则、架构决策
+├── {domain}/
+│   ├── README.md                   # 领域概述 + 简单场景内联
+│   └── {scenario}.md               # 复杂场景独立文件
 ```
-
-`index.md` 分为 **Active** 和 **Archived** 两个区域。`archive-threshold` 注释（默认 5）控制 `/req-8-done` 何时提示运行 `/req-archive`。
 
 ## 仓库结构
 
@@ -101,24 +88,23 @@ requirements/
 my-skills/
 ├── _shared/
 │   ├── plantuml.md                  # PlantUML 共享规范 + 环境检测
-│   ├── status.md                    # 状态枚举、index.md 格式（Active/Archived 分区）
-│   ├── changelog.md                 # 变更日志格式与误改检测规则
+│   ├── status.md                    # 文档模板、编写原则
 │   ├── recovery.md                  # 断点恢复模式
-│   └── scripts.md                   # 自动化脚本规范
+│   ├── scripts.md                   # 自动化脚本规范
+│   ├── git-commit.md                # Git 提交规范
+│   ├── markdown.md                  # Markdown 格式规范
+│   └── diverge-converge.md          # 多子代理分析模式
 ├── create-skill/SKILL.md
 ├── req/SKILL.md                     # 全流程编排
-├── req-1-analyze/SKILL.md           # 需求分析
-├── req-2-tech/SKILL.md              # 技术设计
-├── req-3-code/                      # 编码开发
+├── req-analyze/SKILL.md             # 需求分析
+├── req-tech/SKILL.md                # 技术设计
+├── req-code/                        # 编码开发
 │   ├── SKILL.md
 │   ├── python.md                    # Python 开发规范
 │   └── java.md                      # Java 开发规范
-├── req-4-security/SKILL.md          # 安全审查
-├── req-5-cleanup/SKILL.md           # 代码精简（不改业务逻辑）
-├── req-6-review/SKILL.md            # 需求对比
-├── req-7-verify/SKILL.md            # 校验测试
-├── req-8-done/SKILL.md              # 归档 + 一致性检查 + 阈值提示
-├── req-archive/SKILL.md             # 批量归档 + 里程碑摘要
-├── req-status/SKILL.md              # 状态查询（默认显示进行中）
+├── req-security/SKILL.md            # 安全审查
+├── req-cleanup/SKILL.md             # 代码精简（不改业务逻辑）
+├── req-review/SKILL.md              # 需求对比
+├── req-verify/SKILL.md              # 校验测试
 └── req-amend/SKILL.md               # 需求变更流程
 ```
