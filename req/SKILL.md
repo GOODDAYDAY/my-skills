@@ -1,218 +1,204 @@
 ---
 name: req
 description: Full requirement-driven development workflow orchestrator, from analysis to archive
-argument-hint: "[description | REQ-xxx]"
+argument-hint: "[description | domain/scenario]"
 ---
 
 # req — Full-Cycle Workflow Orchestrator
-> Version: v1 | Date: 2026-04-02 | Author: system
+> Version: v4 | Date: 2026-04-27 | Author: system
 
 ## 1. Role
-You are the full-cycle development workflow orchestrator — guide the user sequentially through all 8 stages of requirement-driven development.
-
-```mermaid
-flowchart LR
-    A[User input\nnew or REQ-xxx] --> B{New or resume?}
-    B -- New --> C[Stage 1 → 8\nsequential execution]
-    B -- Resume --> D[Read index.md status\nresume at matching stage]
-```
-**Figure 1.1 — Orchestrator entry point decision**
+You are the full-cycle development workflow orchestrator. You assess each task, identify its domain and scenario, build a tailored pipeline (which stages to run, which to skip), and drive execution through that pipeline. Sub-skills are pure executors — you own all routing decisions.
 
 ## 2. Directory Structure
-All requirement documents are stored under `requirements/` in the project root:
-
-```mermaid
-flowchart TD
-    R[requirements/] --> I[index.md\nstatus tracking]
-    R --> R1[REQ-001-xxx/]
-    R --> R2[REQ-002-xxx/]
-    R1 --> A[requirement.md]
-    R1 --> B[technical.md]
-    R1 --> C[diagrams .puml/.svg]
-```
-**Figure 2.1 — requirements/ directory layout**
+All requirement documents are organized by domain under `requirements/` in the project root:
 
 ```text
 requirements/
-├── index.md                    # Requirement index & status tracking (ALL in English)
-├── REQ-001-xxx/
-│   ├── requirement.md          # Requirement document
-│   ├── technical.md            # Technical design document
-│   ├── *.puml / *.svg          # PlantUML diagrams
-│   └── ...
-└── REQ-002-xxx/
-    └── ...
+├── index.md                 # Domain directory + WIP tracking (ALL in English)
+├── architecture.md          # Tech philosophy, principles, structural decisions
+├── {domain}/
+│   ├── README.md            # Domain overview + simple scenarios inline
+│   └── {scenario}.md        # Complex scenarios get separate files
 ```
 
 ## 3. Shared Reference Files
-The following shared specification files are referenced by sub-stages:
-
-```mermaid
-flowchart LR
-    S[_shared/] --> A[status.md\nstatus enum + index format]
-    S --> B[changelog.md\nchange log format]
-    S --> C[recovery.md\nbreakpoint recovery]
-    S --> D[scripts.md\nautomation script conventions]
-    S --> E[plantuml.md\nPlantUML diagrams]
-```
-**Figure 3.1 — Shared reference files and their roles**
-
-- `_shared/status.md` — status enum, index.md format and update rules
-- `_shared/changelog.md` — change log format and Affected Scope rules
+- `_shared/status.md` — status definitions, index.md format, document templates
 - `_shared/recovery.md` — breakpoint recovery pattern
 - `_shared/scripts.md` — automation script conventions (.bat + .sh)
 - `_shared/plantuml.md` — PlantUML conventions (environment detection, syntax, SVG conversion)
 
-## 4. 8-Stage Pipeline
+## 4. Sub-Skills Catalog
 
-```mermaid
-flowchart LR
-    S0([Start]) --> B[Create Branch]
-    B --> S1[Stage 1\nAnalyze]
-    S1 -->|User Approved| S2[Stage 2\nTech Design]
-    S2 -->|User Approved| S3[Stage 3\nCoding]
-    S3 --> S4[Stage 4\nSecurity Review]
-    S4 --> S5[Stage 5\nCleanup]
-    S5 --> S6[Stage 6\nReq Review]
-    S6 --> S7[Stage 7\nVerify]
-    S7 --> S8[Stage 8\nArchive]
-    S8 --> E([Done])
-```
-**Figure 4.1 — 8-stage requirement-driven development pipeline**
+| Skill | Role |
+|:---|:---|
+| req-analyze | Requirement analysis — create/update domain scenario docs |
+| req-tech | Technical design — think through architecture, update architecture.md |
+| req-code | Coding — implement based on domain docs + architecture.md |
+| req-security | Security review — scan and fix vulnerabilities |
+| req-cleanup | Code cleanup — structural improvements without behavior changes |
+| req-review | Requirement review — compare code against domain docs |
+| req-verify | Verification — build, runtime, automated testing |
+| req-done | Completion — consistency check, mark scenario as Implemented |
+| req-amend | Amendment — update domain docs with scope confirmation |
+| req-status | Status query — domain/scenario overview |
+| req-archive | Archive — archive inactive domains/scenarios |
 
 ## 5. Breakpoint Recovery
-
-```mermaid
-flowchart LR
-    A[/req REQ-xxx] --> B[Read index.md status]
-    B --> C[Map status → stage\nper _shared/status.md]
-    C --> D[Check artifacts\nper _shared/recovery.md]
-    D --> E[Resume from\nfirst incomplete step]
-```
-**Figure 5.1 — Breakpoint recovery for existing REQ**
-
-### 5.1 Recovery Flow
 See `_shared/recovery.md` and `_shared/status.md` for detailed specifications.
-When resuming an existing requirement via `/req REQ-xxx`:
-1. Read the current status from `requirements/index.md`
-2. Use `_shared/status.md` to map the status to the corresponding stage
-3. Enter that stage and check artifact completeness per `_shared/recovery.md`
-4. Continue from the incomplete part — do not restart from the beginning
-5. Inform the user: "Detected REQ-xxx was interrupted at [Stage X - specific step]. Resuming from there."
+When resuming interrupted work:
+1. Read `requirements/index.md` Work In Progress section
+2. If a WIP entry exists: identify domain, scenario, and current stage
+3. Re-derive the pipeline (re-read scenario docs, re-assess triage — see §7.2)
+4. Enter that stage and check artifact completeness per `_shared/recovery.md`
+5. Continue from the incomplete part — do not restart from the beginning
+6. Inform user: "Detected interrupted work on {domain}/{scenario} at [{Stage}]. Resuming."
 
-## 6. Parallel Requirements
-
-### 6.1 Conflict Detection Flow
-
-```mermaid
-flowchart TD
-    A[Read index.md] --> B{Multiple non-Completed\nrequirements?}
-    B -->|No| C[Proceed normally]
-    B -->|Yes| D[Alert user about\nparallel situation]
-    D --> E{File conflicts\ndetected?}
-    E -->|No| C
-    E -->|Yes| F[List conflicting files]
-    F --> G[User decides priority]
-    G --> C
-```
-**Figure 6.1 — Multi-requirement conflict detection flow**
-
-### 6.2 Parallel Rules
-1. Before starting, read `index.md` and list all non-`Completed` requirements
-2. If multiple requirements are in progress, alert the user about the parallel situation
-3. Check for **file conflicts** (multiple requirements modifying the same file)
+## 6. Parallel Work
+1. Before starting, read `index.md` WIP section and list all in-progress work
+2. If multiple scenarios are in progress, alert the user about the parallel situation
+3. Check for **file conflicts** (multiple scenarios modifying the same file)
 4. If conflicts exist, list the conflicting files and let the user decide priority
 
-## 7. Workflow
+## 7. Orchestration
 
-```mermaid
-flowchart TD
-    A[New REQ] --> B[Create feature branch\nfeat/REQ-xxx-name]
-    B --> C[Stage 1-2: analyze + design\nwait user approval each]
-    C --> D[Stage 3: code\nmodule by module]
-    D --> E[Stage 4-6: security\ncleanup review]
-    E --> F[Stage 7-8: verify\narchive]
+### 7.1 Entry
+
+**Step 0 — Task classification (run FIRST, every time):**
+
+Before deciding anything, classify the incoming request:
+
+| Scenario | Description | Examples | Action |
+|----------|-------------|----------|--------|
+| **A — Trivial** | Too small to warrant domain docs | rename variable, add log line, tweak config | Execute directly |
+| **B — New work** | New feature/goal, needs domain docs | implement login, integrate payment API, refactor DB layer | Identify domain → create/update scenario → pipeline |
+| **C — Amend (spec change)** | Existing scenario, but direction changed | "use OAuth instead", "change token TTL to 7 days" | `req-amend` domain docs, re-run affected stages |
+| **D — Amend (bug fix)** | Implementation defect in existing scenario | "token parsing fails", "verify didn't pass" | `req-amend` domain docs, route back to `code`, re-run `verify` |
+| **E — Ambiguous** | Might be new work or extension of existing | "add remember-me" | Check if related scenario exists → amend or new |
+
+**Classification rules:**
+
+1. Read `requirements/index.md` first — check WIP and Domains.
+2. If the request relates to an in-progress scenario → **Scenario C or D**.
+3. If clearly unrelated to any existing domain/scenario → **Scenario B** (complex) or **A** (trivial).
+4. Complexity threshold for A vs B: would this benefit from a requirement doc? If yes → B.
+5. For E: check if a relevant scenario exists and its status.
+
+---
+
+**Scenario A — Execute directly:**
+- Perform the change with direct tools
+- No domain docs created
+- Inform user when done
+
+**Scenario B — New work:**
+1. Identify which domain this belongs to (existing domain or create new)
+2. Identify the scenario within the domain
+3. Proceed to Pipeline Triage (§7.2)
+
+**Scenario C / D — Amend:**
+1. Inform user: "This relates to {domain}/{scenario} — amending existing docs."
+2. Invoke `req-amend` to update domain scenario docs
+3. Re-derive the pipeline from updated docs (§7.2)
+4. For bug fixes (D): route back to `code`, then re-run `verify`
+
+**Resuming interrupted work (WIP exists in index.md):**
+1. Read WIP from `requirements/index.md`
+2. Re-derive pipeline from scenario docs (§7.2)
+3. Inform user: "Detected interrupted work on {domain}/{scenario} at [{Stage}]. Resuming."
+4. Enter pipeline execution at the current stage
+
+### 7.2 Pipeline Triage
+
+Before starting any work, evaluate each stage's necessity based on the task.
+
+**Evaluation rules (each stage judged independently):**
+
+| Stage | Skip when |
+|-------|-----------|
+| analyze | User provides a complete specification (rare) |
+| tech | Change direction is known and mechanical ("delete X", "move Y to Z", "rename") |
+| code | **Never skip** |
+| security | No new attack surface: refactoring, deletion, internal wiring, no user input / auth / external API changes |
+| cleanup | The change itself IS cleanup, OR total scope ≤ 3 files |
+| review | Scope ≤ 3 files AND no functional requirement changes |
+| verify | No new behavior added (pure refactoring / deletion), existing tests sufficient |
+| done | **Never skip** |
+
+**User override**: The user can always add or remove stages ("+security", "-review").
+
+### 7.3 Pipeline Plan
+
+After triage, present the pipeline and **wait for confirmation**:
+
 ```
-**Figure 7.1 — End-to-end workflow summary**
+Pipeline for {domain}/{scenario}:
 
-### 7.1 Prerequisite: Create Feature Branch
-For new requirements (not resuming an existing one):
+  ✓ analyze    — 需求分析
+  ✓ tech       — 技术方案思考
+  ✓ code       — 编码
+  ✗ security   — 跳过（原因）
+  ✗ cleanup    — 跳过（原因）
+  ✓ review     — 需求复核
+  ✗ verify     — 跳过（原因）
+  ✓ done       — 完成
 
-```bash
-git checkout -b feat/REQ-xxx-<short-name>
+调整？（"+security" 加回，"-review" 跳过，或直接开始）
 ```
 
-Each requirement gets its own branch, isolated from main, making it easy to review and merge.
+### 7.4 Pipeline Execution
 
-### 7.2 Stage 1: Requirement Analysis
-Invoke `/req-1-analyze $ARGUMENTS`.
-- If no description is provided (`$ARGUMENTS` is empty), **proactively guide the user to provide input**
-- Expand the description into a complete requirement document
-- Requirements should be as thorough and detailed as possible
-- Generate use case diagrams, flowcharts, etc.
-- **Wait for user approval before proceeding to the next stage**
+**Core loop:**
+```
+loop:
+  1. Read current stage from requirements/index.md WIP section
+  2. Determine next ACTIVE stage (skip stages not in pipeline)
+     - If a skipped stage matches current stage: auto-advance to next stage's status
+  3. If all stages complete: invoke done, then exit with summary
+  4. Inform user: "Starting: {stage} ({domain}/{scenario})"
+  5. Invoke sub-skill via Skill tool: /req-{stage} {domain}/{scenario}
+  6. Sub-skill runs to completion
+  7. After sub-skill returns → go back to step 1
+```
 
-### 7.3 Stage 2: Technical Design
-Invoke `/req-2-tech REQ-xxx`.
-- Write the technical design based on the finalized requirements
-- Emphasize module reuse, following high-cohesion/low-coupling principles
-- Generate architecture diagrams, sequence diagrams, class diagrams
-- **Wait for user approval before proceeding to the next stage**
+**Stage order and status mapping:**
 
-### 7.4 Stage 3: Coding
-Invoke `/req-3-code REQ-xxx`.
-- Develop following the requirement and technical documents
-- Automatically load the corresponding language conventions based on the technology stack
-- High-quality code: comprehensive logging, comments, high cohesion / low coupling
-- Generate automation scripts under `scripts/` (.bat + .sh)
+| Stage | Entry Status | Completion Status |
+|-------|-------------|-------------------|
+| analyze | (new) | Requirement Drafted |
+| tech | Requirement Drafted | Design Decided |
+| code | Design Decided | Development Done |
+| security | Development Done | Security Reviewed |
+| cleanup | Security Reviewed | Code Cleaned |
+| review | Code Cleaned | Reviewed |
+| verify | Reviewed | Verified |
+| done | Verified | (remove from WIP) |
 
-### 7.5 Stage 4: Security Review
-Invoke `/req-4-security REQ-xxx`.
-- Scan for injection attacks, data leakage, authentication issues, configuration vulnerabilities
-- Fix critical/high-severity issues directly
-- Report medium/low-severity issues to the user for confirmation
+When a stage is skipped, update the WIP row's Stage column to the next active stage.
 
-### 7.6 Stage 5: Code Cleanup
-Invoke `/req-5-cleanup REQ-xxx`.
-- Detect unused code, dead code, redundant logic
-- Merge duplicate code into shared utilities
-- Optimize cohesion and coupling
-- **Never modify business logic** — structural optimization only
-- Present findings to the user and apply changes only after approval
+### 7.5 Non-linear Routing Rules
 
-### 7.7 Stage 6: Requirement Review
-Invoke `/req-6-review REQ-xxx`.
-- Compare implementation against requirements item by item
-- When the change log has multiple versions, the latest version takes precedence
-- Ensure the latest version has not made undeclared modifications to previously confirmed content
+**After `req-review`:**
+- Status `Reviewed` → route to next active stage (verify or done)
+- Items incomplete → invoke `req-code` to fill gaps, then re-run `req-review`
 
-### 7.8 Stage 7: Verification
-Invoke `/req-7-verify REQ-xxx`.
-- Build check
-- Runtime check
-- Automated testing
-- Generate verification scripts under `scripts/` (.bat + .sh)
+**After `req-verify`:**
+- All tests pass → route to `req-done`
+- Tests fail → route to `req-code` to fix, then re-run `req-verify`
 
-### 7.9 Stage 8: Archive
-Invoke `/req-8-done REQ-xxx`.
-- Run final consistency check
-- Update `index.md` status to `Completed`
+**After `req-amend`:**
+- If scenario docs changed significantly → route back to `req-tech`
+- If only implementation approach changed → route to `req-code`
+- Minor change → continue from current stage
+
+**User interrupts:**
+- "I want to change the requirement" → invoke `req-amend`, then re-evaluate
+- "What's the status?" → invoke `req-status`, then resume
+- "Skip this stage" → remove from pipeline, advance to next stage
 
 ## 8. Execution Rules
 
-```mermaid
-flowchart LR
-    A[Stage starts] --> B[Inform user\nof current stage]
-    B --> C[Execute stage]
-    C --> D{User confirm?}
-    D -- Approved --> E[Advance to next stage]
-    D -- Skip --> F[Explicit confirm\nthen skip]
-    D -- Revise --> C
-```
-**Figure 8.1 — Stage execution and approval loop**
-
-1. **Execute stages strictly in order** — wait for user confirmation before proceeding
-2. First check `requirements/index.md` to determine the next REQ number (auto-increment)
-3. If the user provides a REQ number, resume from the corresponding stage via breakpoint recovery
-4. Inform the user of the current stage at the start of each stage
-5. If the user wants to skip a stage, require explicit confirmation
+1. **Routing decisions belong exclusively to this orchestrator** — sub-skills execute and return, they do not choose the next step
+2. Inform the user of the current stage at the start of each sub-skill invocation
+3. Re-read `requirements/index.md` after every sub-skill returns to get the latest state before routing
+4. When skipping a stage, update index.md WIP Stage column: `git add -A && git commit -m "docs({domain}): skip {stage} — {reason}"`

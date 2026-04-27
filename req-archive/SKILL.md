@@ -1,118 +1,70 @@
 ---
 name: req-archive
-description: Batch archive completed requirements and generate a milestone summary
-argument-hint: ""
+description: Archive — archive inactive domains/scenarios and generate milestone summary
+argument-hint: "[domain | scenario]"
 ---
 
 # req-archive
-> Version: v1 | Date: 2026-04-02 | Author: system
+> Version: v2 | Date: 2026-04-27 | Author: system
 
 ## 1. Overview
-Batch-archive all Completed requirements from the Active section of `requirements/index.md` and generate a milestone summary document.
-
-```mermaid
-flowchart LR
-    A[Active Completed REQs] --> B[Extract info\nfrom each REQ]
-    B --> C[Write milestone summary\narchive/milestone-date.md]
-    C --> D[Move rows to\nArchived section]
-    D --> E[Commit and tag\nmilestone-date]
-```
-**Figure 1.1 — req-archive batch archive overview**
+Archive domains or scenarios that are no longer active. Move them to `requirements/archive/` and generate a milestone summary.
 
 ## 2. When to Trigger
+- User explicitly runs `/req-archive`
+- User wants to clean up old domains/scenarios that are no longer relevant
 
-```mermaid
-flowchart LR
-    A[Trigger] --> B[/req-8-done\narcive-threshold reached]
-    A --> C[User runs\n/req-archive manually]
-    B --> D[Execute archive flow]
-    C --> D
-```
-**Figure 2.1 — Archive trigger conditions**
+## 3. Steps
 
-Triggered by `/req-8-done` when the archive threshold is reached, or run manually by the user at any time.
+### 3.1 Identify What to Archive
+1. Read `requirements/index.md` Domains table
+2. If `$ARGUMENTS` specifies a domain or scenario, target that
+3. If no argument, ask the user which domain(s) or scenario(s) to archive
+4. Confirm with the user before proceeding
 
-## 3. Overall Flow
-
-```mermaid
-flowchart TD
-    A[Load Active Completed Requirements] --> B{Any found?}
-    B -- No --> C[Inform user and exit]
-    B -- Yes --> D[Extract info from each REQ]
-    D --> E[Write milestone summary to archive/]
-    E --> F[Move Completed rows to Archived section]
-    F --> G[Commit and Tag]
-    G --> H[Output Result]
-```
-**Figure 3.1 — req-archive batch archive flow**
-
-## 4. Steps
-
-```mermaid
-flowchart TD
-    A[4.1 Load Active Completed] --> B[4.2 Generate milestone summary]
-    B --> C[4.3 Update index.md\nmove to Archived section]
-    C --> D[4.4 Commit and tag\nmilestone-date]
-    D --> E[4.5 Output result\nto user]
-```
-**Figure 4.1 — Detailed step sequence**
-
-### 4.1 Load Active Completed Requirements
-1. Read `requirements/index.md`
-2. Collect all rows with status `Completed` from the **Active** section
-3. If none found, notify the user and exit
-
-### 4.2 Generate Milestone Summary
-For each completed requirement, read its `requirement.md` and `technical.md` and extract:
+### 3.2 Generate Milestone Summary
+For each item being archived, extract:
 - A one-line description of what was built
-- New shared modules/utilities introduced (from technical.md § Shared Modules & Reuse Strategy)
-- Key technical decisions established (from technical.md § Design Principles or Risks & Notes)
+- Key technical decisions (from architecture.md if referenced)
+- Shared modules/utilities introduced
 
 Create `requirements/archive/` if it does not exist. Write `requirements/archive/milestone-<YYYY-MM-DD>.md`:
 
 ```markdown
 # Milestone — <YYYY-MM-DD>
 
-## Delivered Requirements
+## Archived Items
 
-| ID | Name | Summary |
+| Domain | Scenario | Summary |
 |:---|:---|:---|
-| REQ-xxx | <name> | <one-line description> |
+| auth | login | User authentication with JWT |
 
-## New Shared Modules & Utilities
-
-Shared modules/utilities introduced in this batch that future requirements can reuse:
-
+## Shared Modules & Utilities
 - `<module/path>` — <what it does>
 
 ## Technical Decisions Established
-
-Patterns, constraints, or architectural decisions confirmed across this batch:
-
 - <decision>
 
 ## Stats
-
-- Requirements archived: X
-- Active requirements remaining: Y
+- Items archived: X
+- Active domains remaining: Y
 ```
 
-### 4.3 Update index.md
-Move all Completed rows from the **Active** section to the **Archived** section:
-- In the Archived section, replace the `Status` + `Updated` columns with a single `Completed` date column
-- Leave all other row content unchanged
-- Do not touch rows with non-Completed status
+### 3.3 Move to Archive
+- If archiving an entire domain: move `requirements/{domain}/` to `requirements/archive/{domain}/`
+- If archiving a scenario: move the scenario file to `requirements/archive/{domain}-{scenario}.md`
+- Remove the domain from index.md Domains table (if entire domain archived)
+- Update the domain README Scenarios table (if only a scenario archived)
 
-### 4.4 Commit & Tag
-
+### 3.4 Commit
 ```bash
-git add -A && git commit -m "chore: archive milestone <YYYY-MM-DD>"
-git tag milestone-<YYYY-MM-DD>
+git add -A && git commit -m "chore: archive {items}"
 ```
 
-### 4.5 Output Result
+### 3.5 Output Result
 Notify the user:
-- How many requirements were archived
-- Milestone summary location: `requirements/archive/milestone-<date>.md`
-- Number of remaining active requirements
-- Git tag created: `milestone-<date>`
+- What was archived
+- Milestone summary location
+- Remaining active domains
+
+Archive complete.

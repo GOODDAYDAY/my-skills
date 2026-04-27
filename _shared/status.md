@@ -1,93 +1,161 @@
-# Requirement Status Enum
-> Version: v1 | Date: 2026-04-02 | Author: system
+# Domain Snapshot Status Reference
+> Version: v3 | Date: 2026-04-27 | Author: system
 
-## 1. Status Definitions
+## 1. Scenario Statuses
 
-All statuses used in `requirements/index.md`, `requirement.md`, and `technical.md`.
+Each scenario in a domain has one of these statuses:
 
-```mermaid
-stateDiagram-v2
-    [*] --> RequirementDraft
-    RequirementDraft --> RequirementFinalized: req-1-analyze complete
-    RequirementFinalized --> TechnicalDesign: req-2-tech starts
-    TechnicalDesign --> TechnicalFinalized: req-2-tech complete
-    TechnicalFinalized --> InDevelopment: req-3-code starts
-    InDevelopment --> DevelopmentDone: req-3-code complete
-    DevelopmentDone --> SecurityReviewed: req-4-security complete
-    SecurityReviewed --> CodeCleaned: req-5-cleanup complete
-    CodeCleaned --> Reviewed: req-6-review complete
-    Reviewed --> InVerification: req-7-verify starts
-    InVerification --> Completed: req-7-verify complete
-    Completed --> [*]
-```
-**Figure 1.1 — Requirement lifecycle state machine**
+| Status | Meaning |
+|:---|:---|
+| `Planned` | Documented but not yet coded |
+| `Implemented` | Coded and verified |
 
-| Status | Meaning | Next Stage |
+## 2. Pipeline Stage Statuses
+
+Used in `index.md` Work In Progress section to track ongoing work:
+
+| Stage | Entry Status | Completion Status |
 |:---|:---|:---|
-| `Requirement Draft` | Requirement analysis in progress | → req-1-analyze |
-| `Requirement Finalized` | Requirement approved | → req-2-tech |
-| `Technical Design` | Technical design in progress | → req-2-tech |
-| `Technical Finalized` | Technical design approved | → req-3-code |
-| `In Development` | Coding in progress | → req-3-code |
-| `Development Done` | Coding completed | → req-4-security |
-| `Security Reviewed` | Security review passed | → req-5-cleanup |
-| `Code Cleaned` | Code cleanup completed | → req-6-review |
-| `Reviewed` | Requirement review passed | → req-7-verify |
-| `In Verification` | Verification in progress | → req-7-verify |
-| `Completed` | All done | - |
+| analyze | (new) | Requirement Drafted |
+| tech | Requirement Drafted | Design Decided |
+| code | Design Decided | Development Done |
+| security | Development Done | Security Reviewed |
+| cleanup | Security Reviewed | Code Cleaned |
+| review | Code Cleaned | Reviewed |
+| verify | Reviewed | Verified |
+| done | Verified | (removed from WIP) |
 
-## 2. index.md Format
+## 3. index.md Format
 
-```mermaid
-flowchart LR
-    A[requirements/index.md] --> B[Active section\nall non-archived REQs]
-    A --> C[Archived section\nCompleted REQs moved here]
-    B --> D[archive-threshold comment\ncontrols auto-archive prompt]
-```
-**Figure 2.1 — index.md two-section structure**
+### 3.1 Language Requirement
 
-### 2.1 Language Requirement
+`index.md` **must be written entirely in English**, including domain names and descriptions.
 
-`index.md` **must be written entirely in English**, including requirement names and descriptions.
-
-### 2.2 Template
+### 3.2 Template
 
 ```markdown
-# Requirement Index
+# Requirements Index
 
-<!-- archive-threshold: 5 -->
+## Work In Progress
 
-## Active
-
-| ID | Name | Status | Updated | Description |
-|:---|:---|:---|:---|:---|
-
-## Archived
-
-| ID | Name | Completed | Description |
+| Domain | Scenario | Stage | Updated |
 |:---|:---|:---|:---|
+
+## Domains
+
+| Domain | Path | Description |
+|:---|:---|:---|
 ```
 
-- New requirements go into the **Active** section
-- The `archive-threshold` comment controls how many Completed entries in Active trigger the `/req-archive` prompt — adjust per project (default: 5)
+- **Work In Progress** tracks active pipeline work. Each row is one scenario being worked on.
+- **Domains** lists all requirement domain directories. Add when a new domain is created; remove when archived.
+- When a scenario completes the pipeline (`done` stage), remove its WIP row and update the scenario status to `Implemented` in the domain README.
 
-## 3. Updating index.md
+### 3.3 Updating index.md
 
-### 3.1 Status Update Rule
+- **Adding WIP**: Insert a row with domain, scenario name, current stage, and today's date.
+- **Advancing stage**: Update Stage and Updated columns for the target WIP row. Do not touch other rows.
+- **Completing work**: Remove the WIP row. Update the scenario status in the domain README.
+- **Adding a domain**: Insert a row in the Domains table.
 
-When updating `index.md`, only change the `Status` and `Updated` columns for the target REQ in the **Active** section. Do not touch other rows or the Archived section.
+## 4. Writing Principles
 
-### 3.2 Determining Next REQ Number
+Requirements are written as **user stories** from the perspective of system actors. Each story describes **who** needs something, **what** they need, and **why** it matters.
 
-Scan **both** Active and Archived sections to find the highest existing REQ number. Increment by 1.
-
-```mermaid
-flowchart LR
-    A[New REQ needed] --> B[Scan Active section]
-    A --> C[Scan Archived section]
-    B --> D[Find max REQ number]
-    C --> D
-    D --> E[Increment by 1]
-    E --> F[Assign new REQ-N]
+**Format:**
 ```
-**Figure 3.1 — REQ number assignment flow**
+## US-XX: As a {actor}, {situation/need}, so that {value}
+
+{1-2 sentences elaborating what and why — pure business language}
+
+### Acceptance Criteria
+- Given {context}, when {action}, then {outcome}
+```
+
+**Actors** (choose the one whose concern the story addresses):
+- **cycle** — a single iteration of the agent's work loop
+- **agent** — the overall autonomous entity across cycles
+- **evaluator** — the quality assessment system
+- **operator** — the human who deploys and monitors
+- **tool** — an individual capability the agent can invoke
+- **CI pipeline** — the automated deployment system
+
+**DO:**
+- Write from the actor's perspective — "As a cycle, I need X so that Y"
+- One story = one concern (fine-grained, not a story covering 5 things)
+- Include "so that" rationale in every story — this is what code cannot tell you
+- Write acceptance criteria as observable behaviors: "Given X, when Y, then Z"
+- Group stories by concern area within each file
+
+**DON'T:**
+- Include function names, class names, variable names, or constant values
+- Write stories that are just code comments in user story form
+- Use acceptance criteria like "function X exists" or "field Y has default Z"
+- Combine multiple unrelated concerns into a single story
+
+**Test:** If a user story becomes false when you rename a function without changing behavior, it's a technical spec, not a user story. Rewrite it.
+
+## 5. Domain README Format
+
+```markdown
+# {Domain Name}
+
+> {One-line description}
+
+## Scenarios
+
+| Scenario | Location | Status |
+|:---|:---|:---|
+| Feature A | inline | Implemented |
+| Feature B | feature-b.md | Planned |
+
+# {Concern Area}
+
+## US-01: As a {actor}, {situation/need}, so that {value}
+
+{1-2 sentences: what this means and why it matters.}
+
+### Acceptance Criteria
+- Given {context}, when {action}, then {outcome}
+- Given ...
+
+## US-02: As a {actor}, {another need}, so that {value}
+
+...
+```
+
+## 6. Standalone Scenario File Format
+
+```markdown
+# {Scenario Name}
+
+# {Concern Area 1}
+
+## US-01: As a {actor}, {situation/need}, so that {value}
+
+{Description}
+
+### Acceptance Criteria
+- Given {context}, when {action}, then {outcome}
+
+# {Concern Area 2}
+
+## US-02: ...
+```
+
+## 6. architecture.md Format
+
+```markdown
+# Technical Architecture
+
+## Philosophy
+
+## Architecture Overview
+
+## Key Decisions
+
+| Date | Decision | Rationale | How to Extend |
+|:---|:---|:---|:---|
+
+## Extension Guide
+```

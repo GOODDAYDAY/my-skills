@@ -33,19 +33,19 @@ The core workflow is `/req`, which orchestrates a full development cycle in 8 st
 ```
 /req "feature description"
   │
-  ├─ Stage 1: Requirement Analysis ──→ requirement.md + diagrams        [tag: REQ-xxx-analyzed]
+  ├─ Stage 1: Requirement Analysis ──→ requirement.md + diagrams
   │    ↓ (user approval required)
-  ├─ Stage 2: Technical Design ──────→ technical.md + diagrams          [tag: REQ-xxx-designed]
+  ├─ Stage 2: Technical Design ──────→ technical.md + diagrams
   │    ↓ (user approval required)
-  ├─ Stage 3: Coding ────────────────→ source code + scripts/           [tag: REQ-xxx-coded]
+  ├─ Stage 3: Coding ────────────────→ source code + scripts/
   │    ↓                                (acceptance tests first, commit per module)
-  ├─ Stage 4: Security Review ──────→ vulnerability scan + fix          [tag: REQ-xxx-security]
+  ├─ Stage 4: Security Review ──────→ vulnerability scan + fix
   │    ↓
-  ├─ Stage 5: Code Cleanup ─────────→ structural optimization           [tag: REQ-xxx-cleaned]
+  ├─ Stage 5: Code Cleanup ─────────→ structural optimization
   │    ↓
   ├─ Stage 6: Requirement Review ────→ compliance check report
   │    ↓
-  ├─ Stage 7: Verification ─────────→ build / run / test                [tag: REQ-xxx-verified]
+  ├─ Stage 7: Verification ─────────→ build / run / test
   │    ↓
   └─ Stage 8: Archive ──────────────→ consistency check + mark completed
 ```
