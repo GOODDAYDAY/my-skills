@@ -124,6 +124,7 @@ This replaces the old per-requirement `technical.md`. Keep it focused — enough
 If `requirements/architecture.md` does not exist, create it using the template from `_shared/status.md` §6.
 
 Update the relevant sections:
+- **Glossary**: When a new module, component, or domain term is introduced, add a row (Term / Definition / Location). Keep definitions in business language, one line each.
 - **Key Decisions**: Add a row for significant architectural choices
 - **Extension Guide**: Update if new patterns are established
 - **Architecture Overview**: Update if the high-level structure changes

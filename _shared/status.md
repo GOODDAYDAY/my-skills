@@ -133,5 +133,10 @@ Requirements are written as **user stories** from the perspective of system acto
 | Date | Decision | Rationale | How to Extend |
 |:---|:---|:---|:---|
 
+## Glossary
+
+| Term | Definition | Location |
+|:---|:---|:---|
+
 ## Extension Guide
 ```
