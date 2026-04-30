@@ -5,18 +5,24 @@ argument-hint: "[--forward-only | --reverse-only]"
 ---
 
 # req-refresh — Domain Docs Batch Refresh
-> Version: v1 | Date: 2026-04-30 | Author: system
+> Version: v2 | Date: 2026-04-30 | Author: system
 
 ## 1. Role
 
 You are responsible for refreshing all domain requirement documents to match the current codebase reality. Unlike `req-analyze` (which creates docs from a user request), `req-refresh` takes **existing** docs and ensures they accurately reflect what the code actually does today.
+
+**核心原则：Refresh = 保持最新一致。增加没有的，删除旧的，修正偏差的。Refresh 不是报告问题，而是修到完全一致。**
+
+- **UNDER-DOC**（代码有、文档没有）→ 补充新的 user story 和 acceptance criteria
+- **STALE**（文档引用已不存在的代码/特性）→ 删除或更新过时内容
+- **OVER-SPEC**（文档描述与实现不符）→ 修正描述使之匹配代码
 
 This skill is part of the req-* family:
 
 | Skill | Relationship |
 |:---|:---|
 | req-analyze | Creates/updates domain docs from user intent → **forward, intent-driven** |
-| req-refresh | Updates domain docs from code reality → **forward, code-driven** |
+| req-refresh | Updates domain docs from code reality → **forward, code-driven, fix everything** |
 | req-review | Verifies code matches docs → **reverse, doc-as-spec** |
 
 ## 2. Overall Flow
@@ -24,7 +30,8 @@ This skill is part of the req-* family:
 ```
 Phase 1 — Forward: Update docs to match code (one subagent per domain, parallel)
 Phase 2 — Reverse: Verify docs match code (one subagent per domain, parallel)
-Phase 3 — Report: Aggregate results
+Phase 3 — Fix: Fix ALL issues found in Phase 2 (one subagent per domain with issues, parallel)
+Phase 4 — Report: Aggregate results
 ```
 
 Arguments:
@@ -221,9 +228,82 @@ This is read-only — do NOT modify any files.
 - **missing_terms**: [list of terms used in code but not in glossary, or "none"]
 ```
 
-## 5. Phase 3 — Summary Report
+## 5. Phase 3 — Fix All Issues
 
-After all Phase 2 subagents complete, produce a consolidated report:
+After all Phase 2 subagents complete, collect every domain that has STALE, UNDER-DOC, or OVER-SPEC items. For each such domain, launch a parallel fix subagent.
+
+**This is the core of refresh — Phase 1 does the bulk update, Phase 2 finds gaps, Phase 3 closes every gap.**
+
+**Subagent prompt** (fill in `{domain}`, `{domain_path}`, `{project_dir}`, `{issues_summary}`):
+
+```
+You are fixing the requirement docs for domain "{domain}" in the project at {project_dir}.
+
+## Known issues from verification
+
+{issues_summary}
+
+## Task
+
+Read the domain docs and source code, then fix ALL issues:
+- STALE: remove or update acceptance criteria/descriptions that reference removed/changed code
+- UNDER-DOC: add new user stories or acceptance criteria for implemented but undocumented behaviors
+- OVER-SPEC: correct descriptions to match what the code actually does
+
+## Steps
+
+1. Read CLAUDE.md for conventions
+2. Read requirements/{domain_path}/README.md (and sub-scenario files)
+3. Read the source files that implement this domain
+4. For each issue, verify it by reading the code, then fix the doc
+
+## Rules
+
+- Preserve existing document structure (US-XX format, Given/When/Then)
+- Write user stories from an actor's perspective
+- NO function names, class names, or variable names in user stories or acceptance criteria
+- Do NOT invent business logic — only document what the code actually does
+- REMOVE stale content cleanly — no commented-out remnants
+- Section headings must be in English
+- Do NOT create or modify any code files — docs only
+
+## Output
+
+## Domain Fix Result
+- **domain**: {domain}
+- **stale_fixed**: N
+- **under_doc_fixed**: N
+- **over_spec_fixed**: N
+- **changes**: [brief list of what was changed]
+```
+
+Also launch a fix subagent for architecture.md if it had issues:
+
+```
+You are fixing requirements/architecture.md for the project at {project_dir}.
+
+## Known issues
+
+{arch_issues_summary}
+
+## Task
+
+- Add missing glossary terms
+- Fix stale term descriptions/locations
+- Update stale decisions
+- Do NOT modify any code files
+
+## Output
+
+## Architecture Fix Result
+- **stale_terms_fixed**: N
+- **missing_terms_added**: N
+- **stale_decisions_fixed**: N
+```
+
+## 6. Phase 4 — Summary Report
+
+After all Phase 3 fix subagents complete, produce a consolidated report:
 
 ```markdown
 # Refresh Summary — {project_name}
@@ -249,21 +329,23 @@ Architecture: {accurate/has_issues}
 - UNDER-DOC: ...
 ```
 
-## 6. Index Update
+## 7. Index Update
 
 After all phases, update `requirements/index.md` if:
 - New domains were added during the forward pass
 - Domain descriptions have changed
 
-## 7. Execution Rules
+## 8. Execution Rules
 
 1. **No git operations** — this skill only modifies requirement docs in the working tree
 2. **One subagent per domain** — never batch multiple domains into one subagent
 3. **Phase 2 waits for Phase 1** — reverse pass reads docs that the forward pass may have updated
-4. **Subagents are independent** — each reads its own context, no shared state
-5. **Read before write** — every subagent must read the actual code before touching any doc
+4. **Phase 3 waits for Phase 2** — fix pass uses verification results to know what to fix
+5. **Subagents are independent** — each reads its own context, no shared state
+6. **Read before write** — every subagent must read the actual code before touching any doc
+7. **Fix everything** — do NOT just report issues. The point of refresh is to make docs match code. Every STALE item must be removed/updated, every UNDER-DOC item must be documented, every OVER-SPEC item must be corrected. If Phase 2 finds issues, Phase 3 MUST run.
 
-## 8. Stage Result
+## 9. Stage Result
 
 Output the following block as the final output:
 
