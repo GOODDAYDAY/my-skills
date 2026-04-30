@@ -40,6 +40,7 @@ requirements/
 | req-review | Requirement review — compare code against domain docs |
 | req-verify | Verification — build, runtime, automated testing |
 | req-amend | Amendment — update domain docs with scope confirmation |
+| req-justify | Justification — validate each stage for reasonableness, reliability, efficiency |
 
 ## 5. Resuming Interrupted Work
 
@@ -106,6 +107,7 @@ Before starting any work, evaluate each stage's necessity based on the task.
 | cleanup | The change itself IS cleanup, OR total scope ≤ 3 files |
 | review | Scope ≤ 3 files AND no functional requirement changes |
 | verify | No new behavior added (pure refactoring / deletion), existing tests sufficient |
+| justify | **Never skip** — mandatory process retrospective |
 
 **User override**: The user can always add or remove stages ("+security", "-review").
 
@@ -123,6 +125,7 @@ Pipeline for {domain}/{scenario}:
   ✗ cleanup    — 跳过（原因）
   ✓ review     — 需求复核
   ✗ verify     — 跳过（原因）
+  ✓ justify    — 论证（必做）
 
 调整？（"+security" 加回，"-review" 跳过，或直接开始）
 ```
@@ -131,7 +134,7 @@ Pipeline for {domain}/{scenario}:
 
 **Stage order:**
 
-analyze → tech → code → security → cleanup → review → verify
+analyze → tech → code → security → cleanup → review → verify → justify
 
 **Stage Result contract:**
 Every sub-skill outputs a `## Stage Result` block as its final output. This block contains key-value fields in the format `- **key**: value`. The orchestrator reads the `status` field first to determine the routing path, then reads additional fields as needed for routing decisions.
@@ -178,9 +181,15 @@ Read Stage Result field: `integrity`
 - `integrity: pass` → continue to next active stage
 - `integrity: fail` → cleanup self-reverted; inform user and continue (no code changes were made)
 
+**After `req-justify`:**
+Read Stage Result fields: `status`, `rounds`, `fixed`
+- `status: all_justified` → finish (output final summary including justification report)
+- `status: has_issues` → justification found unresolved issues after 3 rounds; present remaining issues to user for decision
+
 **Loop protection:**
 - review↔code loop: maximum 3 iterations, then escalate to user
 - verify↔code loop: maximum 3 iterations, then escalate to user
+- justify self-fix loop: maximum 3 rounds (handled internally by req-justify)
 
 **User interrupts:**
 - "I want to change the requirement" → invoke `req-amend`, then re-evaluate pipeline based on its Stage Result
