@@ -109,4 +109,11 @@ Output analysis report. **Wait for user approval.**
 git add -A && git commit -m "refactor({domain}): code cleanup — {scenario}"
 ```
 
-Stage complete. Return to orchestrator.
+Output the following block as the final output of this stage:
+
+```
+## Stage Result
+- **status**: completed
+- **changes_applied**: {N} items
+- **integrity**: pass | fail
+```

@@ -101,4 +101,13 @@ At minimum:
 git add -A && git commit -m "test({domain}): verification — {scenario}"
 ```
 
-Stage complete. Return to orchestrator.
+Output the following block as the final output of this stage:
+
+```
+## Stage Result
+- **status**: all_pass | has_failures
+- **build**: pass | fail
+- **runtime**: pass | fail
+- **tests**: {X}/{Y} passing
+- **failures**: {comma-separated list of failing test names} (only if status is has_failures)
+```

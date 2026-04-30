@@ -50,14 +50,19 @@ After user confirmation:
 
 ### 2.4 Cascade Check
 
+Determine `change_scope` and `cascade_target` based on what was changed:
+
 If scenario **user stories** changed:
 1. Check if the Implementation Approach needs update
 2. Check if existing code needs adjustment
-3. Ask user: "User stories changed. Should we re-enter the pipeline from tech/code stage?"
+3. Set `change_scope: significant`, `cascade_target: tech`
 
 If only **Implementation Approach** changed:
 1. Check if existing code needs adjustment
-2. Ask user: "Technical approach changed. Should we re-enter coding?"
+2. Set `change_scope: approach_only`, `cascade_target: code`
+
+If neither user stories nor implementation approach changed materially:
+1. Set `change_scope: minor`, `cascade_target: none`
 
 ### 2.5 Commit
 ```bash
@@ -71,7 +76,15 @@ git add -A && git commit -m "docs({domain}): amend {scenario} — {brief descrip
 
 - Domain/Scenario: {domain}/{scenario}
 - Affected scope: US-01, US-03
-- Next step: {what happens next}
+- Change description: {what was changed}
 ```
 
-Stage complete. Return to orchestrator.
+Output the following block as the final output of this stage:
+
+```
+## Stage Result
+- **status**: completed
+- **change_scope**: significant | approach_only | minor
+- **affected_stories**: US-xx, US-xx (list of modified story IDs)
+- **cascade_target**: tech | code | none
+```

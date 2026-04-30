@@ -55,6 +55,13 @@ If the Superseded Components section is absent or says "None", skip this check.
 
 ### 4.3 Output Conclusion
 - All items satisfied → output conclusion report
-- Items not implemented or partially implemented → list pending items and wait for user decision
+- Items not implemented or partially implemented → list pending items in the conclusion report
 
-Stage complete. Return to orchestrator.
+Output the following block as the final output of this stage:
+
+```
+## Stage Result
+- **status**: all_satisfied | has_gaps
+- **satisfied**: {N}/{M} items
+- **gaps**: US-xx, US-xx (only if status is has_gaps; list requirement IDs with Partial or Not implemented status)
+```

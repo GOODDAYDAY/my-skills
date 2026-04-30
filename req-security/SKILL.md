@@ -91,4 +91,12 @@ For all code produced for this scenario, check the following six dimensions:
 git add -A && git commit -m "fix({domain}): security review — {scenario}"
 ```
 
-Stage complete. Return to orchestrator.
+Output the following block as the final output of this stage:
+
+```
+## Stage Result
+- **status**: pass | conditional_pass | fail
+- **critical**: {N}
+- **high**: {N}
+- **fixed**: {N} items auto-fixed
+```

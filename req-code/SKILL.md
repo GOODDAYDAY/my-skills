@@ -205,4 +205,13 @@ def do_action(self, data):
     return self._build_result(record_id, enriched)
 ```
 
-Stage complete. Return to orchestrator.
+Output the following block as the final output of this stage:
+
+```
+## Stage Result
+- **status**: completed
+- **domain**: {domain name}
+- **scenario**: {scenario name}
+- **modules_implemented**: {comma-separated list of module names}
+- **tests_written**: {N} test files
+```

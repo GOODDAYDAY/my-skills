@@ -165,4 +165,12 @@ Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` for the index.md format.
 git add -A && git commit -m "docs({domain}): requirement analysis — {scenario}"
 ```
 
-Stage complete. Return to orchestrator.
+Output the following block as the final output of this stage:
+
+```
+## Stage Result
+- **status**: completed
+- **domain**: {domain name}
+- **scenario**: {scenario name}
+- **user_stories**: US-01, US-02, ... (list all story IDs created/updated)
+```

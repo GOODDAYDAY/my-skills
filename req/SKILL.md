@@ -133,33 +133,57 @@ Pipeline for {domain}/{scenario}:
 
 analyze → tech → code → security → cleanup → review → verify
 
+**Stage Result contract:**
+Every sub-skill outputs a `## Stage Result` block as its final output. This block contains key-value fields in the format `- **key**: value`. The orchestrator reads the `status` field first to determine the routing path, then reads additional fields as needed for routing decisions.
+
 **Core loop:**
 ```
 for each active stage in order:
   1. Inform user: "Starting: {stage} ({domain}/{scenario})"
   2. Invoke sub-skill via Skill tool: /req-{stage} {domain}/{scenario}
-  3. Sub-skill runs to completion
-  4. Continue to next active stage
+  3. Read the sub-skill's ## Stage Result block from its output
+  4. Apply routing rules (§6.5) based on Stage Result fields
+  5. If routing rules redirect to a different stage → go to that stage
+  6. Otherwise → continue to next active stage
 When all stages complete: output summary
 ```
 
 ### 6.5 Non-linear Routing Rules
 
+Route based on the `## Stage Result` block output by each sub-skill. All routing is automatic — no user confirmation needed.
+
 **After `req-review`:**
-- All items satisfied → route to next active stage (verify) or finish
-- Items incomplete → invoke `req-code` to fill gaps, then re-run `req-review`
+Read Stage Result fields: `status`, `gaps`
+- `status: all_satisfied` → route to next active stage (verify) or finish
+- `status: has_gaps` → invoke `req-code` with the `gaps` list to fill them, then re-run `req-review`
 
 **After `req-verify`:**
-- All tests pass → finish
-- Tests fail → route to `req-code` to fix, then re-run `req-verify`
+Read Stage Result fields: `status`, `build`, `runtime`, `failures`
+- `status: all_pass` → finish
+- `status: has_failures` → invoke `req-code` to fix the items listed in `failures`, then re-run `req-verify`
 
 **After `req-amend`:**
-- If scenario docs changed significantly → route back to `req-tech`
-- If only implementation approach changed → route to `req-code`
-- Minor change → continue from current stage
+Read Stage Result fields: `change_scope`, `cascade_target`
+- `change_scope: significant` → route back to `req-tech`
+- `change_scope: approach_only` → route to `req-code`
+- `change_scope: minor` → continue from current stage
+
+**After `req-security`:**
+Read Stage Result fields: `status`, `critical`, `high`
+- `status: pass` or `status: conditional_pass` → continue to next active stage
+- `status: fail` → halt pipeline; inform user of unresolved critical/high issues
+
+**After `req-cleanup`:**
+Read Stage Result field: `integrity`
+- `integrity: pass` → continue to next active stage
+- `integrity: fail` → cleanup self-reverted; inform user and continue (no code changes were made)
+
+**Loop protection:**
+- review↔code loop: maximum 3 iterations, then escalate to user
+- verify↔code loop: maximum 3 iterations, then escalate to user
 
 **User interrupts:**
-- "I want to change the requirement" → invoke `req-amend`, then re-evaluate
+- "I want to change the requirement" → invoke `req-amend`, then re-evaluate pipeline based on its Stage Result
 - "Skip this stage" → remove from pipeline, advance to next stage
 
 ## 7. Execution Rules

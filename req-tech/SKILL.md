@@ -147,4 +147,13 @@ Only generate diagrams that add value — a simple file rename doesn't need an a
 git add -A && git commit -m "docs({domain}): technical design — {scenario}"
 ```
 
-Stage complete. Return to orchestrator.
+Output the following block as the final output of this stage:
+
+```
+## Stage Result
+- **status**: completed
+- **domain**: {domain name}
+- **scenario**: {scenario name}
+- **modules**: {N} modules defined
+- **architecture_updated**: yes | no
+```
