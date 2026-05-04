@@ -100,30 +100,36 @@ End your response with:
 
 ### 3.3 Architecture Refresh
 
-Launch one additional subagent for `architecture.md`:
+Launch one additional subagent for `architecture.md`. **Same standard as domain refresh: add missing, delete stale, correct drifted.**
 
 ```
 You are refreshing requirements/architecture.md for the project at {project_dir}.
 
 ## Task
 
-Compare the architecture doc against the actual codebase structure and update it.
+Compare the architecture doc against the actual codebase and make it match reality. Same rules as domain refresh: add what's missing, DELETE what's stale, correct what's drifted.
 
 ## Steps
 
 1. Read CLAUDE.md for project conventions
-2. Read requirements/architecture.md
+2. Read requirements/architecture.md thoroughly — every section
 3. Read requirements/index.md to see all domains
 4. Scan the codebase directory structure and key modules
-5. Update architecture.md sections as needed:
-   - Glossary: add/remove/update terms
-   - Key Decisions: add any undocumented decisions found in code, mark stale ones
-   - Extension Guide: update if patterns have changed
-   - Architecture Overview: update if structure has changed
+5. For EVERY section, compare against code:
+
+   - **Core Patterns**: For each pattern, verify Structure/Contract/State flow/Extension/Invariants still match code. DELETE patterns for removed subsystems. ADD patterns for new reusable patterns (only patterns multiple components participate in — not single-module internals).
+   - **Interface Contracts**: For each contract, verify Producer/Consumer/Wiring/Contract/Verified-by still match code. DELETE contracts where the boundary no longer exists. ADD contracts for new cross-module integration points.
+   - **Glossary**: For each term, verify the module/component still exists and the description matches. DELETE terms for removed code. ADD terms for new significant modules.
+   - **Key Decisions**: Verify each decision is still in effect. DELETE or mark superseded decisions. ADD undocumented decisions found in code.
+   - **Extension Guide**: Verify step-by-step recipes still work. UPDATE if patterns have changed.
+   - **Architecture Overview**: UPDATE if high-level structure has changed.
+   - **Philosophy**: Rarely changes — only update if fundamental principles are revised.
 
 ## Rules
 
-- Only update what has actually changed
+- **DELETE stale content** — do NOT leave glossary terms for removed modules, patterns for deleted subsystems, or contracts for boundaries that no longer exist. Clean removal, no commented-out remnants.
+- Add what's genuinely missing — new patterns, new contracts, new glossary terms
+- Correct descriptions that have drifted from code reality
 - Preserve existing section structure
 - Mark ambiguities as [NEEDS CONFIRMATION]
 - Do NOT modify code files
@@ -134,7 +140,13 @@ Compare the architecture doc against the actual codebase structure and update it
 - **status**: updated | unchanged
 - **sections_modified**: [list, or "none"]
 - **terms_added**: [list, or "none"]
+- **terms_removed**: [list, or "none"]
+- **patterns_added**: [list, or "none"]
+- **patterns_removed**: [list, or "none"]
+- **contracts_added**: [list, or "none"]
+- **contracts_removed**: [list, or "none"]
 - **decisions_added**: [list, or "none"]
+- **decisions_removed**: [list, or "none"]
 - **ambiguities**: [list, or "none"]
 ```
 
@@ -213,19 +225,30 @@ This is read-only — do NOT modify any files.
 
 ## Steps
 
-1. Read requirements/architecture.md
-2. For each claim (glossary term, key decision, extension pattern):
-   - Verify the referenced module/pattern still exists
-   - Check if the description matches current code
-3. Report mismatches
+1. Read requirements/architecture.md — every section
+2. For EVERY section, classify each item as PASS / STALE / UNDER-DOC / OVER-SPEC:
+
+   - **Core Patterns**: For each pattern, verify Structure/Contract/State flow/Extension/Invariants still match code. Check for new reusable patterns not yet documented.
+   - **Interface Contracts**: For each contract, verify Producer/Consumer/Wiring/Contract/Verified-by. Check for new cross-module boundaries not yet documented.
+   - **Glossary**: For each term, verify the module still exists and description matches code. Check for significant modules missing from glossary.
+   - **Key Decisions**: For each decision, verify it is still in effect. Check for undocumented architectural decisions in code.
+   - **Extension Guide**: Verify recipes still work against current code.
+   - **Architecture Overview**: Verify structure description matches current codebase layout.
+
+3. Report all mismatches using the same STALE/UNDER-DOC/OVER-SPEC classification as domain verification.
 
 ## Output
 
 ## Architecture Verification Result
 - **status**: accurate | has_issues
+- **stale_patterns**: [list, or "none"]
+- **stale_contracts**: [list, or "none"]
 - **stale_terms**: [list, or "none"]
 - **stale_decisions**: [list, or "none"]
-- **missing_terms**: [list of terms used in code but not in glossary, or "none"]
+- **missing_patterns**: [list, or "none"]
+- **missing_contracts**: [list, or "none"]
+- **missing_terms**: [list, or "none"]
+- **over_spec**: [list with details, or "none"]
 ```
 
 ## 5. Phase 3 — Fix All Issues
@@ -288,17 +311,25 @@ You are fixing requirements/architecture.md for the project at {project_dir}.
 
 ## Task
 
-- Add missing glossary terms
-- Fix stale term descriptions/locations
-- Update stale decisions
+Read the architecture doc and source code, then fix ALL issues — same standard as domain fixes:
+- STALE: **DELETE** glossary terms for removed modules, patterns for deleted subsystems, contracts for boundaries that no longer exist, decisions that were superseded. Clean removal, no commented-out remnants.
+- UNDER-DOC: ADD missing glossary terms, patterns, contracts, decisions
+- OVER-SPEC: CORRECT descriptions that have drifted from code reality
+
+## Rules
+
+- REMOVE stale content cleanly — no commented-out remnants
+- Do NOT invent architecture — only document what the code actually does
+- Preserve existing section structure
 - Do NOT modify any code files
 
 ## Output
 
 ## Architecture Fix Result
-- **stale_terms_fixed**: N
-- **missing_terms_added**: N
-- **stale_decisions_fixed**: N
+- **stale_fixed**: N (patterns, contracts, terms, decisions removed or corrected)
+- **under_doc_fixed**: N (patterns, contracts, terms, decisions added)
+- **over_spec_fixed**: N (descriptions corrected)
+- **changes**: [brief list of what was changed]
 ```
 
 ## 6. Phase 4 — Summary Report
