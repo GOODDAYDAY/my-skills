@@ -53,6 +53,14 @@ Add results as additional rows to the comparison table.
 
 If the Superseded Components section is absent or says "None", skip this check.
 
+### 4.2c Interface Contracts Check
+Read `requirements/architecture.md` Interface Contracts section. For each contract that involves modules touched by this scenario:
+1. Verify the **Producer** function exists and returns the declared type
+2. Verify the **Consumer** function exists and accepts the declared input
+3. Verify the **Wiring** point connects them as described
+
+Add results as additional rows to the comparison table. If no Interface Contracts section exists or none are relevant to this scenario, skip this check.
+
 ### 4.3 Output Conclusion
 - All items satisfied → output conclusion report
 - Items not implemented or partially implemented → list pending items in the conclusion report

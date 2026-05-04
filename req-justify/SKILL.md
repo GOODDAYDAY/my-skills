@@ -36,8 +36,8 @@ Every executed stage is evaluated against three dimensions:
 - **高效性**: Is the requirement document concise? Any redundant stories or criteria that could be merged?
 
 ### tech
-- **合理性**: Does the architecture match the requirement's complexity — not over-engineered for simple tasks, not under-designed for complex ones? Were alternatives considered?
-- **可靠性**: Are the chosen technologies and patterns proven for this use case? Any risky assumptions about dependencies or integration?
+- **合理性**: Does the architecture match the requirement's complexity — not over-engineered for simple tasks, not under-designed for complex ones? Were alternatives considered? If this scenario introduces or modifies a cross-module boundary, is the Interface Contract documented in architecture.md? If a new reusable pattern was established, is it captured in Core Patterns?
+- **可靠性**: Are the chosen technologies and patterns proven for this use case? Any risky assumptions about dependencies or integration? Are Interface Contracts complete and accurate (producer, consumer, wiring, contract, verified by)?
 - **高效性**: Could a simpler architecture achieve the same goals? Any unnecessary abstraction layers or indirection?
 
 ### code

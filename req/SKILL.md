@@ -195,6 +195,16 @@ Read Stage Result fields: `status`, `rounds`, `fixed`
 - "I want to change the requirement" → invoke `req-amend`, then re-evaluate pipeline based on its Stage Result
 - "Skip this stage" → remove from pipeline, advance to next stage
 
+### 6.6 Post-pipeline: Regenerate Catalog
+
+After all pipeline stages complete (including justify), invoke:
+
+```
+/req-catalog
+```
+
+This regenerates `requirements/CATALOG.md` with the latest scenario metadata and architecture content. This step is unconditional — always runs on pipeline completion, regardless of which stages were active.
+
 ## 7. Execution Rules
 
 1. **Routing decisions belong exclusively to this orchestrator** — sub-skills execute and return, they do not choose the next step

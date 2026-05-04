@@ -106,9 +106,24 @@ After user approval:
 
 **Write scenario content** (inline in README.md or separate file).
 
-Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` §4 Writing Principles before writing. Key rule: **write user stories from an actor's perspective, not technical specs**.
+Read `${CLAUDE_SKILL_DIR}/../_shared/status.md` §4–§5 Writing Principles and Standalone File Format before writing. Key rule: **write user stories from an actor's perspective, not technical specs**.
+
+**Standalone scenario files must include YAML frontmatter** (see `_shared/status.md` §5.1):
+
+```yaml
+---
+name: {Scenario Name}
+description: {One-line summary of what this scenario covers, max 120 chars}
+---
+```
+
+Place this before the H1 heading. The `name` must match the H1 text. The `description` should summarize the concern areas covered, not repeat the domain description.
 
 ```markdown
+---
+name: {Scenario Name}
+description: {One-line summary, max 120 chars}
+---
 # {Scenario Name}
 
 # {Concern Area}

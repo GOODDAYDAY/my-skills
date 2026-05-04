@@ -119,14 +119,27 @@ This replaces the old per-requirement `technical.md`. Keep it focused — enough
 
 ### 4.7 Update architecture.md
 
-**Only update when structural decisions are made** — new patterns, refactoring rationale, extension conventions.
+**Only update when structural decisions are made** — new patterns, refactoring rationale, extension conventions, cross-module integration.
 
 If `requirements/architecture.md` does not exist, create it using the template from `_shared/status.md` §6.
 
 Update the relevant sections:
-- **Glossary**: When a new module, component, or domain term is introduced, add a row (Term / Definition / Location). Keep definitions in business language, one line each.
+
+- **Core Patterns** (update when a new architectural pattern is established or an existing one is extended):
+  - One entry per reusable pattern (e.g. Cycle→Stage→Phase pipeline, Tool ABC, Skill discovery)
+  - Each entry must include: Structure, Contract, State flow, Extension method, Invariants
+  - Goal: someone reading only this section can reimplement the pattern from scratch
+  - Do NOT describe single-use module internals — only patterns that multiple components participate in
+
+- **Interface Contracts** (update when the scenario introduces or modifies cross-module integration):
+  - One entry per producer→consumer boundary that spans different modules/files
+  - Each entry must include: Producer (function + return type), Consumer (function + how it uses input), Wiring (where they connect), Contract (what is guaranteed), Verified by (which test)
+  - Intra-module calls are NOT contracts — only cross-module boundaries
+  - Goal: if Module A's scenario and Module B's scenario are implemented independently, their Interface Contract is the shared truth that keeps them compatible
+
 - **Key Decisions**: Add a row for significant architectural choices
-- **Extension Guide**: Update if new patterns are established
+- **Extension Guide**: Update if new patterns are established. Each entry is a step-by-step recipe.
+- **Glossary**: When a new module, component, or domain term is introduced, add a row (Term / Definition / Location). Keep definitions in business language, one line each. Group by subsystem.
 - **Architecture Overview**: Update if the high-level structure changes
 - **Philosophy**: Rarely changes — only when fundamental principles are established or revised
 
