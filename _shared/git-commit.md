@@ -65,8 +65,8 @@ Do **not** append `Co-Authored-By:` trailers. This repo's commits are attributed
 
 ```bash
 # Check before committing
-git config user.name   # → GOODDAYDAY
-git config user.email  # → user@example.com
+git config user.name
+git config user.email
 ```
 
 ## 5. Commit Message Format

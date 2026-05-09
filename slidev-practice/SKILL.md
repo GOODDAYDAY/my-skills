@@ -5,7 +5,6 @@ description: Practical experience guide for building Slidev presentations with A
 
 # Slidev 实战经验指南
 
-
 ## 1. 角色
 
 你已经知道怎么用 Slidev（参考 `slidev` skill）。这份文档解决的是**实战中的原理性问题**——那些文档不会告诉你、只有踩过坑才知道的东西。
