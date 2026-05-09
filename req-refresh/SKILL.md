@@ -47,10 +47,11 @@ Arguments:
 3. Also check `requirements/architecture.md` existence
 
 **Domain granularity principle**: Domains should be small and focused. A project can have dozens or hundreds of domains — there is no upper limit. Split aggressively:
-- Each independently operable subsystem gets its own domain
-- A domain typically maps to a single concern, not a whole layer
-- Better to have 50 fine-grained domains than 12 bloated ones
-- When in doubt, split further — domain files are cheap, confusion is expensive
+- Each independently operable subsystem gets its own domain. A single Lua file or React component that does one distinct thing can be its own domain.
+- A domain maps to a single concern, never a whole layer. "Combat" should be split into "combat-movement", "combat-damage", "combat-ai", etc.
+- Better to have 50 fine-grained domains than 12 bloated ones. Small domains are easier to audit, refresh, and generate skills from.
+- When in doubt, split further — domain files are cheap, confusion is expensive.
+- During the Undocumented Domain Scan (§3.4), aggressively identify missing domains. Every significant module without a domain doc is a gap.
 
 **No status tracking**: Requirements are snapshots. Do NOT add "draft", "reviewed", "stable", "Planned", "Implemented", or any status markers to any document. The documents describe what the code IS, not a lifecycle stage.
 
@@ -369,13 +370,23 @@ Architecture: {accurate/has_issues}
 - UNDER-DOC: ...
 ```
 
-## 7. Index Update
+## 7. Phase 5 — Catalog Regeneration
+
+After Phase 4 (Summary Report) completes, regenerate the project catalog:
+
+```
+Call Skill("req-catalog") to regenerate requirements/CATALOG.md.
+```
+
+This ensures the catalog always reflects the latest domain structure after a full refresh.
+
+## 8. Index Update
 
 After all phases, update `requirements/index.md` if:
 - New domains were added during the forward pass
 - Domain descriptions have changed
 
-## 8. Execution Rules
+## 9. Execution Rules
 
 1. **No git operations** — this skill only modifies requirement docs in the working tree
 2. **One subagent per domain** — never batch multiple domains into one subagent
@@ -385,7 +396,7 @@ After all phases, update `requirements/index.md` if:
 6. **Read before write** — every subagent must read the actual code before touching any doc
 7. **Fix everything** — do NOT just report issues. The point of refresh is to make docs match code. Every STALE item must be removed/updated, every UNDER-DOC item must be documented, every OVER-SPEC item must be corrected. If Phase 2 finds issues, Phase 3 MUST run.
 
-## 9. Stage Result
+## 10. Stage Result
 
 Output the following block as the final output:
 
