@@ -46,7 +46,8 @@ flowchart TD
 ### 3.1 Discover Domains
 
 1. Read `requirements/index.md` — parse the Domains table
-2. Determine mode from `$ARGUMENTS`:
+2. **Domain granularity**: Each domain in the index is a separate skill file. There is no upper limit — a project can have hundreds or thousands of domains. Never merge distinct domains. Every independently operable subsystem deserves its own file under `project-description-skills/`.
+3. Determine mode from `$ARGUMENTS`:
    - **empty or `--all`** → process all domains in parallel (default)
    - **`{domain-name}`** → process only that domain
    - **`--incremental`** → run §3.1a Incremental Detection, then process only affected domains
@@ -188,7 +189,8 @@ Analyze the domain's documentation and source code, then generate/update .claude
 ## Rules
 
 - preserve: accurate content. update: drifted content. delete: stale content. add: new discoveries
-- mark unknowns with [NEEDS CONFIRMATION]
+- CRITICAL: Every domain file MUST include all 5 hook sections (analyze-hook, tech-hook, code-hook, review-hook, verify-hook) with domain-specific content. Do NOT skip any hook. For thin/API domains, adapt hooks to context — code-hook documents HTTP/RPC conventions, verify-hook documents endpoint testing patterns
+- Resolve [NEEDS CONFIRMATION] items to definite conclusions where possible. Domain skills must be authoritative, not tentative. Only keep NEEDS CONFIRMATION when the answer cannot be determined from docs or code
 - include cross-references to other domain files where integration exists
 
 ## Output
@@ -199,19 +201,28 @@ End with:
 - **status**: generated | updated | unchanged
 - **patterns**: N
 - **pitfalls**: N
+- **hooks**: all 5 | missing: {list}
 ```
 
-After all domain subagents complete, rebuild SKILL.md index per §3.4.
+After all domain subagents complete:
+
+1. **Validate each domain file** — check that all 5 hook sections (analyze-hook, tech-hook, code-hook, review-hook, verify-hook) are present with non-empty content
+2. **Report missing hooks** — if any domain file is missing hooks, list it as `missing_hooks: {domain}` and flag it for re-generation
+3. **Rebuild SKILL.md index** per §3.4
 
 ## 4. Output Report
 
 ```markdown
 ## Domain Skills Report
 
-| Domain | Status | Patterns | Pitfalls |
-|:---|:---|:---|:---|
-| game | updated | 5 | 4 |
-| api | generated | 3 | 2 |
+| Domain | Status | Patterns | Pitfalls | Hooks |
+|:---|:---|:---|:---|:---|
+| game | updated | 5 | 4 | all 5 |
+| api | generated | 3 | 2 | all 5 |
+| server | MISSING HOOKS | 4 | 2 | only 2 |
+
+### Validation Issues (if any)
+- server: missing analyze-hook, tech-hook, verify-hook
 
 ### Ambiguities (if any)
 - {domain}: {item}
@@ -226,5 +237,6 @@ After all domain subagents complete, rebuild SKILL.md index per §3.4.
 - **skills_generated**: {list}
 - **skills_updated**: {list}
 - **skills_unchanged**: {list}
+- **missing_hooks**: {list of domains with missing hook sections, or "none"}
 - **ambiguities**: {N}
 ```

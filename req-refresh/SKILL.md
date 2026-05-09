@@ -46,6 +46,14 @@ Arguments:
 2. For each domain, note the path and description
 3. Also check `requirements/architecture.md` existence
 
+**Domain granularity principle**: Domains should be small and focused. A project can have dozens or hundreds of domains — there is no upper limit. Split aggressively:
+- Each independently operable subsystem gets its own domain
+- A domain typically maps to a single concern, not a whole layer
+- Better to have 50 fine-grained domains than 12 bloated ones
+- When in doubt, split further — domain files are cheap, confusion is expensive
+
+**No status tracking**: Requirements are snapshots. Do NOT add "draft", "reviewed", "stable", "Planned", "Implemented", or any status markers to any document. The documents describe what the code IS, not a lifecycle stage.
+
 ### 3.2 Launch Forward Subagents
 
 For **each domain**, launch a parallel subagent using the `Agent` tool (`subagent_type: "general-purpose"`).
@@ -77,6 +85,7 @@ Compare the domain's requirement docs against the actual source code and update 
 - Preserve the existing document structure (user stories in US-XX format, acceptance criteria in Given/When/Then)
 - Write user stories from an actor's perspective, not as technical specs
 - NO function names, class names, or variable names in user stories or acceptance criteria
+- NO status markers (draft, reviewed, stable, Planned, Implemented, etc.). Documents describe what the code IS, not a lifecycle stage
 - Mark anything ambiguous as [NEEDS CONFIRMATION] rather than guessing
 - Do NOT invent business logic — only document what the code actually does
 - Do NOT delete information that is still valid
@@ -284,6 +293,7 @@ Read the domain docs and source code, then fix ALL issues:
 - Preserve existing document structure (US-XX format, Given/When/Then)
 - Write user stories from an actor's perspective
 - NO function names, class names, or variable names in user stories or acceptance criteria
+- NO status markers (draft, reviewed, stable, etc.) in documents
 - Do NOT invent business logic — only document what the code actually does
 - REMOVE stale content cleanly — no commented-out remnants
 - Section headings must be in English
