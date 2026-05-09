@@ -1,28 +1,23 @@
 ---
 name: req-catalog
-description: Generate requirements/CATALOG.md — full project knowledge index with architecture and all scenario descriptions
+description: Generate requirements/CATALOG.md — project knowledge index with full architecture and domain document descriptions. TRIGGER when: user asks to regenerate catalog, update project index, or sync documentation index (e.g. "重新生成 CATALOG", "更新目录")
 argument-hint: "[force]"
 ---
 
 # req-catalog — Requirements Catalog Generator
-> Version: v1 | Date: 2026-05-04 | Author: system
 
 ## 1. Role
 
 You generate `requirements/CATALOG.md` — a single rich document that serves as the project's "abstract memory". It contains the full architecture and a description index of every requirement document, so any reader (human or AI) can understand what exists and decide what to read in depth.
 
-## 2. Shared Reference
+## 2. Preconditions
 
-- `_shared/status.md` — document templates, frontmatter spec (§5.1), CATALOG format (§7)
-
-## 3. Preconditions
-
-- `requirements/index.md` must exist — if not, abort with: `"No requirements/index.md found. Run /req-analyze first."`
+- `requirements/index.md` must exist — if not, abort with: `"No requirements/index.md found. Run req (analyze stage) first."`
 - `requirements/architecture.md` is optional — if missing, skip the architecture section
 
-## 4. Algorithm
+## 3. Algorithm
 
-### 4.1 Collect metadata
+### 3.1 Collect metadata
 
 1. **Read `requirements/index.md`** — parse the Domains table to get: Domain, Path, Description
 2. **Read `requirements/architecture.md`** — store full content (if file exists)
@@ -35,7 +30,7 @@ You generate `requirements/CATALOG.md` — a single rich document that serves as
       - **Priority 3**: H1 heading text itself (strip `# ` prefix)
    d. If no standalone `.md` files exist in the domain directory (only README.md), mark as inline domain
 
-### 4.2 Assemble CATALOG.md
+### 3.2 Assemble CATALOG.md
 
 Write `requirements/CATALOG.md` following this structure:
 
@@ -60,7 +55,7 @@ Generated: {YYYY-MM-DD} | {N} domains, {M} documents
 
 | Document | Description |
 |:---|:---|
-| {filename} | {description extracted per §4.1} |
+| {filename} | {description extracted per §3.1} |
 
 {Repeat for each domain in index.md order}
 
@@ -77,7 +72,7 @@ Full architecture: read_file("requirements/architecture.md")
 - Architecture section includes the full file content, not a summary
 - If architecture.md is missing, omit the entire "Technical Architecture" section and its surrounding `---` dividers
 
-### 4.3 Write and commit
+### 3.3 Write and commit
 
 1. Write the assembled content to `requirements/CATALOG.md`
 2. Git commit (if in a git repo):
@@ -87,7 +82,20 @@ Full architecture: read_file("requirements/architecture.md")
    ```
    If nothing changed (file identical), skip the commit.
 
-## 5. Stage Result
+### 3.4 YAML Frontmatter Spec (for extraction)
+
+Standalone scenario files use this frontmatter format:
+
+```yaml
+---
+name: {Scenario Name}
+description: {One-line summary of what this scenario covers, max 120 chars}
+---
+```
+
+When generating, read frontmatter from existing files. For the `force` argument, add frontmatter to files that lack it using H1 title and preamble.
+
+## 4. Stage Result
 
 ```
 ## Stage Result
@@ -99,7 +107,7 @@ Full architecture: read_file("requirements/architecture.md")
 - **fallback_count**: {how many files used H1/preamble fallback}
 ```
 
-## 6. Argument: `force`
+## 5. Argument: `force`
 
 When invoked with `force` argument: also add missing YAML frontmatter to scenario files that lack it.
 

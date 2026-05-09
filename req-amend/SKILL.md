@@ -1,11 +1,10 @@
 ---
 name: req-amend
-description: Amendment — update domain scenario documents with scope confirmation and cascade check
+description: Amendment — update domain scenario documents with scope confirmation and cascade check. TRIGGER when: user asks to change, modify, or update existing requirements or user stories (e.g. "改需求", "修改 US-03", "变更场景")
 argument-hint: "[domain/scenario]"
 ---
 
-# req-amend
-> Version: v2 | Date: 2026-04-27 | Author: system
+# req-amend — Document Amendment
 
 ## 1. Overview
 You are responsible for the amendment process. When an existing domain scenario document needs modification, this skill ensures the change is scoped, confirmed, and cascaded properly.
@@ -65,11 +64,12 @@ If neither user stories nor implementation approach changed materially:
 1. Set `change_scope: minor`, `cascade_target: none`
 
 ### 2.5 Commit
+
 ```bash
 git add -A && git commit -m "docs({domain}): amend {scenario} — {brief description}"
 ```
 
-### 2.7 Output Change Summary
+### 2.6 Output Change Summary
 
 ```markdown
 ## Change Summary
@@ -79,7 +79,7 @@ git add -A && git commit -m "docs({domain}): amend {scenario} — {brief descrip
 - Change description: {what was changed}
 ```
 
-Output the following block as the final output of this stage:
+## 3. Stage Result
 
 ```
 ## Stage Result

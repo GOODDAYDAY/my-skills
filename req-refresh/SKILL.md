@@ -5,7 +5,6 @@ argument-hint: "[--forward-only | --reverse-only]"
 ---
 
 # req-refresh — Domain Docs Batch Refresh
-> Version: v2 | Date: 2026-04-30 | Author: system
 
 ## 1. Role
 
@@ -21,9 +20,9 @@ This skill is part of the req-* family:
 
 | Skill | Relationship |
 |:---|:---|
-| req-analyze | Creates/updates domain docs from user intent → **forward, intent-driven** |
+| req (analyze stage) | Creates/updates domain docs from user intent → **forward, intent-driven** |
 | req-refresh | Updates domain docs from code reality → **forward, code-driven, fix everything** |
-| req-review | Verifies code matches docs → **reverse, doc-as-spec** |
+| req (review stage) | Verifies code matches docs → **reverse, doc-as-spec** |
 
 ## 2. Overall Flow
 
@@ -49,7 +48,7 @@ Arguments:
 
 ### 3.2 Launch Forward Subagents
 
-For **each domain**, launch a parallel subagent using the `Agent` tool (`subagent_type: "req-agent"`).
+For **each domain**, launch a parallel subagent using the `Agent` tool (`subagent_type: "general-purpose"`).
 
 **Subagent prompt** (fill in `{domain}`, `{domain_path}`, `{project_dir}`):
 
