@@ -1,113 +1,115 @@
 # my-skills
 
-Personal Claude Code skills repository. A complete requirement-driven development workflow — from requirement analysis to verification.
+Personal Claude Code skills for requirement-driven development — built for solo devs who want AI to truly understand their project.
 
 [中文版](./README_CN.md)
 
-## Installation
+## Why This Exists
 
-Add this repository as a git submodule to your project's `.claude/skills` directory:
+I started with numbered requirement lists. They went stale within days.
 
-```bash
-git submodule add git@github.com:GOODDAYDAY/my-skills.git .claude/skills
-```
+I evolved to User Stories with Given/When/Then acceptance criteria. Better — requirements were now testable and human-readable. But AI still didn't *get* the project. Every session, every `/req`, every code change — the AI started from scratch, reading files to reconstruct a mental model it had already built and discarded a hundred times before.
 
-To clone a project that already includes this submodule:
+The problem wasn't how I wrote requirements. It was that there was no **persistent, AI-consumable knowledge layer** between the requirements docs and the AI's context window.
 
-```bash
-git clone --recurse-submodules <your-project-repo>
-```
+That's what this project builds.
 
-To update the skills to the latest version:
-
-```bash
-git submodule update --remote .claude/skills
-```
-
-## How It Works
-
-Once installed, all skills are auto-discovered by Claude Code as slash commands.
-
-The core workflow is `/req`, which orchestrates a full development cycle:
+## The Core Idea: Two Layers, Always in Sync
 
 ```
-/req "feature description"
+requirements/                              .claude/skills/project-description-skills/
+├── index.md          (domain index)       ├── SKILL.md          (entry point)
+├── architecture.md   (tech decisions)     └── {domain}.md       (per-domain knowledge)
+└── {domain}/
+    ├── README.md     (what this domain does)
+    └── {scenario}.md  (specific user stories)
+    
+    ↑  Human-authored source of truth         ↑  AI-consumable bridge, generated from above
+```
+
+**`requirements/`** is for humans. It's where you think, plan, and write down what needs to be built.
+
+**`project-description-skills/`** is for AI. It's a generated skill that encodes how your project is structured, how to modify it, what patterns to follow, and what pitfalls to avoid. When loaded, it gives AI persistent project knowledge without consuming context re-reading the entire codebase.
+
+The two layers share the same domains. Change one, the other can be refreshed — fully or incrementally.
+
+## The Self-Reinforcing Loop
+
+```
+/req "build a login system"
   │
-  ├─ [bootstrap]  — Check/generate project-description-skills
-  │                 (project knowledge encoded as AI skills)
-  ├─ analyze      — Requirement analysis ──→ domain scenario docs + diagrams
-  │    ↓ (user approval required)
-  ├─ tech         — Technical design ─────→ implementation approach + architecture.md
-  │    ↓
-  ├─ code         — Coding ──────────────→ source code + scripts/
-  │    ↓                                    (acceptance tests first, commit per module)
-  ├─ security     — Security review ─────→ vulnerability scan + fix
-  │    ↓
-  ├─ cleanup      — Code cleanup ────────→ structural optimization
-  │    ↓
-  ├─ review       — Requirement review ──→ compliance check report
-  │    ↓
-  ├─ verify       — Verification ────────→ build / run / test
-  │    ↓
-  ├─ justify      — Process justification → meta-review
-  │    ↓
-  └─ skills sync  — Refresh project domain skills for the domain just worked on
+  ├─ Load project-description-skills ──→ AI understands existing domains, patterns, pitfalls
+  ├─ Read requirements/{auth}/ ────────→ current requirements for this domain
+  ├─ analyze → tech → code → review → verify
+  │
+  └─ Post-pipeline: refresh project-description-skills for the auth domain
+       └─ So next time, AI already knows about the login system
 ```
 
-The orchestrator triages each task and decides which stages to include or skip. Domain knowledge hooks in each stage load `project-description-skills` for context.
-
-Supports **artifact-based recovery** — if interrupted, `/req` checks existing docs, code, and tests to infer where you left off and resumes from there.
+Each pipeline run **leaves the project smarter than it found it**. The knowledge accumulates across sessions. AI doesn't start from zero anymore.
 
 ## Skills
 
-| Command | Description |
+| Command | What it does |
 |:---|:---|
-| `/req [description]` | Full workflow orchestrator — triages and runs all stages (analyze → tech → code → security → cleanup → review → verify → justify) |
-| `/req-amend [domain/scenario]` | Amendment — update domain docs with scope confirmation and cascade check |
-| `/req-catalog [force]` | Regenerate requirements/CATALOG.md — project knowledge index |
-| `/req-refresh` | Batch refresh all domain requirement docs to match current code (forward + reverse) |
-| `/req-domain-skills-generate [--all \| domain-name]` | Generate/refresh project-description-skills — per-domain knowledge files + main index (default: all; --incremental for git-diff mode) |
+| `/req [description]` | Full-cycle development pipeline — triages the task, runs relevant stages (analyze → tech → code → security → cleanup → review → verify → justify) |
+| `/req-amend [domain/scenario]` | Modify existing requirements — scoped change with cascade impact analysis |
+| `/req-refresh [--forward-only\|--reverse-only]` | Batch-refresh all domain docs to match current code (forward: code→docs, reverse: docs→code verification) |
+| `/req-catalog [force]` | Regenerate `requirements/CATALOG.md` — project knowledge index with full architecture |
+| `/req-domain-skills-generate [--all\|domain\|--incremental]` | Generate/refresh the AI knowledge bridge — full, single-domain, or git-diff incremental |
+
+## Design Principles
+
+**Solo-dev scale.** Everything supports full and incremental modes. A one-person team can't afford a full-time docs maintainer — the tools carry that weight.
+
+**Artifact-based recovery.** If a session crashes mid-pipeline, `/req` reads existing docs, code, and tests to infer where you left off and resumes from there.
+
+**Adaptive depth.** Trivial changes skip the pipeline entirely. Medium features use a subset of stages. Cross-cutting refactors engage the full workflow. No ceremony tax for small work.
+
+**Write once, sync everywhere.** Requirements are the single source of truth. `project-description-skills` is derived, never manually edited. `req-refresh` keeps them aligned when code drifts.
 
 ## Document Structure
 
-All requirement documents are managed under `requirements/` in your project root. Domain knowledge skills are generated into `.claude/skills/project-description-skills/`:
-
 ```
 requirements/
-├── index.md                        # Domain directory (English)
-├── architecture.md                 # Tech philosophy, principles, structural decisions
+├── index.md                        # Domain directory
+├── architecture.md                 # Technical philosophy, principles, structural decisions
 ├── CATALOG.md                      # Auto-generated project knowledge index
 └── {domain}/
     ├── README.md                   # Domain overview + simple scenarios inline
-    └── {scenario}.md               # Complex scenarios get separate files
+    └── {scenario}.md               # Complex scenarios in separate files
 
 .claude/skills/
 └── project-description-skills/     # Generated by req-domain-skills-generate
-    ├── SKILL.md                    # Main entry — domain index + architecture overview
-    └── {domain}.md                 # Per-domain knowledge, patterns, pitfalls, hooks
+    ├── SKILL.md                    # Entry point — domain index, architecture overview, usage guide
+    └── {domain}.md                 # Per-domain: APIs, patterns, pitfalls, stage-specific hooks
 ```
 
-## Repository Structure
+## Repository
 
 ```
 my-skills/
-├── _shared/
-│   ├── plantuml.md                  # Shared PlantUML conventions + env detection
-│   ├── git-commit.md                # Git commit conventions
-│   ├── recovery.md                  # Breakpoint recovery pattern
-│   ├── scripts.md                   # Automation script standards
-│   ├── markdown.md                  # Markdown format specification
-│   └── diverge-converge.md          # Multi-subagent analysis pattern
-├── create-skill/SKILL.md
-├── req/
-│   ├── SKILL.md                     # Workflow orchestrator (all stages)
-│   └── conventions/
-│       ├── python.md                # Python coding conventions
-│       └── java.md                  # Java coding conventions
-├── req-amend/SKILL.md               # Document amendment
-├── req-catalog/SKILL.md             # Catalog regeneration
-├── req-refresh/SKILL.md             # Domain doc batch refresh
-├── req-domain-skills-generate/SKILL.md  # Domain knowledge skill generator
-├── write-blog/SKILL.md              # Blog post creation
-└── write-doc/SKILL.md               # Technical document writing
+├── _shared/                        # Shared conventions (diagrams, markdown, git, scripts, recovery)
+├── req/                            # Pipeline orchestrator (all 9 stages + language conventions)
+├── req-amend/                      # Document amendment workflow
+├── req-catalog/                    # Catalog regeneration
+├── req-refresh/                    # Domain doc batch refresh (forward + reverse + fix)
+├── req-domain-skills-generate/     # AI knowledge bridge generator
+├── write-blog/                     # Bilingual Hugo blog post creation
+├── write-doc/                      # Structured technical document writing
+├── slidev-practice/                # Slidev presentation practical experience guide
+└── create-skill/                   # Guide for creating new skills
+```
+
+## Installation
+
+```bash
+# Add to your project
+git submodule add git@github.com:GOODDAYDAY/my-skills.git .claude/skills
+
+# Clone a project that already includes these skills
+git clone --recurse-submodules <your-project>
+
+# Update to latest
+git submodule update --remote .claude/skills
 ```

@@ -85,6 +85,15 @@ Write/update `.claude/skills/project-description-skills/{domain}.md`:
 
 > {One-line description from index.md}
 
+## Source Documents
+
+This file is **derived** from the following. When in doubt, the source documents are authoritative.
+
+- `requirements/{domain}/README.md` — domain requirements and user stories
+- `requirements/{domain}/*.md` — scenario-specific documents
+- `requirements/architecture.md` — relevant architectural decisions
+- Source code under `{source_paths}` — actual implementation
+
 ## Architecture Patterns
 
 {Patterns from architecture.md adapted for this domain}
@@ -104,6 +113,8 @@ Write/update `.claude/skills/project-description-skills/{domain}.md`:
 {How this domain connects to other domains — cross-references to sibling .md files}
 
 ## Hooks
+
+Each hook is loaded by a specific `req` pipeline stage. When loaded, **also read `requirements/{domain}/` docs** — this file caches code patterns, not requirement details. Requirements live in `requirements/`.
 
 ### analyze-hook
 When req analyze stage loads this: key terminology, domain actors, constraints for acceptance criteria
@@ -135,16 +146,37 @@ description: Project knowledge skill — how this project is structured, how to 
 
 This is the generated project knowledge skill. It tells you how this project works, how to modify it, and how to do requirement-driven development on it.
 
+## Relationship to requirements/
+
+This skill is **derived** from two sources:
+- `requirements/` — the human-authored source of truth (domain docs, architecture, user stories)
+- Source code — the actual implementation (APIs, patterns, conventions)
+
+This skill is a **cache**, not the authority. When in doubt, `requirements/` wins.
+
 ## How to Use
 
-1. **Read `requirements/` first** — `requirements/index.md` lists all domains, `requirements/architecture.md` has architecture decisions
-2. **Match your task to a domain** — the domain files below tell you what exists, how things connect, and what to watch for
-3. **Before coding**: read the domain's hooks — they tell you patterns to follow and pitfalls to avoid
-4. **After changes**: this skill may need refreshing — run `/req-domain-skills-generate --incremental`
+### On Every Invocation
+
+1. **Read `requirements/index.md`** — get the current domain list and descriptions. This skill's domain index below may be stale.
+2. **Read `requirements/architecture.md`** — get current architectural decisions and constraints.
+3. **For the domain you're working on**, read **all three layers**:
+   - `requirements/{domain}/README.md` — what this domain does, user stories
+   - `requirements/{domain}/*.md` — scenario-specific requirements
+   - `{domain}.md` in this skill directory — patterns, pitfalls, hooks from code
+4. **Before writing code**: read the domain file's hooks section — they encode stage-specific guidance.
+5. **After making changes**: this skill may need refreshing — run `/req-domain-skills-generate --incremental`.
+
+### When to Refresh This Skill
+
+- After implementing a new feature in a domain
+- After `req-refresh` updates requirement docs
+- After significant refactoring that changes APIs or patterns
+- If the domain index below doesn't match `requirements/index.md`
 
 ## Domain Index
 
-{Generated from requirements/index.md Domains table}
+{Synchronized from requirements/index.md Domains table}
 
 | Domain | File | Description |
 |:---|:---|:---|
@@ -154,7 +186,7 @@ This is the generated project knowledge skill. It tells you how this project wor
 
 ## Architecture Overview
 
-{Key architecture decisions from requirements/architecture.md, condensed}
+{Condensed from requirements/architecture.md — read the full file for authoritative details}
 ```
 
 ### 3.5 Merge Strategy (Existing Files)
