@@ -1,6 +1,21 @@
-# my-skills
+<p align="center">
+  <h1 align="center">my-skills</h1>
+  <p align="center">
+    Personal Claude Code skills for requirement-driven development.
+    <br />
+    Built for solo devs who want AI to truly understand their project.
+    <br />
+    9 skills. 6 shared conventions. 51 iterations.
+  </p>
+</p>
 
-Personal Claude Code skills for requirement-driven development — built for solo devs who want AI to truly understand their project.
+<p align="center">
+  <a href=".claude/skills"><img src="https://img.shields.io/badge/skills-9-green" alt="9 Skills"></a>
+  <a href="_shared"><img src="https://img.shields.io/badge/conventions-6-blue" alt="6 Conventions"></a>
+  <a href="https://github.com/GOODDAYDAY/my-skills/commits/main"><img src="https://img.shields.io/badge/commits-51-blueviolet" alt="51 Commits"></a>
+  <a href="https://docs.anthropic.com/en/docs/claude-code"><img src="https://img.shields.io/badge/built%20for-Claude%20Code-f5f5f5?logo=anthropic" alt="Built for Claude Code"></a>
+  <a href="https://github.com/sponsors/GOODDAYDAY"><img src="https://img.shields.io/badge/sponsor-%E2%9D%A4-pink?logo=github" alt="Sponsor"></a>
+</p>
 
 [中文版](./README_CN.md)
 

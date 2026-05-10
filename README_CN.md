@@ -1,6 +1,21 @@
-# my-skills
+<p align="center">
+  <h1 align="center">my-skills</h1>
+  <p align="center">
+    个人 Claude Code Skills 仓库——一套让 AI 真正理解你项目的工作流体系。
+    <br />
+    为独立开发者设计。
+    <br />
+    9 个技能。6 个共享规范。51 次迭代。
+  </p>
+</p>
 
-个人 Claude Code Skills 仓库——一套让 AI 真正理解你项目的工作流体系。为独立开发者设计。
+<p align="center">
+  <a href=".claude/skills"><img src="https://img.shields.io/badge/skills-9-green" alt="9 Skills"></a>
+  <a href="_shared"><img src="https://img.shields.io/badge/conventions-6-blue" alt="6 Conventions"></a>
+  <a href="https://github.com/GOODDAYDAY/my-skills/commits/main"><img src="https://img.shields.io/badge/commits-51-blueviolet" alt="51 Commits"></a>
+  <a href="https://docs.anthropic.com/en/docs/claude-code"><img src="https://img.shields.io/badge/built%20for-Claude%20Code-f5f5f5?logo=anthropic" alt="Built for Claude Code"></a>
+  <a href="https://github.com/sponsors/GOODDAYDAY"><img src="https://img.shields.io/badge/sponsor-%E2%9D%A4-pink?logo=github" alt="Sponsor"></a>
+</p>
 
 [English](./README.md)
 
