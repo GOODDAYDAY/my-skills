@@ -1,0 +1,8 @@
+{
+	"productId": "",
+	"name": "req-nl-coverage",
+	"description": "'Measure NL (Natural Language) implementation and accuracy — how much NL has landed in code, and whether NL matches reality. TRIGGER when: user asks for NL coverage, NL implementation rate, NL accuracy, or says \"NL覆盖率\", \"NL实现率\", \"NL准确率\"'",
+	"version": "0.0.0",
+	"installedAt": "2026-06-01T01:53:53.438Z",
+	"installedBy": "manual"
+}

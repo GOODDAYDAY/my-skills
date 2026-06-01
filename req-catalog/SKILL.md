@@ -29,6 +29,7 @@ You generate `requirements/CATALOG.md` — a single rich document that serves as
       - **Priority 2**: First non-empty paragraph after the H1 heading, before `---` or next heading (`#` or `##`)
       - **Priority 3**: H1 heading text itself (strip `# ` prefix)
    d. If no standalone `.md` files exist in the domain directory (only README.md), mark as inline domain
+4. **Read `.nl-coverage-history.json`** — if the file exists, extract the latest entry's metrics: `implementation_rate`, `accuracy_rate`, `precision_rate`, `implemented`, `total_acs`, `conflicting`, `vague`. If the file does not exist, skip the NL Coverage section in the output.
 
 ### 3.2 Assemble CATALOG.md
 
@@ -37,6 +38,20 @@ Write `requirements/CATALOG.md` following this structure:
 ```markdown
 # Requirements Catalog
 Generated: {YYYY-MM-DD} | {N} domains, {M} documents
+
+---
+
+## NL Coverage
+
+{Metrics from `.nl-coverage-history.json` latest entry. If no history file exists, omit this entire section and its surrounding `---` dividers.}
+
+| Metric | Value |
+|:---|:---|
+| NL Implementation | {implementation_rate}% ({implemented}/{total-vague} ACs in code) |
+| NL Accuracy | {accuracy_rate}% ({implemented}/{implemented+conflicting} ACs match code) |
+| NL Precision | {precision_rate}% ({total-vague}/{total} ACs are testable) |
+
+{If conflicting > 0: ⚠️ **{conflicting} conflicting ACs** — NL says one thing, code does another. Run `/req-nl-coverage` for details.}
 
 ---
 
@@ -70,6 +85,9 @@ Full architecture: read_file("requirements/architecture.md")
 - For inline domains (no standalone files), replace the table with: `(All content inline in README.md)`
 - The `{M} documents` count = total standalone `.md` files across all domains (excluding READMEs)
 - Architecture section includes the full file content, not a summary
+- NL Coverage section includes the latest metrics from `.nl-coverage-history.json` (see §3.1 step 4)
+- If `.nl-coverage-history.json` is missing, omit the entire NL Coverage section and its surrounding `---` dividers
+- If `conflicting > 0`, include the ⚠️ warning line with the count
 - If architecture.md is missing, omit the entire "Technical Architecture" section and its surrounding `---` dividers
 
 ### 3.3 Write and commit
@@ -103,6 +121,7 @@ When generating, read frontmatter from existing files. For the `force` argument,
 - **domains**: {N}
 - **documents**: {M}
 - **has_architecture**: yes | no
+- **nl_coverage**: yes ({implementation_rate}% implemented, {accuracy_rate}% accurate) | no
 - **frontmatter_count**: {how many files had YAML frontmatter}
 - **fallback_count**: {how many files used H1/preamble fallback}
 ```
